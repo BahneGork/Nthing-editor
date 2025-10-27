@@ -239,8 +239,14 @@ showPreviewToggle.addEventListener('change', (e) => {
   showPreview = e.target.checked;
   if (showPreview) {
     container.classList.remove('hide-preview');
+    // Re-enable sync scroll checkbox
+    syncScrollToggle.disabled = false;
   } else {
     container.classList.add('hide-preview');
+    // Disable sync scroll when preview is hidden (no preview to sync with)
+    syncScrollEnabled = false;
+    syncScrollToggle.checked = false;
+    syncScrollToggle.disabled = true;
   }
   // Save preference to localStorage
   localStorage.setItem('showPreview', showPreview);
@@ -253,6 +259,10 @@ if (savedPreviewPref !== null) {
   showPreviewToggle.checked = showPreview;
   if (!showPreview) {
     container.classList.add('hide-preview');
+    // Also disable sync scroll if preview is hidden
+    syncScrollEnabled = false;
+    syncScrollToggle.checked = false;
+    syncScrollToggle.disabled = true;
   }
 }
 
