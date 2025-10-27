@@ -10,9 +10,11 @@ const lineCount = document.getElementById('line-count');
 const lineNumbers = document.getElementById('line-numbers');
 const container = document.querySelector('.container');
 const paneTitle = document.getElementById('pane-title');
+const syncScrollToggle = document.getElementById('sync-scroll-toggle');
 
 let currentFilePath = null;
 let currentMode = 'editor'; // 'editor' or 'writing'
+let syncScrollEnabled = true; // Scroll sync state
 
 // Configure marked options
 marked.setOptions({
@@ -37,8 +39,8 @@ editor.addEventListener('scroll', () => {
     lineNumbers.scrollTop = editor.scrollTop;
   }
 
-  // Sync preview in editor mode only
-  if (currentMode !== 'editor') return;
+  // Sync preview in editor mode only if sync is enabled
+  if (currentMode !== 'editor' || !syncScrollEnabled) return;
 
   if (isPreviewScrolling) {
     isPreviewScrolling = false;
@@ -61,7 +63,7 @@ editor.addEventListener('scroll', () => {
 
 // Bidirectional sync: Allow preview to scroll editor
 function handlePreviewScroll() {
-  if (currentMode !== 'editor') return;
+  if (currentMode !== 'editor' || !syncScrollEnabled) return;
 
   if (isEditorScrolling) {
     isEditorScrolling = false;
@@ -83,6 +85,20 @@ function handlePreviewScroll() {
 }
 
 preview.addEventListener('scroll', handlePreviewScroll);
+
+// Sync scroll toggle handler
+syncScrollToggle.addEventListener('change', (e) => {
+  syncScrollEnabled = e.target.checked;
+  // Save preference to localStorage
+  localStorage.setItem('syncScrollEnabled', syncScrollEnabled);
+});
+
+// Load sync scroll preference from localStorage
+const savedSyncPref = localStorage.getItem('syncScrollEnabled');
+if (savedSyncPref !== null) {
+  syncScrollEnabled = savedSyncPref === 'true';
+  syncScrollToggle.checked = syncScrollEnabled;
+}
 
 function updatePreview() {
   const markdown = editor.value;
