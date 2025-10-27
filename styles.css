@@ -41,6 +41,34 @@ body {
   font-weight: 600;
   font-size: 14px;
   color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.formatting-toggle {
+  display: none;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.formatting-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.formatting-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Show formatting toggle only in Writing mode */
+.container[data-mode="writing"] .formatting-toggle {
+  display: flex;
 }
 
 #editor {
@@ -55,6 +83,112 @@ body {
   background: transparent;
   width: 100%;
   min-width: 0;
+}
+
+#editor.hidden {
+  display: none;
+}
+
+/* CodeMirror container */
+.codemirror-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.codemirror-container.hidden {
+  display: none;
+}
+
+.codemirror-container .cm-editor {
+  height: 100%;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.codemirror-container .cm-scroller {
+  overflow: auto;
+  padding: 40px 120px;
+}
+
+.codemirror-container .cm-content {
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* CodeMirror Markdown Styling */
+.cm-header-1 {
+  font-size: 2em;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.5em 0 0.3em 0;
+  border-bottom: 2px solid #eee;
+}
+
+.cm-header-2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.5em 0 0.3em 0;
+  border-bottom: 1px solid #eee;
+}
+
+.cm-header-3 {
+  font-size: 1.3em;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.3em 0;
+}
+
+.cm-header-4 {
+  font-size: 1.1em;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.2em 0;
+}
+
+.cm-header-5, .cm-header-6 {
+  font-size: 1em;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.2em 0;
+}
+
+.cm-strong {
+  font-weight: bold;
+}
+
+.cm-em {
+  font-style: italic;
+}
+
+.cm-strikethrough {
+  text-decoration: line-through;
+}
+
+.cm-link {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.cm-code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.cm-list {
+  padding-left: 2em;
+}
+
+.cm-quote {
+  border-left: 4px solid #ddd;
+  padding-left: 1em;
+  color: #666;
+  font-style: italic;
 }
 
 /* Line numbers for Editor mode */
@@ -113,8 +247,10 @@ body {
   font-family: 'Georgia', 'Times New Roman', serif;
   font-size: 18px;
   line-height: 1.8;
-  padding: 40px 120px;
-  max-width: 100%;
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 #preview {

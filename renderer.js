@@ -1,6 +1,11 @@
 const { ipcRenderer } = require('electron');
 const { marked } = require('marked');
 
+// CodeMirror imports
+const { EditorView, basicSetup } = require('@codemirror/view');
+const { EditorState } = require('@codemirror/state');
+const { markdown } = require('@codemirror/lang-markdown');
+
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
 const status = document.getElementById('status');
@@ -11,10 +16,14 @@ const lineNumbers = document.getElementById('line-numbers');
 const container = document.querySelector('.container');
 const paneTitle = document.getElementById('pane-title');
 const syncScrollToggle = document.getElementById('sync-scroll-toggle');
+const showFormattingToggle = document.getElementById('show-formatting-toggle');
+const codemirrorContainer = document.getElementById('codemirror-container');
 
 let currentFilePath = null;
 let currentMode = 'editor'; // 'editor' or 'writing'
 let syncScrollEnabled = true; // Scroll sync state
+let showFormatting = false; // Formatting display state
+let codemirrorView = null; // CodeMirror instance
 
 // Configure marked options
 marked.setOptions({
@@ -146,11 +155,20 @@ function switchMode(mode) {
     paneTitle.textContent = 'Writing Focus';
     // Disable scroll sync for preview in writing mode
     preview.removeEventListener('scroll', handlePreviewScroll);
+    // Apply formatting if enabled
+    if (showFormatting) {
+      toggleFormatting(true);
+    }
   } else {
     paneTitle.textContent = 'Editor';
     updateLineNumbers();
     // Re-enable scroll sync for preview in editor mode
     preview.addEventListener('scroll', handlePreviewScroll);
+    // Disable formatting when leaving writing mode
+    if (showFormatting) {
+      toggleFormatting(false);
+      showFormattingToggle.checked = false;
+    }
   }
 }
 
@@ -158,6 +176,89 @@ function switchMode(mode) {
 ipcRenderer.on('switch-mode', (event, mode) => {
   switchMode(mode);
 });
+
+// CodeMirror initialization
+function initializeCodeMirror() {
+  if (codemirrorView) {
+    // Already initialized
+    return;
+  }
+
+  const state = EditorState.create({
+    doc: editor.value,
+    extensions: [
+      basicSetup,
+      markdown(),
+      EditorView.lineWrapping,
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          // Sync content back to textarea
+          editor.value = update.state.doc.toString();
+          updatePreview();
+          updateStats();
+          updateLineNumbers();
+        }
+      })
+    ]
+  });
+
+  codemirrorView = new EditorView({
+    state,
+    parent: codemirrorContainer
+  });
+}
+
+// Toggle between plain textarea and CodeMirror formatted view
+function toggleFormatting(enabled) {
+  showFormatting = enabled;
+
+  if (enabled && currentMode === 'writing') {
+    // Show CodeMirror, hide textarea
+    editor.classList.add('hidden');
+    codemirrorContainer.classList.remove('hidden');
+
+    // Initialize CodeMirror if not already done
+    if (!codemirrorView) {
+      initializeCodeMirror();
+    } else {
+      // Update CodeMirror with current textarea content
+      codemirrorView.dispatch({
+        changes: {
+          from: 0,
+          to: codemirrorView.state.doc.length,
+          insert: editor.value
+        }
+      });
+    }
+  } else {
+    // Show textarea, hide CodeMirror
+    editor.classList.remove('hidden');
+    codemirrorContainer.classList.add('hidden');
+
+    // Sync content from CodeMirror to textarea if it exists
+    if (codemirrorView) {
+      editor.value = codemirrorView.state.doc.toString();
+    }
+  }
+
+  // Save preference
+  localStorage.setItem('showFormatting', enabled);
+}
+
+// Formatting toggle handler
+showFormattingToggle.addEventListener('change', (e) => {
+  toggleFormatting(e.target.checked);
+});
+
+// Load formatting preference
+const savedFormattingPref = localStorage.getItem('showFormatting');
+if (savedFormattingPref !== null) {
+  showFormatting = savedFormattingPref === 'true';
+  showFormattingToggle.checked = showFormatting;
+  if (showFormatting && currentMode === 'writing') {
+    toggleFormatting(true);
+  }
+}
 
 // Listen for file opened
 ipcRenderer.on('file-opened', (event, { content, filePath }) => {

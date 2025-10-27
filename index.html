@@ -46,10 +46,17 @@
     <div class="editor-pane">
       <div class="pane-header">
         <span id="pane-title">Editor</span>
+        <span class="formatting-toggle">
+          <label>
+            <input type="checkbox" id="show-formatting-toggle">
+            <span>Show Formatting</span>
+          </label>
+        </span>
       </div>
       <div class="editor-wrapper">
         <div id="line-numbers" class="line-numbers"></div>
         <textarea id="editor" placeholder="# Start typing markdown here..."></textarea>
+        <div id="codemirror-container" class="codemirror-container hidden"></div>
       </div>
     </div>
     <div class="preview-pane">
