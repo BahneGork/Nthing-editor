@@ -270,6 +270,13 @@ function initializeCodeMirror() {
   console.log('Editor content length:', editor.value.length);
   console.log('Container element:', codemirrorContainer);
 
+  // Debug: Check which extensions are undefined
+  console.log('basicSetup:', basicSetup);
+  console.log('markdown():', markdown());
+  console.log('EditorView.lineWrapping:', EditorView.lineWrapping);
+  console.log('markdownTheme:', markdownTheme);
+  console.log('markdownBaseTheme:', markdownBaseTheme);
+
   const state = EditorState.create({
     doc: editor.value,
     extensions: [
