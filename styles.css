@@ -416,12 +416,14 @@ body {
   opacity: 0.5;
 }
 
+.preview-toggle,
 .sync-toggle {
   display: flex;
   align-items: center;
   margin: 0 16px;
 }
 
+.preview-toggle label,
 .sync-toggle label {
   display: flex;
   align-items: center;
@@ -431,13 +433,24 @@ body {
   font-size: 12px;
 }
 
+.preview-toggle input[type="checkbox"],
 .sync-toggle input[type="checkbox"] {
   cursor: pointer;
   width: 14px;
   height: 14px;
 }
 
-/* Hide sync toggle in Writing Focus mode */
+/* Hide preview pane when toggled off in Editor mode */
+.container[data-mode="editor"].hide-preview .preview-pane {
+  display: none;
+}
+
+.container[data-mode="editor"].hide-preview .editor-pane {
+  border-right: none;
+}
+
+/* Hide preview toggle and sync toggle in Writing Focus mode */
+.container[data-mode="writing"] ~ .status-bar .preview-toggle,
 .container[data-mode="writing"] ~ .status-bar .sync-toggle {
   display: none;
 }
