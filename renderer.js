@@ -2,9 +2,18 @@ const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
 
 // CodeMirror imports
-const { EditorView } = require('@codemirror/view');
-const { EditorState } = require('@codemirror/state');
-const { markdown } = require('@codemirror/lang-markdown');
+const cmView = require('@codemirror/view');
+const cmState = require('@codemirror/state');
+const langMarkdown = require('@codemirror/lang-markdown');
+
+// Debug: See what's available in each package
+console.log('view exports:', Object.keys(cmView));
+console.log('state exports:', Object.keys(cmState));
+console.log('lang-markdown exports:', Object.keys(langMarkdown));
+
+const { EditorView } = cmView;
+const { EditorState } = cmState;
+const { markdown } = langMarkdown;
 
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
