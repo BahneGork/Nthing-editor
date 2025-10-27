@@ -1,6 +1,6 @@
-# Markdown Editor
+# Nthing
 
-A desktop markdown editor built with Electron. Features live preview, file operations, and a clean interface.
+A distraction-free markdown editor where nothing else matters. Built with Electron for a clean, focused writing experience.
 
 ## Features
 
@@ -154,7 +154,7 @@ npm install
 npm run build
 ```
 
-This will create a Windows installer at `dist/Markdown Editor Setup 1.0.0.exe`
+This will create a Windows installer at `dist/Nthing Setup 1.0.0.exe`
 
 ### Windows Defender False Positive Warning
 
