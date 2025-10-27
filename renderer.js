@@ -22,6 +22,51 @@ editor.addEventListener('input', () => {
   updateStats();
 });
 
+// Scroll synchronization
+let isEditorScrolling = false;
+let isPreviewScrolling = false;
+
+editor.addEventListener('scroll', () => {
+  if (isPreviewScrolling) {
+    isPreviewScrolling = false;
+    return;
+  }
+
+  isEditorScrolling = true;
+
+  // Calculate scroll percentage
+  const scrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+
+  // Apply to preview
+  const previewScrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
+  preview.scrollTop = previewScrollTop;
+
+  setTimeout(() => {
+    isEditorScrolling = false;
+  }, 50);
+});
+
+// Optional: Allow preview to scroll editor (bidirectional sync)
+preview.addEventListener('scroll', () => {
+  if (isEditorScrolling) {
+    isEditorScrolling = false;
+    return;
+  }
+
+  isPreviewScrolling = true;
+
+  // Calculate scroll percentage
+  const scrollPercentage = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
+
+  // Apply to editor
+  const editorScrollTop = scrollPercentage * (editor.scrollHeight - editor.clientHeight);
+  editor.scrollTop = editorScrollTop;
+
+  setTimeout(() => {
+    isPreviewScrolling = false;
+  }, 50);
+});
+
 function updatePreview() {
   const markdown = editor.value;
   preview.innerHTML = marked.parse(markdown);

@@ -5,6 +5,7 @@ A desktop markdown editor built with Electron. Features live preview, file opera
 ## Features
 
 - Split-pane editor with live markdown preview
+- **Synchronized scrolling** - Preview scrolls with your editor position
 - Open and read markdown files (.md, .markdown, .txt)
 - Save and Save As functionality
 - **Open Recent** - Quick access to your last 10 opened files
@@ -83,6 +84,13 @@ The status bar displays real-time statistics:
 - **Word Count**: Number of words in your document
 - **Character Count**: Total characters including spaces
 - **Line Count**: Total number of lines
+
+### Synchronized Scrolling
+The editor and preview panes stay in sync as you scroll:
+- **Scroll the editor** - Preview automatically scrolls to match
+- **Scroll the preview** - Editor automatically scrolls to match
+- **Bidirectional** - Works both ways for maximum flexibility
+- **Proportional** - Maintains relative position regardless of content length
 
 ## Supported Markdown Features
 
