@@ -13,7 +13,7 @@ console.log('state exports:', Object.keys(cmState).join(', '));
 console.log('lang-markdown exports:', Object.keys(langMarkdown).join(', '));
 console.log('language exports:', Object.keys(cmLanguage).join(', '));
 
-const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers, keymap } = cmView;
+const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
 const { syntaxHighlighting, defaultHighlightStyle } = cmLanguage;
