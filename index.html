@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="editor-pane">
+      <div class="pane-header">Editor</div>
+      <textarea id="editor" placeholder="# Start typing markdown here..."></textarea>
+    </div>
+    <div class="preview-pane">
+      <div class="pane-header">Preview</div>
+      <div id="preview"></div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span id="status">Ready</span>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
