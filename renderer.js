@@ -16,7 +16,24 @@ console.log('language exports:', Object.keys(cmLanguage).join(', '));
 const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
-const { syntaxHighlighting, defaultHighlightStyle } = cmLanguage;
+const { syntaxHighlighting, HighlightStyle, defaultHighlightStyle } = cmLanguage;
+
+// Check if tags are available
+console.log('Trying to import tags from language...');
+let tags;
+try {
+  tags = require('@lezer/highlight').tags;
+  console.log('Tags imported from @lezer/highlight');
+} catch (e) {
+  console.log('Could not import from @lezer/highlight, checking cmLanguage...');
+  // tags might be in cmLanguage
+  if (cmLanguage.tags) {
+    tags = cmLanguage.tags;
+    console.log('Tags found in cmLanguage');
+  } else {
+    console.log('Tags not available, will use defaultHighlightStyle');
+  }
+}
 
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
