@@ -139,6 +139,20 @@ body {
   margin: 0 auto;
 }
 
+/* CodeMirror YAML Frontmatter Styling - match preview */
+.codemirror-container .cm-line .cmt-meta {
+  color: #6b7280 !important;
+  background-color: #f9fafb !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  font-weight: normal !important;
+}
+
+.codemirror-container .cm-line:has(.cmt-meta) {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
 /* CodeMirror Markdown Styling */
 .cm-header-1 {
   font-size: 2em;

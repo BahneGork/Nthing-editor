@@ -413,18 +413,23 @@ const markdownBaseTheme = EditorView.baseTheme({
     color: "#666",
     fontStyle: "italic"
   },
-  // YAML frontmatter - reset to normal styling
+  // YAML frontmatter - grey styling to match preview
   ".cmt-meta": {
-    fontSize: "14px !important",
+    fontSize: "13px !important",
     fontWeight: "normal !important",
     fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace !important",
-    color: "#666",
-    backgroundColor: "#f9f9f9",
-    display: "block"
+    color: "#6b7280 !important",
+    backgroundColor: "#f9fafb !important",
+    display: "inline-block",
+    padding: "0 2px"
   },
   // Keep markdown syntax marks visible but dimmed
   ".cmt-processingInstruction": {
-    color: "#999"
+    color: "#999 !important"
+  },
+  // Additional YAML frontmatter line styling
+  ".cm-line:has(.cmt-meta)": {
+    backgroundColor: "#f9fafb"
   }
 });
 
