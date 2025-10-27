@@ -140,17 +140,91 @@ Expect the installer to be around:
 
 This is normal for Electron apps as they bundle a Chromium runtime and Node.js.
 
-## Code Signing (Optional)
+## Windows Defender False Positive
 
-For production distribution, consider code signing to avoid Windows SmartScreen warnings:
+**IMPORTANT**: Windows Defender and other antivirus software may flag your built .exe file as malware, typically reporting:
+- `Trojan:Win32/Wacatac.C!ml`
+- `Trojan:Win32/Sabsik.FL.B!ml`
+- Other generic trojan detections
 
-1. Purchase a code signing certificate
-2. Add to package.json:
-```json
-"win": {
-  "certificateFile": "path/to/cert.pfx",
-  "certificatePassword": "password"
-}
-```
+### This is a FALSE POSITIVE
 
-Without code signing, users may see "Unknown publisher" warnings (but the app will still work).
+This happens because:
+1. **Unsigned executable** - The .exe is not code-signed (certificates cost $100-400/year)
+2. **Machine learning heuristics** - Windows Defender's ML algorithm flags new/unknown executables
+3. **Electron apps are common targets** - Many legitimate Electron apps trigger this false positive
+4. **New executable** - The file was just built and is unknown to Microsoft's threat database
+
+### Immediate Solutions
+
+**For Personal Use**:
+
+1. **Add Windows Defender exclusion**:
+   - Open **Windows Security** (search in Start menu)
+   - Go to **Virus & threat protection**
+   - Click **Manage settings** under "Virus & threat protection settings"
+   - Scroll to **Exclusions** and click **Add or remove exclusions**
+   - Click **Add an exclusion** > **Folder**
+   - Browse to and select your project's `dist` folder
+   - The .exe will no longer be scanned/quarantined
+
+2. **Restore quarantined files**:
+   - In Windows Security, go to **Virus & threat protection**
+   - Click **Protection history**
+   - Find the quarantined file and click **Actions** > **Restore**
+
+**For Distribution**:
+
+1. **Code sign your application** (most effective):
+   - Purchase a code signing certificate from:
+     - **DigiCert** ($474/year for OV certificate)
+     - **Sectigo** ($200-400/year)
+     - **SignPath** (FREE for open source projects - https://about.signpath.io/product/open-source)
+   - Add to `package.json`:
+   ```json
+   "win": {
+     "certificateFile": "path/to/cert.pfx",
+     "certificatePassword": "your-password",
+     "signingHashAlgorithms": ["sha256"]
+   }
+   ```
+
+2. **Submit to Microsoft**:
+   - Report false positive at: https://www.microsoft.com/en-us/wdsi/filesubmission
+   - Select "Software developer" as role
+   - Upload your .exe file
+   - Microsoft will analyze and potentially whitelist it (takes 1-3 days)
+
+3. **Build reputation over time**:
+   - Code-signed apps build reputation as more users install them
+   - SmartScreen warnings decrease as your certificate gains reputation
+
+### Verifying Your Build is Safe
+
+You can verify the .exe is legitimate by:
+1. Checking it only contains your source code (inspect `dist/win-unpacked/resources/app.asar`)
+2. Building from clean source on your own machine
+3. Uploading to VirusTotal.com (expect some false positives from ML-based scanners)
+
+### Why This Affects Electron Apps
+
+Electron bundles:
+- Chromium browser engine
+- Node.js runtime
+- Native system access capabilities
+
+This combination makes antivirus software suspicious, even though these are the same components used by VS Code, Slack, Discord, and thousands of legitimate apps.
+
+## Code Signing (Recommended for Distribution)
+
+For production distribution, code signing provides:
+- ✅ No Windows Defender false positives
+- ✅ No SmartScreen warnings
+- ✅ User trust (shows your verified identity)
+- ✅ Prevents tampering detection
+
+Without code signing:
+- ❌ Windows Defender may flag as malware
+- ❌ Users see "Unknown publisher" warnings
+- ❌ Some corporate networks may block installation
+- ⚠️ App still works, but user experience is degraded
