@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
 
 // CodeMirror imports
@@ -521,6 +521,14 @@ function clearHighlights() {
   currentMatchIndex = -1;
   matchCountDisplay.textContent = '';
 }
+
+// Prevent links from opening inside the app - open in external browser
+preview.addEventListener('click', (e) => {
+  if (e.target.tagName === 'A' && e.target.href) {
+    e.preventDefault();
+    shell.openExternal(e.target.href);
+  }
+});
 
 // Initial preview and stats
 updatePreview();
