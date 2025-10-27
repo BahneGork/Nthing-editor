@@ -7,6 +7,7 @@ A desktop markdown editor built with Electron. Features live preview, file opera
 - Split-pane editor with live markdown preview
 - Open and read markdown files (.md, .markdown, .txt)
 - Save and Save As functionality
+- **Open Recent** - Quick access to your last 10 opened files
 - **Find & Replace** with case-sensitive and whole-word options
 - **Real-time word, character, and line count**
 - Keyboard shortcuts for all major operations
@@ -37,6 +38,7 @@ A desktop markdown editor built with Electron. Features live preview, file opera
 ### Keyboard Shortcuts
 - `Ctrl+N` - New file
 - `Ctrl+O` - Open file
+- `Ctrl+1-9` - Open recent file (1 = most recent)
 - `Ctrl+S` - Save file
 - `Ctrl+Shift+S` - Save As
 - `Ctrl+F` - Find
@@ -48,8 +50,17 @@ A desktop markdown editor built with Electron. Features live preview, file opera
 Use the **File** menu to:
 - Create a new file
 - Open existing markdown files
+- **Open Recent** - Access your last 10 opened files with one click
 - Save your work
 - Save to a new file location
+
+### Open Recent Files
+The editor remembers your last 10 opened files:
+- Access via **File > Open Recent** menu
+- Use keyboard shortcuts `Ctrl+1` through `Ctrl+9` for quick access
+- Files are automatically added when opened or saved
+- Clear the list with **File > Open Recent > Clear Recent Files**
+- Files that no longer exist are automatically removed from the list
 
 The **Edit** menu provides:
 - Undo/Redo
