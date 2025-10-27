@@ -317,8 +317,17 @@ const markdownBaseTheme = EditorView.baseTheme({
     color: "#666",
     fontStyle: "italic"
   },
+  // YAML frontmatter - reset to normal styling
+  ".cmt-meta": {
+    fontSize: "14px !important",
+    fontWeight: "normal !important",
+    fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace !important",
+    color: "#666",
+    backgroundColor: "#f9f9f9",
+    display: "block"
+  },
   // Keep markdown syntax marks visible but dimmed
-  ".cmt-processingInstruction, .cmt-meta": {
+  ".cmt-processingInstruction": {
     color: "#999"
   }
 });
