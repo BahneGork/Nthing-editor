@@ -68,9 +68,6 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
-  // Open DevTools automatically for debugging
-  mainWindow.webContents.openDevTools();
-
   // Load recent files
   loadRecentFiles();
 
@@ -198,6 +195,14 @@ function createMenu() {
           type: 'radio',
           click: () => {
             mainWindow.webContents.send('switch-mode', 'writing');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: 'F12',
+          click: () => {
+            mainWindow.webContents.toggleDevTools();
           }
         }
       ]
