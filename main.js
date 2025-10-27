@@ -178,6 +178,26 @@ function createMenu() {
           }
         }
       ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Editor Mode',
+          type: 'radio',
+          checked: true,
+          click: () => {
+            mainWindow.webContents.send('switch-mode', 'editor');
+          }
+        },
+        {
+          label: 'Writing Focus Mode',
+          type: 'radio',
+          click: () => {
+            mainWindow.webContents.send('switch-mode', 'writing');
+          }
+        }
+      ]
     }
   ];
 

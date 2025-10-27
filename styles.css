@@ -27,6 +27,13 @@ body {
   border-right: 1px solid #ddd;
 }
 
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
 .pane-header {
   background-color: #f5f5f5;
   padding: 8px 16px;
@@ -45,6 +52,54 @@ body {
   font-size: 14px;
   line-height: 1.6;
   outline: none;
+  background: transparent;
+}
+
+/* Line numbers for Editor mode */
+.line-numbers {
+  display: none;
+  padding: 16px 8px;
+  background-color: #f8f8f8;
+  border-right: 1px solid #ddd;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #999;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+/* Editor Mode Styles */
+.container[data-mode="editor"] .line-numbers {
+  display: block;
+}
+
+.container[data-mode="editor"] #editor {
+  padding-left: 8px;
+}
+
+/* Writing Focus Mode Styles */
+.container[data-mode="writing"] .preview-pane {
+  display: none;
+}
+
+.container[data-mode="writing"] .editor-pane {
+  border-right: none;
+  max-width: none;
+}
+
+.container[data-mode="writing"] .line-numbers {
+  display: none;
+}
+
+.container[data-mode="writing"] #editor {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  padding: 40px 120px;
+  max-width: 100%;
 }
 
 #preview {
