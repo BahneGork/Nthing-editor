@@ -98,21 +98,31 @@ markdown-editor/
 
 ## Building for Distribution
 
-To package the application for Windows, you can add electron-builder:
+This project is pre-configured with electron-builder to create Windows installers.
 
-```
-npm install --save-dev electron-builder
-```
+### Quick Build
 
-Then add to package.json scripts:
-```json
-"scripts": {
-  "start": "electron .",
-  "build": "electron-builder --win"
-}
+```bash
+npm install
+npm run build
 ```
 
-Run `npm run build` to create a Windows installer.
+This will create a Windows installer at `dist/Markdown Editor Setup 1.0.0.exe`
+
+### Build Options
+
+- `npm run build` - Create NSIS installer (recommended)
+- `npm run build:portable` - Create portable .exe (no installation required)
+
+### Detailed Instructions
+
+For complete build instructions, customization options, and troubleshooting, see [BUILD.md](BUILD.md).
+
+The installer includes:
+- Desktop shortcut creation
+- Start Menu integration
+- Custom installation directory option
+- Proper uninstaller
 
 ## Technologies Used
 
