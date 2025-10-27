@@ -80,6 +80,30 @@ marked.setOptions({
   gfm: true
 });
 
+// Add wikilink support (Obsidian-style [[links]])
+marked.use({
+  extensions: [{
+    name: 'wikilink',
+    level: 'inline',
+    start(src) { return src.indexOf('[['); },
+    tokenizer(src) {
+      // Match [[page name]] or [[page name|display text]]
+      const match = src.match(/^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
+      if (match) {
+        return {
+          type: 'wikilink',
+          raw: match[0],
+          page: match[1].trim(),
+          text: match[2] ? match[2].trim() : match[1].trim()
+        };
+      }
+    },
+    renderer(token) {
+      return `<a href="#" class="wikilink" title="${token.page}">${token.text}</a>`;
+    }
+  }]
+});
+
 // Update preview and stats on input
 editor.addEventListener('input', () => {
   updatePreview();
@@ -704,11 +728,22 @@ function clearHighlights() {
   matchCountDisplay.textContent = '';
 }
 
-// Prevent links from opening inside the app - open in external browser
+// Handle link clicks in preview
 preview.addEventListener('click', (e) => {
-  if (e.target.tagName === 'A' && e.target.href) {
+  if (e.target.tagName === 'A') {
     e.preventDefault();
-    shell.openExternal(e.target.href);
+
+    // Wikilinks (internal links) - don't open anywhere, just prevent default
+    if (e.target.classList.contains('wikilink')) {
+      console.log('Wikilink clicked:', e.target.title || e.target.textContent);
+      // Could add functionality here later (e.g., search for file, show tooltip, etc.)
+      return;
+    }
+
+    // Regular links - open in external browser
+    if (e.target.href && !e.target.href.startsWith('#')) {
+      shell.openExternal(e.target.href);
+    }
   }
 });
 
