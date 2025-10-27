@@ -200,9 +200,8 @@ function performFind() {
   }
 
   if (matches.length > 0) {
-    currentMatchIndex = 0;
-    highlightMatches();
     matchCountDisplay.textContent = `Found ${matches.length} match${matches.length > 1 ? 'es' : ''}`;
+    currentMatchIndex = -1; // Don't auto-select, wait for user to click Find Next
   } else {
     matchCountDisplay.textContent = 'No matches found';
   }
@@ -224,7 +223,12 @@ function findNext() {
     return;
   }
 
-  currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+  // If no match is selected yet, start at the first one
+  if (currentMatchIndex === -1) {
+    currentMatchIndex = 0;
+  } else {
+    currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+  }
   highlightMatches();
 }
 
@@ -234,7 +238,12 @@ function findPrevious() {
     return;
   }
 
-  currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+  // If no match is selected yet, start at the last one
+  if (currentMatchIndex === -1) {
+    currentMatchIndex = matches.length - 1;
+  } else {
+    currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+  }
   highlightMatches();
 }
 
