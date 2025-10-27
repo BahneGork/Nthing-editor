@@ -1,6 +1,6 @@
-# Building the Markdown Editor for Windows
+# Building Nthing for Windows
 
-This guide explains how to build a standalone Windows installer (.exe) for the Markdown Editor.
+This guide explains how to build a standalone Windows installer (.exe) for Nthing.
 
 ## Prerequisites
 
@@ -29,7 +29,7 @@ npm run build
 
 This will create:
 - **NSIS Installer** - A traditional Windows installer with setup wizard
-- Location: `dist/Markdown Editor Setup 1.0.0.exe`
+- Location: `dist/Nthing Setup 1.0.0.exe`
 
 ### Alternative: Portable Version
 
@@ -46,7 +46,7 @@ This creates a standalone .exe that can run from anywhere without installation.
 After the build completes successfully, you'll find the installer in:
 
 ```
-dist/Markdown Editor Setup 1.0.0.exe
+dist/Nthing Setup 1.0.0.exe
 ```
 
 The installer will:
@@ -58,7 +58,7 @@ The installer will:
 ## Build Output Files
 
 The `dist` folder will contain:
-- `Markdown Editor Setup 1.0.0.exe` - The installer (distribute this)
+- `Nthing Setup 1.0.0.exe` - The installer (distribute this)
 - `win-unpacked/` - Unpacked application files (for testing)
 - `builder-effective-config.yaml` - Build configuration used
 
@@ -81,8 +81,8 @@ If you don't provide an icon, electron-builder will use a default Electron icon.
 
 The build is configured in `package.json` under the `"build"` section:
 
-- **App ID**: `com.markdowneditor.app`
-- **Product Name**: `Markdown Editor`
+- **App ID**: `com.nthing.app`
+- **Product Name**: `Nthing`
 - **Target**: Windows 64-bit (NSIS installer)
 - **Output Directory**: `dist/`
 
@@ -108,7 +108,7 @@ First build can take 5-10 minutes as it downloads Windows build tools. Subsequen
 ## Distribution
 
 Once built, you can:
-1. **Share the installer** - Send `Markdown Editor Setup 1.0.0.exe` to others
+1. **Share the installer** - Send `Nthing Setup 1.0.0.exe` to others
 2. **Install locally** - Double-click the installer to test
 3. **Run portable** - Use the portable build for USB drives
 
