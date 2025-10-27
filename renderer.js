@@ -35,6 +35,24 @@ try {
   }
 }
 
+// Create custom highlight style for headers with font sizing
+let customHighlightStyle;
+if (tags) {
+  console.log('Creating custom HighlightStyle with tags...');
+  customHighlightStyle = HighlightStyle.define([
+    {tag: tags.heading1, fontSize: "2em", fontWeight: "bold"},
+    {tag: tags.heading2, fontSize: "1.5em", fontWeight: "bold"},
+    {tag: tags.heading3, fontSize: "1.3em", fontWeight: "bold"},
+    {tag: tags.heading4, fontSize: "1.1em", fontWeight: "bold"},
+    {tag: tags.heading5, fontSize: "1em", fontWeight: "bold"},
+    {tag: tags.heading6, fontSize: "1em", fontWeight: "bold"},
+    {tag: tags.strong, fontWeight: "bold"},
+    {tag: tags.emphasis, fontStyle: "italic"}
+  ]);
+} else {
+  console.log('Tags not available, will use CSS fallback');
+}
+
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
 const status = document.getElementById('status');
@@ -297,7 +315,7 @@ function initializeCodeMirror() {
     extensions: [
       // Markdown support with syntax highlighting
       markdown(),
-      syntaxHighlighting(defaultHighlightStyle),
+      syntaxHighlighting(customHighlightStyle || defaultHighlightStyle),
       // Line wrapping
       EditorView.lineWrapping,
       // Custom themes
