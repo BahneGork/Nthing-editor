@@ -156,6 +156,32 @@ npm run build
 
 This will create a Windows installer at `dist/Markdown Editor Setup 1.0.0.exe`
 
+### Windows Defender False Positive Warning
+
+**Important**: Windows Defender may flag the built .exe file as a trojan (typically "Trojan:Win32/Wacatac.C!ml"). This is a **false positive** that commonly occurs with unsigned Electron applications.
+
+**Why this happens**:
+- The executable is not code-signed (code signing certificates cost $100-400/year)
+- Windows Defender's machine learning flags new/unknown executables as suspicious
+- This affects many legitimate Electron applications
+
+**How to fix**:
+
+1. **Add exclusion in Windows Security**:
+   - Open Windows Security (search for it in Start menu)
+   - Go to "Virus & threat protection"
+   - Click "Manage settings" under "Virus & threat protection settings"
+   - Scroll down to "Exclusions" and click "Add or remove exclusions"
+   - Click "Add an exclusion" > "Folder"
+   - Add your project's `dist` folder (e.g., `C:\Users\YourName\markdowneditor1\dist`)
+
+2. **For distribution**: Consider purchasing a code signing certificate from providers like:
+   - DigiCert
+   - Sectigo
+   - SignPath (free for open source projects)
+
+3. **Submit to Microsoft**: You can report the false positive to Microsoft at https://www.microsoft.com/en-us/wdsi/filesubmission
+
 ### Build Options
 
 - `npm run build` - Create NSIS installer (recommended)
