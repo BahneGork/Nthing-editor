@@ -234,6 +234,32 @@ body {
   opacity: 0.5;
 }
 
+.sync-toggle {
+  display: flex;
+  align-items: center;
+  margin: 0 16px;
+}
+
+.sync-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+}
+
+.sync-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Hide sync toggle in Writing Focus mode */
+.container[data-mode="writing"] ~ .status-bar .sync-toggle {
+  display: none;
+}
+
 /* Find & Replace Dialog */
 .dialog {
   position: fixed;
