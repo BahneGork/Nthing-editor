@@ -476,6 +476,18 @@ body {
   height: 14px;
 }
 
+.preview-toggle input[type="checkbox"]:disabled,
+.sync-toggle input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.preview-toggle label:has(input:disabled),
+.sync-toggle label:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Hide preview pane when toggled off in Editor mode */
 .container[data-mode="editor"].hide-preview .preview-pane {
   display: none;
