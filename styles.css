@@ -384,6 +384,18 @@ body {
   text-decoration: underline;
 }
 
+/* Wikilinks (Obsidian-style [[links]]) - distinct purple color */
+#preview a.wikilink {
+  color: #9333ea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#preview a.wikilink:hover {
+  text-decoration: underline;
+  color: #7c3aed;
+}
+
 #preview img {
   max-width: 100%;
   height: auto;
