@@ -166,4 +166,157 @@ body {
   font-size: 12px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stats .separator {
+  opacity: 0.5;
+}
+
+/* Find & Replace Dialog */
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 450px;
+}
+
+.dialog.hidden {
+  display: none;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  border-radius: 6px 6px 0 0;
+}
+
+.dialog-header span {
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+}
+
+.close-btn:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.dialog-content {
+  padding: 16px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  width: 80px;
+  font-size: 14px;
+  color: #333;
+}
+
+.input-group input[type="text"] {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.input-group input[type="text"]:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+.dialog-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-left: 80px;
+}
+
+.dialog-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dialog-actions button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #f5f5f5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialog-actions button:hover {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+.dialog-actions button:active {
+  background-color: #d0d0d0;
+}
+
+.match-count {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  min-height: 16px;
+}
+
+.editor-highlight {
+  background-color: #ffeb3b;
+}
+
+.editor-highlight.current {
+  background-color: #ff9800;
 }

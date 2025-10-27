@@ -74,7 +74,22 @@ function createMenu() {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
-        { role: 'selectAll' }
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Find',
+          accelerator: 'CmdOrCtrl+F',
+          click: () => {
+            mainWindow.webContents.send('show-find-dialog', false);
+          }
+        },
+        {
+          label: 'Find & Replace',
+          accelerator: 'CmdOrCtrl+H',
+          click: () => {
+            mainWindow.webContents.send('show-find-dialog', true);
+          }
+        }
       ]
     }
   ];

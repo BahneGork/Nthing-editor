@@ -7,6 +7,41 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Find & Replace Dialog -->
+  <div id="find-replace-dialog" class="dialog hidden">
+    <div class="dialog-header">
+      <span>Find & Replace</span>
+      <button id="close-dialog" class="close-btn">&times;</button>
+    </div>
+    <div class="dialog-content">
+      <div class="input-group">
+        <label for="find-input">Find:</label>
+        <input type="text" id="find-input" placeholder="Search text...">
+      </div>
+      <div class="input-group">
+        <label for="replace-input">Replace:</label>
+        <input type="text" id="replace-input" placeholder="Replace with...">
+      </div>
+      <div class="dialog-options">
+        <label>
+          <input type="checkbox" id="case-sensitive">
+          Case sensitive
+        </label>
+        <label>
+          <input type="checkbox" id="whole-word">
+          Whole word
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button id="find-next-btn">Find Next</button>
+        <button id="find-prev-btn">Find Previous</button>
+        <button id="replace-btn">Replace</button>
+        <button id="replace-all-btn">Replace All</button>
+      </div>
+      <div id="match-count" class="match-count"></div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="editor-pane">
       <div class="pane-header">Editor</div>
@@ -19,6 +54,13 @@
   </div>
   <div class="status-bar">
     <span id="status">Ready</span>
+    <span class="stats">
+      <span id="word-count">Words: 0</span>
+      <span class="separator">|</span>
+      <span id="char-count">Characters: 0</span>
+      <span class="separator">|</span>
+      <span id="line-count">Lines: 0</span>
+    </span>
   </div>
   <script src="renderer.js"></script>
 </body>
