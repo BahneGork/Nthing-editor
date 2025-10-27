@@ -68,6 +68,9 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
+  // Open DevTools automatically for debugging
+  mainWindow.webContents.openDevTools();
+
   // Load recent files
   loadRecentFiles();
 
