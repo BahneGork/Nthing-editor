@@ -5,15 +5,18 @@ const { marked } = require('marked');
 const cmView = require('@codemirror/view');
 const cmState = require('@codemirror/state');
 const langMarkdown = require('@codemirror/lang-markdown');
+const cmLanguage = require('@codemirror/language');
 
 // Debug: See what's available in each package
 console.log('view exports:', Object.keys(cmView).join(', '));
 console.log('state exports:', Object.keys(cmState).join(', '));
 console.log('lang-markdown exports:', Object.keys(langMarkdown).join(', '));
+console.log('language exports:', Object.keys(cmLanguage).join(', '));
 
-const { EditorView } = cmView;
+const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, lineNumbers, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
+const { syntaxHighlighting, defaultHighlightStyle } = cmLanguage;
 
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
@@ -198,73 +201,66 @@ const markdownTheme = EditorView.theme({
   }
 });
 
-// Base markdown style tags - using CodeMirror 6 token classes
+// Base markdown style tags - using CodeMirror 6 defaultHighlightStyle class names
 const markdownBaseTheme = EditorView.baseTheme({
-  // Headers
-  ".cm-line .tok-heading1": {
+  // Headers - using cmt- prefix (CodeMirror tags)
+  ".cmt-heading1": {
     fontSize: "2em !important",
-    fontWeight: "bold",
-    lineHeight: "1.4",
-    display: "inline-block"
+    fontWeight: "bold !important",
+    lineHeight: "1.4"
   },
-  ".cm-line .tok-heading2": {
+  ".cmt-heading2": {
     fontSize: "1.5em !important",
-    fontWeight: "bold",
-    lineHeight: "1.4",
-    display: "inline-block"
+    fontWeight: "bold !important",
+    lineHeight: "1.4"
   },
-  ".cm-line .tok-heading3": {
+  ".cmt-heading3": {
     fontSize: "1.3em !important",
-    fontWeight: "bold",
+    fontWeight: "bold !important",
     lineHeight: "1.4"
   },
-  ".cm-line .tok-heading4": {
+  ".cmt-heading4": {
     fontSize: "1.1em !important",
-    fontWeight: "bold",
+    fontWeight: "bold !important",
     lineHeight: "1.4"
   },
-  ".cm-line .tok-heading5, .cm-line .tok-heading6": {
+  ".cmt-heading5, .cmt-heading6": {
     fontSize: "1em",
-    fontWeight: "bold",
+    fontWeight: "bold !important",
     lineHeight: "1.4"
   },
   // Text formatting
-  ".tok-strong, .tok-emphasis.tok-strong": {
+  ".cmt-strong": {
     fontWeight: "bold !important"
   },
-  ".tok-emphasis": {
+  ".cmt-emphasis": {
     fontStyle: "italic !important"
   },
-  ".tok-strikethrough": {
+  ".cmt-strikethrough": {
     textDecoration: "line-through !important"
   },
-  ".tok-link": {
+  ".cmt-link": {
     color: "#0066cc !important",
     textDecoration: "underline"
   },
   // Inline code
-  ".tok-monospace": {
+  ".cmt-monospace": {
     fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace !important",
     backgroundColor: "#f5f5f5",
     padding: "2px 4px",
     borderRadius: "3px",
     fontSize: "0.9em"
   },
-  // Lists
-  ".tok-list": {
-    paddingLeft: "2em"
-  },
   // Quotes
-  ".tok-quote": {
+  ".cmt-quote": {
     borderLeft: "4px solid #ddd",
     paddingLeft: "1em",
     color: "#666",
     fontStyle: "italic"
   },
-  // Keep markdown syntax visible but styled
-  ".tok-meta": {
-    color: "#999",
-    fontWeight: "normal"
+  // Keep markdown syntax marks visible but dimmed
+  ".cmt-processingInstruction, .cmt-meta": {
+    color: "#999"
   }
 });
 
@@ -282,8 +278,9 @@ function initializeCodeMirror() {
   const state = EditorState.create({
     doc: editor.value,
     extensions: [
-      // Markdown support
+      // Markdown support with syntax highlighting
       markdown(),
+      syntaxHighlighting(defaultHighlightStyle),
       // Line wrapping
       EditorView.lineWrapping,
       // Custom themes
