@@ -80,29 +80,81 @@ marked.setOptions({
   gfm: true
 });
 
-// Add wikilink support (Obsidian-style [[links]])
+// Add custom markdown extensions
 marked.use({
-  extensions: [{
-    name: 'wikilink',
-    level: 'inline',
-    start(src) { return src.indexOf('[['); },
-    tokenizer(src) {
-      // Match [[page name]] or [[page name|display text]]
-      const match = src.match(/^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
-      if (match) {
-        return {
-          type: 'wikilink',
-          raw: match[0],
-          page: match[1].trim(),
-          text: match[2] ? match[2].trim() : match[1].trim()
-        };
+  extensions: [
+    // Wikilink support (Obsidian-style [[links]])
+    {
+      name: 'wikilink',
+      level: 'inline',
+      start(src) { return src.indexOf('[['); },
+      tokenizer(src) {
+        // Match [[page name]] or [[page name|display text]]
+        const match = src.match(/^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
+        if (match) {
+          return {
+            type: 'wikilink',
+            raw: match[0],
+            page: match[1].trim(),
+            text: match[2] ? match[2].trim() : match[1].trim()
+          };
+        }
+      },
+      renderer(token) {
+        return `<a href="#" class="wikilink" title="${token.page}">${token.text}</a>`;
       }
     },
-    renderer(token) {
-      return `<a href="#" class="wikilink" title="${token.page}">${token.text}</a>`;
+    // Hashtag support (#tag)
+    {
+      name: 'hashtag',
+      level: 'inline',
+      start(src) { return src.indexOf('#'); },
+      tokenizer(src) {
+        // Match #tag (word boundary before and after)
+        const match = src.match(/^#([a-zA-Z0-9_-]+)/);
+        if (match && (src === match[0] || src[match[0].length].match(/[\s.,;!?)]|$/))) {
+          return {
+            type: 'hashtag',
+            raw: match[0],
+            tag: match[1]
+          };
+        }
+      },
+      renderer(token) {
+        return `<span class="hashtag">#${token.tag}</span>`;
+      }
     }
-  }]
+  ]
 });
+
+// Custom renderer to handle YAML frontmatter
+const defaultRenderer = new marked.Renderer();
+marked.use({
+  renderer: {
+    code(code, language) {
+      // Check if this is YAML frontmatter
+      if (language === 'yaml' && code.trim().startsWith('---')) {
+        return `<pre class="frontmatter"><code>${code}</code></pre>`;
+      }
+      // Regular code blocks
+      return `<pre><code class="language-${language || 'plaintext'}">${code}</code></pre>`;
+    }
+  }
+});
+
+// Pre-process to detect YAML frontmatter at document start
+const originalParse = marked.parse.bind(marked);
+marked.parse = function(src, options) {
+  // Detect YAML frontmatter (--- at start, --- at end)
+  const frontmatterMatch = src.match(/^---\n([\s\S]*?)\n---\n/);
+  if (frontmatterMatch) {
+    const frontmatter = frontmatterMatch[1];
+    const content = src.slice(frontmatterMatch[0].length);
+    const frontmatterHtml = `<pre class="frontmatter"><code>${frontmatter}</code></pre>`;
+    return frontmatterHtml + originalParse(content, options);
+  }
+  return originalParse(src, options);
+};
 
 // Update preview and stats on input
 editor.addEventListener('input', () => {
@@ -207,6 +259,16 @@ if (savedPreviewPref !== null) {
 function updatePreview() {
   const markdown = editor.value;
   preview.innerHTML = marked.parse(markdown);
+
+  // Apply syntax highlighting to code blocks
+  if (typeof hljs !== 'undefined') {
+    preview.querySelectorAll('pre code').forEach((block) => {
+      // Skip frontmatter blocks
+      if (!block.parentElement.classList.contains('frontmatter')) {
+        hljs.highlightElement(block);
+      }
+    });
+  }
 }
 
 function updateStats() {
