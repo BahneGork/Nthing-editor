@@ -262,9 +262,13 @@ const markdownBaseTheme = EditorView.baseTheme({
 // CodeMirror initialization
 function initializeCodeMirror() {
   if (codemirrorView) {
-    // Already initialized
+    console.log('CodeMirror already initialized, skipping');
     return;
   }
+
+  console.log('Creating CodeMirror state...');
+  console.log('Editor content length:', editor.value.length);
+  console.log('Container element:', codemirrorContainer);
 
   const state = EditorState.create({
     doc: editor.value,
@@ -286,14 +290,18 @@ function initializeCodeMirror() {
     ]
   });
 
+  console.log('Creating CodeMirror view...');
   codemirrorView = new EditorView({
     state,
     parent: codemirrorContainer
   });
+  console.log('CodeMirror view created:', codemirrorView);
+  console.log('CodeMirror DOM:', codemirrorView.dom);
 }
 
 // Toggle between plain textarea and CodeMirror formatted view
 function toggleFormatting(enabled) {
+  console.log('toggleFormatting called:', enabled, 'currentMode:', currentMode);
   showFormatting = enabled;
 
   if (enabled && currentMode === 'writing') {
@@ -303,9 +311,16 @@ function toggleFormatting(enabled) {
 
     // Initialize CodeMirror if not already done
     if (!codemirrorView) {
-      initializeCodeMirror();
+      console.log('Initializing CodeMirror...');
+      try {
+        initializeCodeMirror();
+        console.log('CodeMirror initialized successfully');
+      } catch (error) {
+        console.error('Error initializing CodeMirror:', error);
+      }
     } else {
       // Update CodeMirror with current textarea content
+      console.log('Updating existing CodeMirror view');
       codemirrorView.dispatch({
         changes: {
           from: 0,
