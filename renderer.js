@@ -300,6 +300,12 @@ function initializeCodeMirror() {
   });
   console.log('CodeMirror view created:', codemirrorView);
   console.log('CodeMirror DOM:', codemirrorView.dom);
+
+  // Debug: Log the actual HTML after a short delay to see class names
+  setTimeout(() => {
+    console.log('CodeMirror HTML structure:');
+    console.log(codemirrorContainer.innerHTML.substring(0, 2000));
+  }, 500);
 }
 
 // Toggle between plain textarea and CodeMirror formatted view
