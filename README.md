@@ -4,15 +4,16 @@ A desktop markdown editor built with Electron. Features live preview, file opera
 
 ## Features
 
-- Split-pane editor with live markdown preview
-- **Synchronized scrolling** - Preview scrolls with your editor position
+- **Two editing modes**: Editor Mode (split-pane with preview) and Writing Focus Mode (distraction-free)
+- **Editor Mode**: Line numbers, raw source code, live preview with synchronized scrolling
+- **Writing Focus Mode**: Wider margins, larger serif font, distraction-free writing
 - Open and read markdown files (.md, .markdown, .txt)
 - Save and Save As functionality
 - **Open Recent** - Quick access to your last 10 opened files
 - **Find & Replace** with case-sensitive and whole-word options
 - **Real-time word, character, and line count**
 - Keyboard shortcuts for all major operations
-- Native File and Edit menu integration
+- Native File, Edit, and View menus
 - Clean, modern UI
 
 ## Installation & Running
@@ -70,6 +71,32 @@ The **Edit** menu provides:
 - Find
 - Find & Replace
 
+The **View** menu provides:
+- **Editor Mode** - Split-pane with preview and line numbers
+- **Writing Focus Mode** - Distraction-free writing
+
+### Editing Modes
+
+The editor supports two modes optimized for different workflows:
+
+**Editor Mode** (default):
+- Split-pane layout with live preview
+- Line numbers in the editor
+- Monospace font (Consolas, Monaco)
+- Raw markdown source code
+- Synchronized scrolling between editor and preview
+- Perfect for technical writing and precise editing
+
+**Writing Focus Mode**:
+- Full-width editor (no preview)
+- Wider margins (120px on each side)
+- Larger serif font (Georgia, 18px)
+- Increased line spacing for comfortable reading
+- Distraction-free writing environment
+- Perfect for drafting and creative writing
+
+Switch between modes via **View > Editor Mode** or **View > Writing Focus Mode**.
+
 ### Find & Replace Features
 - **Find Next/Previous**: Navigate through all matches
 - **Case Sensitive**: Toggle case-sensitive search
@@ -85,10 +112,11 @@ The status bar displays real-time statistics:
 - **Character Count**: Total characters including spaces
 - **Line Count**: Total number of lines
 
-### Synchronized Scrolling
-The editor and preview panes stay in sync as you scroll:
+### Synchronized Scrolling (Editor Mode)
+The editor and preview panes stay in sync as you scroll in Editor Mode:
 - **Scroll the editor** - Preview automatically scrolls to match
 - **Scroll the preview** - Editor automatically scrolls to match
+- **Line numbers** - Scroll with editor position
 - **Bidirectional** - Works both ways for maximum flexibility
 - **Proportional** - Maintains relative position regardless of content length
 

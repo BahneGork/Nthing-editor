@@ -7,8 +7,12 @@ const status = document.getElementById('status');
 const wordCount = document.getElementById('word-count');
 const charCount = document.getElementById('char-count');
 const lineCount = document.getElementById('line-count');
+const lineNumbers = document.getElementById('line-numbers');
+const container = document.querySelector('.container');
+const paneTitle = document.getElementById('pane-title');
 
 let currentFilePath = null;
+let currentMode = 'editor'; // 'editor' or 'writing'
 
 // Configure marked options
 marked.setOptions({
@@ -20,6 +24,7 @@ marked.setOptions({
 editor.addEventListener('input', () => {
   updatePreview();
   updateStats();
+  updateLineNumbers();
 });
 
 // Scroll synchronization
@@ -27,6 +32,14 @@ let isEditorScrolling = false;
 let isPreviewScrolling = false;
 
 editor.addEventListener('scroll', () => {
+  // Sync line numbers in editor mode
+  if (currentMode === 'editor' && lineNumbers) {
+    lineNumbers.scrollTop = editor.scrollTop;
+  }
+
+  // Sync preview in editor mode only
+  if (currentMode !== 'editor') return;
+
   if (isPreviewScrolling) {
     isPreviewScrolling = false;
     return;
@@ -46,8 +59,10 @@ editor.addEventListener('scroll', () => {
   }, 50);
 });
 
-// Optional: Allow preview to scroll editor (bidirectional sync)
-preview.addEventListener('scroll', () => {
+// Bidirectional sync: Allow preview to scroll editor
+function handlePreviewScroll() {
+  if (currentMode !== 'editor') return;
+
   if (isEditorScrolling) {
     isEditorScrolling = false;
     return;
@@ -65,7 +80,9 @@ preview.addEventListener('scroll', () => {
   setTimeout(() => {
     isPreviewScrolling = false;
   }, 50);
-});
+}
+
+preview.addEventListener('scroll', handlePreviewScroll);
 
 function updatePreview() {
   const markdown = editor.value;
@@ -90,12 +107,49 @@ function updateStats() {
   lineCount.textContent = `Lines: ${lineCountValue}`;
 }
 
+// Update line numbers for Editor mode
+function updateLineNumbers() {
+  if (currentMode !== 'editor') return;
+
+  const lines = editor.value.split('\n').length;
+  let lineNumbersHtml = '';
+
+  for (let i = 1; i <= lines; i++) {
+    lineNumbersHtml += i + '\n';
+  }
+
+  lineNumbers.textContent = lineNumbersHtml;
+}
+
+// Mode switching
+function switchMode(mode) {
+  currentMode = mode;
+  container.setAttribute('data-mode', mode);
+
+  if (mode === 'writing') {
+    paneTitle.textContent = 'Writing Focus';
+    // Disable scroll sync for preview in writing mode
+    preview.removeEventListener('scroll', handlePreviewScroll);
+  } else {
+    paneTitle.textContent = 'Editor';
+    updateLineNumbers();
+    // Re-enable scroll sync for preview in editor mode
+    preview.addEventListener('scroll', handlePreviewScroll);
+  }
+}
+
+// Listen for mode switch from menu
+ipcRenderer.on('switch-mode', (event, mode) => {
+  switchMode(mode);
+});
+
 // Listen for file opened
 ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   editor.value = content;
   currentFilePath = filePath;
   updatePreview();
   updateStats();
+  updateLineNumbers();
   updateStatus(`Opened: ${filePath}`);
 });
 
@@ -105,6 +159,7 @@ ipcRenderer.on('new-file', () => {
   currentFilePath = null;
   updatePreview();
   updateStats();
+  updateLineNumbers();
   updateStatus('New file');
 });
 
@@ -353,3 +408,4 @@ function clearHighlights() {
 // Initial preview and stats
 updatePreview();
 updateStats();
+updateLineNumbers();

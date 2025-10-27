@@ -42,10 +42,15 @@
     </div>
   </div>
 
-  <div class="container">
+  <div class="container" data-mode="editor">
     <div class="editor-pane">
-      <div class="pane-header">Editor</div>
-      <textarea id="editor" placeholder="# Start typing markdown here..."></textarea>
+      <div class="pane-header">
+        <span id="pane-title">Editor</span>
+      </div>
+      <div class="editor-wrapper">
+        <div id="line-numbers" class="line-numbers"></div>
+        <textarea id="editor" placeholder="# Start typing markdown here..."></textarea>
+      </div>
     </div>
     <div class="preview-pane">
       <div class="pane-header">Preview</div>
