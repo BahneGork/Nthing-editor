@@ -83,6 +83,15 @@ body {
   background: transparent;
   width: 100%;
   min-width: 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar on editor - Webkit browsers */
+#editor::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 #editor.hidden {
@@ -92,7 +101,10 @@ body {
 /* CodeMirror container */
 .codemirror-container {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .codemirror-container.hidden {
@@ -101,6 +113,7 @@ body {
 
 .codemirror-container .cm-editor {
   height: 100%;
+  flex: 1;
   font-family: 'Georgia', 'Times New Roman', serif;
   font-size: 18px;
   line-height: 1.8;
@@ -109,6 +122,15 @@ body {
 .codemirror-container .cm-scroller {
   overflow: auto;
   padding: 40px 120px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar in CodeMirror - Webkit browsers */
+.codemirror-container .cm-scroller::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .codemirror-container .cm-content {
@@ -258,6 +280,15 @@ body {
   padding: 16px;
   overflow-y: auto;
   background-color: #fff;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar on preview - Webkit browsers */
+#preview::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Markdown Preview Styles */
