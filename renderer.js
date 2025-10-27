@@ -177,6 +177,88 @@ ipcRenderer.on('switch-mode', (event, mode) => {
   switchMode(mode);
 });
 
+// Custom theme for Typora-style markdown rendering
+const markdownTheme = EditorView.theme({
+  ".cm-content": {
+    fontFamily: "'Georgia', 'Times New Roman', serif",
+    fontSize: "18px",
+    lineHeight: "1.8"
+  },
+  ".cm-line": {
+    padding: "2px 0"
+  }
+});
+
+// Base markdown style tags - using CodeMirror 6 token classes
+const markdownBaseTheme = EditorView.baseTheme({
+  // Headers
+  ".cm-line .tok-heading1": {
+    fontSize: "2em !important",
+    fontWeight: "bold",
+    lineHeight: "1.4",
+    display: "inline-block"
+  },
+  ".cm-line .tok-heading2": {
+    fontSize: "1.5em !important",
+    fontWeight: "bold",
+    lineHeight: "1.4",
+    display: "inline-block"
+  },
+  ".cm-line .tok-heading3": {
+    fontSize: "1.3em !important",
+    fontWeight: "bold",
+    lineHeight: "1.4"
+  },
+  ".cm-line .tok-heading4": {
+    fontSize: "1.1em !important",
+    fontWeight: "bold",
+    lineHeight: "1.4"
+  },
+  ".cm-line .tok-heading5, .cm-line .tok-heading6": {
+    fontSize: "1em",
+    fontWeight: "bold",
+    lineHeight: "1.4"
+  },
+  // Text formatting
+  ".tok-strong, .tok-emphasis.tok-strong": {
+    fontWeight: "bold !important"
+  },
+  ".tok-emphasis": {
+    fontStyle: "italic !important"
+  },
+  ".tok-strikethrough": {
+    textDecoration: "line-through !important"
+  },
+  ".tok-link": {
+    color: "#0066cc !important",
+    textDecoration: "underline"
+  },
+  // Inline code
+  ".tok-monospace": {
+    fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace !important",
+    backgroundColor: "#f5f5f5",
+    padding: "2px 4px",
+    borderRadius: "3px",
+    fontSize: "0.9em"
+  },
+  // Lists
+  ".tok-list": {
+    paddingLeft: "2em"
+  },
+  // Quotes
+  ".tok-quote": {
+    borderLeft: "4px solid #ddd",
+    paddingLeft: "1em",
+    color: "#666",
+    fontStyle: "italic"
+  },
+  // Keep markdown syntax visible but styled
+  ".tok-meta": {
+    color: "#999",
+    fontWeight: "normal"
+  }
+});
+
 // CodeMirror initialization
 function initializeCodeMirror() {
   if (codemirrorView) {
@@ -190,6 +272,8 @@ function initializeCodeMirror() {
       basicSetup,
       markdown(),
       EditorView.lineWrapping,
+      markdownTheme,
+      markdownBaseTheme,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           // Sync content back to textarea
