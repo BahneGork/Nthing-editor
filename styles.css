@@ -53,11 +53,14 @@ body {
   line-height: 1.6;
   outline: none;
   background: transparent;
+  width: 100%;
+  min-width: 0;
 }
 
 /* Line numbers for Editor mode */
 .line-numbers {
   display: none;
+  flex: 0 0 auto;
   padding: 16px 8px;
   background-color: #f8f8f8;
   border-right: 1px solid #ddd;
@@ -67,8 +70,20 @@ body {
   color: #999;
   text-align: right;
   user-select: none;
-  overflow: hidden;
-  min-width: 40px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  min-width: 50px;
+  max-width: 80px;
+  white-space: pre;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar on line numbers but keep it scrollable - Webkit browsers */
+.line-numbers::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Editor Mode Styles */
