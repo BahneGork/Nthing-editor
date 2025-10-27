@@ -64,12 +64,14 @@ const container = document.querySelector('.container');
 const paneTitle = document.getElementById('pane-title');
 const syncScrollToggle = document.getElementById('sync-scroll-toggle');
 const showFormattingToggle = document.getElementById('show-formatting-toggle');
+const showPreviewToggle = document.getElementById('show-preview-toggle');
 const codemirrorContainer = document.getElementById('codemirror-container');
 
 let currentFilePath = null;
 let currentMode = 'editor'; // 'editor' or 'writing'
 let syncScrollEnabled = true; // Scroll sync state
 let showFormatting = false; // Formatting display state
+let showPreview = true; // Preview visibility state
 let codemirrorView = null; // CodeMirror instance
 
 // Configure marked options
@@ -154,6 +156,28 @@ const savedSyncPref = localStorage.getItem('syncScrollEnabled');
 if (savedSyncPref !== null) {
   syncScrollEnabled = savedSyncPref === 'true';
   syncScrollToggle.checked = syncScrollEnabled;
+}
+
+// Preview toggle handler
+showPreviewToggle.addEventListener('change', (e) => {
+  showPreview = e.target.checked;
+  if (showPreview) {
+    container.classList.remove('hide-preview');
+  } else {
+    container.classList.add('hide-preview');
+  }
+  // Save preference to localStorage
+  localStorage.setItem('showPreview', showPreview);
+});
+
+// Load preview preference from localStorage
+const savedPreviewPref = localStorage.getItem('showPreview');
+if (savedPreviewPref !== null) {
+  showPreview = savedPreviewPref === 'true';
+  showPreviewToggle.checked = showPreview;
+  if (!showPreview) {
+    container.classList.add('hide-preview');
+  }
 }
 
 function updatePreview() {
