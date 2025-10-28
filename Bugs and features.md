@@ -12,4 +12,4 @@
 - Also if another file is already open when using ctrl+1-9, pop warning box "are you sure you want to open another file, you will leave current file. Make sure you have saved first." or something similar, perhaps a save/save as button for the currently open file?
 - toggle autosave on/off in file menu, perhaps with options: 1min, 30min, 1hour? i dont know whats good intervals to provide as options, what are others offering?
 - file association
-- i am not sure if this is intended or if it is a spinoff from the yellow highlighting on FIND. When i mark text now it gets a yellow background instead of blue.
+- ~i am not sure if this is intended or if it is a spinoff from the yellow highlighting on FIND. When i mark text now it gets a yellow background instead of blue.~ **FIXED** - Text selection now uses default blue color
