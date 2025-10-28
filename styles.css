@@ -140,6 +140,30 @@ body {
   align-items: center;
 }
 
+.pane-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-view-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  color: #666;
+  font-size: 14px;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+  font-weight: normal;
+}
+
+.toggle-view-btn:hover {
+  background-color: #e0e0e0;
+  border-color: #999;
+  color: #333;
+}
+
 .formatting-toggle {
   display: none;
   font-weight: normal;
