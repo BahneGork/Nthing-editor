@@ -126,6 +126,13 @@ function createWindow() {
   // Set initial title
   updateWindowTitle(true); // New file, unsaved
 
+  // Update title every minute to keep "last saved" time current
+  setInterval(() => {
+    if (lastSaveTime) {
+      updateWindowTitle(false);
+    }
+  }, 60000); // Every 60 seconds
+
   // Load recent files
   loadRecentFiles();
 
