@@ -1407,12 +1407,14 @@ ipcRenderer.on('autosave-status', (event, { enabled, interval }) => {
 
 // Listen for autosave saving notification
 ipcRenderer.on('autosave-saving', () => {
-  // Show brief notification in status
+  // Show prominent notification in status
   const originalStatus = status.textContent;
   status.textContent = 'Autosaving...';
+  status.classList.add('autosave-notification');
   setTimeout(() => {
     status.textContent = originalStatus;
-  }, 2000);
+    status.classList.remove('autosave-notification');
+  }, 5000); // Show for 5 seconds
 });
 
 // Handle link clicks in preview
