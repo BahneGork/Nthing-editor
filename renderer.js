@@ -1041,19 +1041,28 @@ function highlightMatches() {
 
   const match = matches[currentMatchIndex];
 
-  // Calculate line number to scroll to
-  const textBeforeMatch = editor.value.substring(0, match.start);
-  const lineNumber = textBeforeMatch.split('\n').length;
-
-  // Get approximate scroll position
-  const lineHeight = 24; // Approximate line height in pixels
-  const scrollTop = (lineNumber - 1) * lineHeight;
-
-  // Scroll editor to show the match
-  editor.scrollTop = Math.max(0, scrollTop - editor.clientHeight / 2);
-
   // Select the matched text in the editor (this highlights it visually)
   editor.setSelectionRange(match.start, match.end);
+
+  // Calculate exact position of the match using the same method as overlay
+  const coords = getTextCoordinates(editor, match.start, match.end);
+
+  if (coords) {
+    // Calculate the absolute position of the match in the textarea
+    const matchTop = coords.top + editor.scrollTop;
+    const matchBottom = matchTop + coords.height;
+
+    // Check if match is below the visible area
+    if (matchBottom > editor.scrollTop + editor.clientHeight) {
+      // Scroll so the match is near the bottom with some padding
+      editor.scrollTop = matchBottom - editor.clientHeight + coords.height * 2;
+    }
+    // Check if match is above the visible area
+    else if (matchTop < editor.scrollTop) {
+      // Scroll so the match is near the top with some padding
+      editor.scrollTop = Math.max(0, matchTop - coords.height * 2);
+    }
+  }
 
   // Keep focus on the find input, not the editor
   // This way the text stays highlighted but typing goes to find input
