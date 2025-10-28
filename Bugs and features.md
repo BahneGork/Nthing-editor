@@ -16,6 +16,6 @@
 - ~i am not sure if this is intended or if it is a spinoff from the yellow highlighting on FIND. When i mark text now it gets a yellow background instead of blue.~ **FIXED** - Text selection now uses default blue color
 - ~i cannot undo insert table?~ **FIXED** - Now uses execCommand to preserve undo history
 - ~find/findreplace dialogue box, first time you click its title to move it, it makes a little jump away from the cursor.~ **FIXED** - Now uses getBoundingClientRect to account for CSS transform
-- find doesnt scroll all the way to a found word.
+- ~find doesnt scroll all the way to a found word.~ **FIXED** - Now uses exact coordinates to scroll and reveal matches at top or bottom
 
 
