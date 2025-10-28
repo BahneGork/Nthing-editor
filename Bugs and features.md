@@ -11,7 +11,7 @@
 - ~in writing focus with show formatting on, title bar save status does not change from Last saved just now to Not saved if i make changes. It does change to Last saved just now if i save.~ **FIXED** - CodeMirror now triggers content-changed notifications
 - ~in writing focus with show formatting, bullet list continues as it should pr standard behavior, this does not happen when show formatting is turned off, nor does it work in editor mode.~ **FIXED** - Auto-continue works in Editor mode
 - ~Also if another file is already open when using ctrl+1-9, pop warning box "are you sure you want to open another file, you will leave current file. Make sure you have saved first." or something similar, perhaps a save/save as button for the currently open file?~ **FIXED** - Warning dialog now shows for Open, Open Recent, and New with Save/Don't Save/Cancel options
-- toggle autosave on/off in file menu, perhaps with options: 1min, 30min, 1hour? i dont know whats good intervals to provide as options, what are others offering?
+- ~toggle autosave on/off in file menu, perhaps with options: 1min, 30min, 1hour? i dont know whats good intervals to provide as options, what are others offering?~ **FIXED** - Autosave menu added with intervals: 1, 5, 15, and 30 minutes
 - file association
 - ~i am not sure if this is intended or if it is a spinoff from the yellow highlighting on FIND. When i mark text now it gets a yellow background instead of blue.~ **FIXED** - Text selection now uses default blue color
 - ~i cannot undo insert table?~ **FIXED** - Now uses execCommand to preserve undo history
