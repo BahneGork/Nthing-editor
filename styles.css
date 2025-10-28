@@ -605,6 +605,17 @@ body {
   opacity: 0.5;
 }
 
+.autosave-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 16px;
+  font-style: italic;
+}
+
+.autosave-status:empty {
+  display: none;
+}
+
 .preview-toggle,
 .sync-toggle {
   display: flex;
