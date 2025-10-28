@@ -1,6 +1,6 @@
 {
   "name": "nthing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A distraction-free markdown editor",
   "main": "main.js",
   "scripts": {
@@ -13,7 +13,13 @@
     "release:minor": "npm version minor && npm run build",
     "release:major": "npm version major && npm run build"
   },
-  "keywords": ["markdown", "editor", "electron", "writing", "notes"],
+  "keywords": [
+    "markdown",
+    "editor",
+    "electron",
+    "writing",
+    "notes"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -33,7 +39,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico"
