@@ -8,6 +8,9 @@ let recentFiles = [];
 const MAX_RECENT_FILES = 10;
 let lastSaveTime = null;
 let hasUnsavedChanges = false;
+let autosaveEnabled = false;
+let autosaveInterval = 5 * 60 * 1000; // Default: 5 minutes in milliseconds
+let autosaveTimer = null;
 
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
@@ -109,6 +112,44 @@ function clearRecentFiles() {
   createMenu();
 }
 
+// Autosave functions
+function startAutosave() {
+  stopAutosave(); // Clear any existing timer
+  if (autosaveEnabled && autosaveInterval > 0) {
+    autosaveTimer = setInterval(() => {
+      if (hasUnsavedChanges && currentFilePath) {
+        // Request content from renderer and save
+        mainWindow.webContents.send('save-file-request');
+      }
+    }, autosaveInterval);
+  }
+}
+
+function stopAutosave() {
+  if (autosaveTimer) {
+    clearInterval(autosaveTimer);
+    autosaveTimer = null;
+  }
+}
+
+function toggleAutosave(enabled) {
+  autosaveEnabled = enabled;
+  if (enabled) {
+    startAutosave();
+  } else {
+    stopAutosave();
+  }
+  createMenu(); // Rebuild menu to update checkmark
+}
+
+function setAutosaveInterval(minutes) {
+  autosaveInterval = minutes * 60 * 1000; // Convert minutes to milliseconds
+  if (autosaveEnabled) {
+    startAutosave(); // Restart with new interval
+  }
+  createMenu(); // Rebuild menu to update checkmark
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -206,6 +247,53 @@ function createMenu() {
           click: () => {
             saveFileAs();
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'Autosave',
+          submenu: [
+            {
+              label: 'Enable Autosave',
+              type: 'checkbox',
+              checked: autosaveEnabled,
+              click: (menuItem) => {
+                toggleAutosave(menuItem.checked);
+              }
+            },
+            { type: 'separator' },
+            {
+              label: '1 Minute',
+              type: 'radio',
+              checked: autosaveInterval === 1 * 60 * 1000,
+              click: () => {
+                setAutosaveInterval(1);
+              }
+            },
+            {
+              label: '5 Minutes',
+              type: 'radio',
+              checked: autosaveInterval === 5 * 60 * 1000,
+              click: () => {
+                setAutosaveInterval(5);
+              }
+            },
+            {
+              label: '15 Minutes',
+              type: 'radio',
+              checked: autosaveInterval === 15 * 60 * 1000,
+              click: () => {
+                setAutosaveInterval(15);
+              }
+            },
+            {
+              label: '30 Minutes',
+              type: 'radio',
+              checked: autosaveInterval === 30 * 60 * 1000,
+              click: () => {
+                setAutosaveInterval(30);
+              }
+            }
+          ]
         },
         { type: 'separator' },
         {
@@ -640,6 +728,7 @@ function saveImage(event, base64Data, mimeType, originalName) {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  stopAutosave(); // Clean up autosave timer
   if (process.platform !== 'darwin') {
     app.quit();
   }
