@@ -64,18 +64,32 @@ The `dist` folder will contain:
 
 ## Customizing the Icon
 
-The default configuration expects an icon at `build/icon.ico`. To add a custom icon:
+The project includes a blue "N" icon design in `icon.svg` at the root directory. This icon is used in:
+- Application window (dev mode)
+- File open/save dialogs
+- Taskbar
 
-1. Create a `build` folder in the project root
-2. Add a 256x256 .ico file named `icon.ico`
-3. Rebuild with `npm run build`
+To build the Windows installer, you need to convert the SVG to ICO format:
 
-You can create .ico files using:
-- [ICO Convert](https://icoconvert.com/) (online)
-- GIMP (free software)
-- Adobe Photoshop
+### Converting SVG to ICO
 
-If you don't provide an icon, electron-builder will use a default Electron icon.
+1. Use an online converter:
+   - [CloudConvert](https://cloudconvert.com/svg-to-ico) - Upload `icon.svg`, select 256x256 size
+   - [ICO Convert](https://icoconvert.com/) - Upload and download as .ico
+
+2. Or use ImageMagick (command line):
+   ```bash
+   convert icon.svg -resize 256x256 build/icon.ico
+   ```
+
+3. Or use GIMP (free software):
+   - Open `icon.svg`
+   - Export as > Microsoft Windows Icon (*.ico)
+   - Save to `build/icon.ico`
+
+Once you have `build/icon.ico`, rebuild with `npm run build`.
+
+**Note**: The app will work without the ICO file (uses SVG in dev mode), but the installer needs `build/icon.ico` for proper Windows integration.
 
 ## Build Configuration
 
