@@ -884,9 +884,13 @@ const dialogHeader = dialog.querySelector('.dialog-header');
 dialogHeader.addEventListener('mousedown', (e) => {
   isDragging = true;
 
-  // Get initial mouse position
-  initialX = e.clientX - dialog.offsetLeft;
-  initialY = e.clientY - dialog.offsetTop;
+  // If dialog hasn't been moved yet, calculate position from getBoundingClientRect
+  // to account for the CSS transform: translate(-50%, -50%)
+  const rect = dialog.getBoundingClientRect();
+
+  // Calculate offset from mouse position to dialog's current position
+  initialX = e.clientX - rect.left;
+  initialY = e.clientY - rect.top;
 
   dialogHeader.style.cursor = 'grabbing';
 });
@@ -1105,11 +1109,7 @@ function getTextCoordinates(textarea, start, end) {
   const textBefore = textarea.value.substring(0, start);
   const matchedText = textarea.value.substring(start, end);
 
-  // Measure position by counting lines
-  mirror.textContent = textBefore;
-  const beforeHeight = mirror.scrollHeight;
-
-  // Add a span for the matched text to measure its width
+  // Add text before and a span for the matched text
   mirror.textContent = textBefore;
   const matchSpan = document.createElement('span');
   matchSpan.textContent = matchedText;
@@ -1120,6 +1120,7 @@ function getTextCoordinates(textarea, start, end) {
 
   // Calculate position relative to the mirror
   const relativeLeft = matchSpanRect.left - mirrorRect.left;
+  const relativeTop = matchSpanRect.top - mirrorRect.top;
   const width = matchSpan.offsetWidth;
   const lineHeight = parseInt(computed.lineHeight) || 24;
 
@@ -1131,7 +1132,7 @@ function getTextCoordinates(textarea, start, end) {
 
   // Calculate final position accounting for textarea position and scroll
   const left = textareaRect.left - overlayRect.left + relativeLeft;
-  const top = textareaRect.top - overlayRect.top + beforeHeight - textarea.scrollTop;
+  const top = textareaRect.top - overlayRect.top + relativeTop - textarea.scrollTop;
 
   return {
     left: left,
