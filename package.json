@@ -44,7 +44,7 @@
           ]
         }
       ],
-      "icon": "build/icon.ico",
+      "icon": "build/Nthing.ico",
       "fileAssociations": [
         {
           "ext": "md",
