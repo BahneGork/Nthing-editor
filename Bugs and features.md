@@ -3,7 +3,8 @@
 - ~Find & Find&Replace dialogue box should be moveable~
 - ~edit option: turn marked lines into bullet point list, numbered list.~
 - ~Title bar: include filename without extension and some form of "saved" status, perhaps: not saved, last saved timestamp?~
-- ctrl+1 still does not open recent file 1, etc. Also if another file is already open, pop warning box "are you sure you want to open another file, you will leave current file. Make sure you have saved first." or something similar, perhaps a save/save as button for the currently open file?
+- ~ctrl+1 still does not open recent file 1, etc.~
+- Also if another file is already open, pop warning box "are you sure you want to open another file, you will leave current file. Make sure you have saved first." or something similar, perhaps a save/save as button for the currently open file?
 - find & find replace does not highlight the word anymore, but stays focused on the dialogue box as we want.
 - the standard behavior of bullet and number lists should apply, if i hit enter on a line that has a bullet/number it should automatically continue adding a bullet/next-number on the new line and if i hit enter one more time, it should remove it from that new line. This is standard is all editing software now.
 - "Last saved - just now" is fine if the save was within seconds, but its not very telling when i come back to the window 1 hour later and i look at the save status and it says "Last saved - just now".
