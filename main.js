@@ -215,13 +215,37 @@ function createMenu() {
     {
       label: 'Edit',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          role: 'undo'
+        },
+        {
+          label: 'Redo',
+          accelerator: 'CmdOrCtrl+Y',
+          role: 'redo'
+        },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        {
+          label: 'Cut',
+          accelerator: 'CmdOrCtrl+X',
+          role: 'cut'
+        },
+        {
+          label: 'Copy',
+          accelerator: 'CmdOrCtrl+C',
+          role: 'copy'
+        },
+        {
+          label: 'Paste',
+          accelerator: 'CmdOrCtrl+V',
+          role: 'paste'
+        },
+        {
+          label: 'Select All',
+          accelerator: 'CmdOrCtrl+A',
+          role: 'selectAll'
+        },
         { type: 'separator' },
         {
           label: 'Find',
