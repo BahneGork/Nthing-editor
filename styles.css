@@ -218,17 +218,6 @@ body {
   display: none;
 }
 
-/* Bright yellow selection for find results */
-#editor::selection {
-  background-color: #ffeb3b; /* Bright yellow like a marker */
-  color: inherit;
-}
-
-#editor::-moz-selection {
-  background-color: #ffeb3b;
-  color: inherit;
-}
-
 /* CodeMirror container */
 .codemirror-container {
   flex: 1;
