@@ -224,6 +224,11 @@ editor.addEventListener('input', () => {
   updateStats();
   updateLineNumbers();
 
+  // Clear find highlights when content changes
+  clearHighlightOverlay();
+  matches = [];
+  currentMatchIndex = -1;
+
   // Mark content as changed and notify main process (debounced)
   if (!contentChangedSinceLastSave) {
     contentChangedSinceLastSave = true;
@@ -405,6 +410,11 @@ editor.addEventListener('scroll', () => {
   // Sync line numbers in editor mode
   if (currentMode === 'editor' && lineNumbers) {
     lineNumbers.scrollTop = editor.scrollTop;
+  }
+
+  // Update find highlight overlay position when scrolling
+  if (currentMatchIndex >= 0 && matches.length > 0) {
+    drawHighlightOverlay(matches[currentMatchIndex]);
   }
 
   // Sync preview in editor mode only if sync is enabled
@@ -1086,6 +1096,8 @@ function getTextCoordinates(textarea, start, end) {
   mirror.style.padding = computed.padding;
   mirror.style.border = computed.border;
   mirror.style.width = textarea.clientWidth + 'px';
+  mirror.style.left = '-9999px';
+  mirror.style.top = '0';
 
   document.body.appendChild(mirror);
 
@@ -1093,9 +1105,8 @@ function getTextCoordinates(textarea, start, end) {
   const textBefore = textarea.value.substring(0, start);
   const matchedText = textarea.value.substring(start, end);
 
-  // Measure position
+  // Measure position by counting lines
   mirror.textContent = textBefore;
-  const beforeRect = mirror.getBoundingClientRect();
   const beforeHeight = mirror.scrollHeight;
 
   // Add a span for the matched text to measure its width
@@ -1104,22 +1115,29 @@ function getTextCoordinates(textarea, start, end) {
   matchSpan.textContent = matchedText;
   mirror.appendChild(matchSpan);
 
-  const matchRect = matchSpan.getBoundingClientRect();
+  const matchSpanRect = matchSpan.getBoundingClientRect();
   const mirrorRect = mirror.getBoundingClientRect();
 
-  // Calculate relative position
-  const left = matchRect.left - mirrorRect.left + parseInt(computed.paddingLeft);
-  const top = beforeHeight - textarea.scrollTop;
+  // Calculate position relative to the mirror
+  const relativeLeft = matchSpanRect.left - mirrorRect.left;
   const width = matchSpan.offsetWidth;
-  const height = parseInt(computed.lineHeight) || 24;
+  const lineHeight = parseInt(computed.lineHeight) || 24;
 
   document.body.removeChild(mirror);
+
+  // Get textarea's position relative to the editor-wrapper (overlay's parent)
+  const textareaRect = textarea.getBoundingClientRect();
+  const overlayRect = highlightOverlay.parentElement.getBoundingClientRect();
+
+  // Calculate final position accounting for textarea position and scroll
+  const left = textareaRect.left - overlayRect.left + relativeLeft;
+  const top = textareaRect.top - overlayRect.top + beforeHeight - textarea.scrollTop;
 
   return {
     left: left,
     top: top,
     width: width,
-    height: height
+    height: lineHeight
   };
 }
 
@@ -1227,8 +1245,6 @@ function toggleNumberedList() {
 // Insert table template
 function insertTable() {
   const cursorPos = editor.selectionStart;
-  const textBefore = editor.value.substring(0, cursorPos);
-  const textAfter = editor.value.substring(cursorPos);
 
   // Default 3x3 table template
   const tableTemplate = `| Column 1 | Column 2 | Column 3 |
@@ -1237,13 +1253,15 @@ function insertTable() {
 | Cell 4   | Cell 5   | Cell 6   |
 `;
 
-  // Insert table at cursor position
-  editor.value = textBefore + tableTemplate + textAfter;
+  // Focus editor first
+  editor.focus();
+
+  // Use execCommand to insert text, which preserves undo history
+  document.execCommand('insertText', false, tableTemplate);
 
   // Place cursor at first cell content
   const newCursorPos = cursorPos + '| '.length;
   editor.setSelectionRange(newCursorPos, newCursorPos + 'Column 1'.length);
-  editor.focus();
 
   updatePreview();
   updateStats();
