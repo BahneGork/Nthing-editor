@@ -10,6 +10,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
+  <!-- Custom Title Bar -->
+  <div class="custom-titlebar">
+    <div class="titlebar-left">
+      <span class="app-name">Nthing</span>
+    </div>
+    <div class="titlebar-center">
+      <span id="titlebar-text">Untitled - Not saved</span>
+    </div>
+    <div class="titlebar-right">
+      <button id="minimize-btn" class="titlebar-btn" title="Minimize">&#8212;</button>
+      <button id="maximize-btn" class="titlebar-btn" title="Maximize">&#9723;</button>
+      <button id="close-btn" class="titlebar-btn close" title="Close">&times;</button>
+    </div>
+  </div>
+
   <!-- Find & Replace Dialog -->
   <div id="find-replace-dialog" class="dialog hidden">
     <div class="dialog-header">

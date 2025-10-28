@@ -13,19 +13,19 @@ const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
 
 // Update window title with filename and save status
 function updateWindowTitle(unsaved = false) {
-  let title = '';
+  let titleText = '';
 
   if (currentFilePath) {
     // Get filename without extension
     const filename = path.basename(currentFilePath, path.extname(currentFilePath));
-    title = filename;
+    titleText = filename;
   } else {
-    title = 'Untitled';
+    titleText = 'Untitled';
   }
 
   // Add save status
   if (unsaved) {
-    title += ' - Not saved';
+    titleText += ' - Not saved';
   } else if (lastSaveTime) {
     const now = new Date();
     const savedDate = new Date(lastSaveTime);
@@ -51,13 +51,15 @@ function updateWindowTitle(unsaved = false) {
       }
     }
 
-    title += ` - Last saved ${timeStr}`;
+    titleText += ` - Last saved ${timeStr}`;
   } else {
-    title += ' - Not saved';
+    titleText += ' - Not saved';
   }
 
-  title += ' - Nthing';
-  mainWindow.setTitle(title);
+  // Send to renderer to update custom title bar
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('update-title', titleText);
+  }
 }
 
 // Load recent files from disk
@@ -110,6 +112,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    frame: false, // Remove default title bar
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -377,6 +380,29 @@ ipcMain.on('save-content', (event, content) => {
 // Handle content changed (mark as unsaved)
 ipcMain.on('content-changed', () => {
   updateWindowTitle(true); // Mark as unsaved
+});
+
+// Handle window controls
+ipcMain.on('minimize-window', () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.on('maximize-window', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('close-window', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
 });
 
 app.whenReady().then(createWindow);

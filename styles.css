@@ -10,9 +10,74 @@ body {
   overflow: hidden;
 }
 
+/* Custom Title Bar */
+.custom-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  background: #2c2c2c;
+  color: #fff;
+  -webkit-app-region: drag;
+  user-select: none;
+  position: relative;
+}
+
+.titlebar-left {
+  flex: 0 0 auto;
+  padding-left: 12px;
+  z-index: 1;
+}
+
+.app-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+}
+
+.titlebar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+
+.titlebar-right {
+  display: flex;
+  flex: 0 0 auto;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 46px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.titlebar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.titlebar-btn.close:hover {
+  background-color: #e81123;
+}
+
 .container {
   display: flex;
-  height: calc(100vh - 24px);
+  height: calc(100vh - 56px); /* 32px titlebar + 24px status bar */
 }
 
 .editor-pane,

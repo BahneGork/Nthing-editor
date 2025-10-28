@@ -1,6 +1,29 @@
 const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
 
+// Custom title bar controls
+const minimizeBtn = document.getElementById('minimize-btn');
+const maximizeBtn = document.getElementById('maximize-btn');
+const closeBtn = document.getElementById('close-btn');
+const titlebarText = document.getElementById('titlebar-text');
+
+minimizeBtn.addEventListener('click', () => {
+  ipcRenderer.send('minimize-window');
+});
+
+maximizeBtn.addEventListener('click', () => {
+  ipcRenderer.send('maximize-window');
+});
+
+closeBtn.addEventListener('click', () => {
+  ipcRenderer.send('close-window');
+});
+
+// Listen for title updates from main process
+ipcRenderer.on('update-title', (event, titleText) => {
+  titlebarText.textContent = titleText;
+});
+
 // CodeMirror imports
 const cmView = require('@codemirror/view');
 const cmState = require('@codemirror/state');
