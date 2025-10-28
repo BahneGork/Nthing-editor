@@ -7,6 +7,7 @@ let currentFilePath = null;
 let recentFiles = [];
 const MAX_RECENT_FILES = 10;
 let lastSaveTime = null;
+let hasUnsavedChanges = false;
 
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
@@ -177,10 +178,7 @@ function createMenu() {
           label: 'New',
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            currentFilePath = null;
-            lastSaveTime = null;
-            mainWindow.webContents.send('new-file');
-            updateWindowTitle(true); // New file, unsaved
+            newFile();
           }
         },
         {
@@ -339,7 +337,81 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+function newFile() {
+  // Check for unsaved changes before creating new file
+  if (hasUnsavedChanges) {
+    dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Do you want to save before creating a new file?',
+      buttons: ['Save', 'Don\'t Save', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2
+    }).then(result => {
+      if (result.response === 0) {
+        // Save
+        mainWindow.webContents.send('save-file-request');
+        // Wait for save to complete, then create new file
+        const saveHandler = () => {
+          ipcMain.removeListener('save-content', saveHandler);
+          setTimeout(() => {
+            createNewFile();
+          }, 100);
+        };
+        ipcMain.once('save-content', saveHandler);
+      } else if (result.response === 1) {
+        // Don't Save
+        createNewFile();
+      }
+      // If Cancel (response === 2), do nothing
+    });
+  } else {
+    createNewFile();
+  }
+}
+
+function createNewFile() {
+  currentFilePath = null;
+  lastSaveTime = null;
+  hasUnsavedChanges = false; // New empty file has nothing to save yet
+  mainWindow.webContents.send('new-file');
+  updateWindowTitle(true); // New file, unsaved
+}
+
 function openFile() {
+  // Check for unsaved changes before opening
+  if (hasUnsavedChanges) {
+    dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Do you want to save before opening another file?',
+      buttons: ['Save', 'Don\'t Save', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2
+    }).then(result => {
+      if (result.response === 0) {
+        // Save
+        mainWindow.webContents.send('save-file-request');
+        // Wait for save to complete, then show open dialog
+        const saveHandler = () => {
+          ipcMain.removeListener('save-content', saveHandler);
+          setTimeout(() => {
+            showOpenDialog();
+          }, 100);
+        };
+        ipcMain.once('save-content', saveHandler);
+      } else if (result.response === 1) {
+        // Don't Save
+        showOpenDialog();
+      }
+      // If Cancel (response === 2), do nothing
+    });
+  } else {
+    showOpenDialog();
+  }
+}
+
+function showOpenDialog() {
   dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
@@ -355,6 +427,40 @@ function openFile() {
 }
 
 function openRecentFile(filePath) {
+  // Check for unsaved changes before opening
+  if (hasUnsavedChanges) {
+    dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Do you want to save before opening another file?',
+      buttons: ['Save', 'Don\'t Save', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2
+    }).then(result => {
+      if (result.response === 0) {
+        // Save
+        mainWindow.webContents.send('save-file-request');
+        // Wait for save to complete, then open the file
+        // Use a one-time listener for the save-content event
+        const saveHandler = () => {
+          ipcMain.removeListener('save-content', saveHandler);
+          setTimeout(() => {
+            openRecentFileAfterCheck(filePath);
+          }, 100); // Small delay to ensure save completes
+        };
+        ipcMain.once('save-content', saveHandler);
+      } else if (result.response === 1) {
+        // Don't Save
+        openRecentFileAfterCheck(filePath);
+      }
+      // If Cancel (response === 2), do nothing
+    });
+  } else {
+    openRecentFileAfterCheck(filePath);
+  }
+}
+
+function openRecentFileAfterCheck(filePath) {
   if (fs.existsSync(filePath)) {
     openFileByPath(filePath);
   } else {
@@ -376,6 +482,7 @@ function openFileByPath(filePath) {
     const content = fs.readFileSync(filePath, 'utf-8');
     currentFilePath = filePath;
     lastSaveTime = null; // Reset save time when opening file
+    hasUnsavedChanges = false; // Reset unsaved changes flag
     addToRecentFiles(filePath);
     mainWindow.webContents.send('file-opened', { content, filePath });
     updateWindowTitle(false); // File just opened, not unsaved
@@ -417,6 +524,7 @@ ipcMain.on('save-content', (event, content) => {
     try {
       fs.writeFileSync(currentFilePath, content, 'utf-8');
       lastSaveTime = Date.now();
+      hasUnsavedChanges = false; // Reset unsaved changes flag
       addToRecentFiles(currentFilePath);
       mainWindow.webContents.send('file-saved', currentFilePath);
       updateWindowTitle(false); // Just saved, not unsaved
@@ -428,6 +536,7 @@ ipcMain.on('save-content', (event, content) => {
 
 // Handle content changed (mark as unsaved)
 ipcMain.on('content-changed', () => {
+  hasUnsavedChanges = true;
   updateWindowTitle(true); // Mark as unsaved
 });
 
