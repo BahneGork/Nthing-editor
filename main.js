@@ -286,6 +286,14 @@ function createMenu() {
       label: 'View',
       submenu: [
         {
+          label: 'Toggle View Mode',
+          accelerator: 'F9',
+          click: () => {
+            mainWindow.webContents.send('toggle-mode');
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Editor Mode',
           type: 'radio',
           checked: true,

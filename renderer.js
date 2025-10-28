@@ -7,6 +7,7 @@ const maximizeBtn = document.getElementById('maximize-btn');
 const closeBtn = document.getElementById('close-btn');
 const menuBtn = document.getElementById('menu-btn');
 const titlebarText = document.getElementById('titlebar-text');
+const toggleViewBtn = document.getElementById('toggle-view-btn');
 
 minimizeBtn.addEventListener('click', () => {
   ipcRenderer.send('minimize-window');
@@ -25,6 +26,11 @@ menuBtn.addEventListener('click', () => {
   ipcRenderer.send('show-menu');
 });
 
+// Toggle view mode button
+toggleViewBtn.addEventListener('click', () => {
+  toggleViewMode();
+});
+
 // Alt key shows menu
 document.addEventListener('keydown', (e) => {
   if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key === 'Alt') {
@@ -38,6 +44,12 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       ipcRenderer.send('open-recent-file-by-index', num - 1);
     }
+  }
+
+  // F9 to toggle view mode
+  if (e.key === 'F9' && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+    e.preventDefault();
+    toggleViewMode();
   }
 });
 
@@ -402,9 +414,20 @@ function switchMode(mode) {
   }
 }
 
+// Toggle between Editor and Writing Focus modes
+function toggleViewMode() {
+  const newMode = currentMode === 'editor' ? 'writing' : 'editor';
+  switchMode(newMode);
+}
+
 // Listen for mode switch from menu
 ipcRenderer.on('switch-mode', (event, mode) => {
   switchMode(mode);
+});
+
+// Listen for toggle mode from menu
+ipcRenderer.on('toggle-mode', () => {
+  toggleViewMode();
 });
 
 // Custom theme for Typora-style markdown rendering
