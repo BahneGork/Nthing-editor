@@ -110,6 +110,17 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - `x^2^` for superscript
 - Useful for scientific writing
 
+### ❌ File Versioning / Local History
+- **Priority**: Medium
+- Keep last N versions of file (10-20 snapshots)
+- Version created on manual saves and autosaves (when changes exist)
+- Store in `.nthing-history/` folder next to markdown file
+- UI to browse/restore previous versions (timestamp, preview, restore button)
+- Safety net against accidental deletions/overwrites
+- Similar to VS Code's Timeline feature
+- Storage concerns: Minimal for text files, but needs testing with large files
+- Could use incremental diffs instead of full copies for efficiency
+
 ---
 
 ## Feature Comparison with Typora
