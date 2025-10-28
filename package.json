@@ -44,28 +44,28 @@
           ]
         }
       ],
-      "icon": "build/Nthing.ico",
+      "icon": "Nthing.ico",
       "fileAssociations": [
         {
           "ext": "md",
           "name": "Markdown File",
           "description": "Markdown Document",
           "role": "Editor",
-          "icon": "build/Nthing.ico"
+          "icon": "Nthing.ico"
         },
         {
           "ext": "markdown",
           "name": "Markdown File",
           "description": "Markdown Document",
           "role": "Editor",
-          "icon": "build/Nthing.ico"
+          "icon": "Nthing.ico"
         },
         {
           "ext": "txt",
           "name": "Text File",
           "description": "Plain Text Document",
           "role": "Editor",
-          "icon": "build/Nthing.ico"
+          "icon": "Nthing.ico"
         }
       ]
     },
