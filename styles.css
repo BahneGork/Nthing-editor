@@ -138,6 +138,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 42px; /* Fixed height to match toggle button height */
+  box-sizing: border-box;
 }
 
 .pane-header-left {
