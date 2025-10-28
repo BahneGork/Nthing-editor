@@ -16,6 +16,6 @@
 - ~i cannot undo insert table?~ **FIXED** - Now uses execCommand to preserve undo history
 - ~find/findreplace dialogue box, first time you click its title to move it, it makes a little jump away from the cursor.~ **FIXED** - Now uses getBoundingClientRect to account for CSS transform
 - ~find doesnt scroll all the way to a found word.~ **FIXED** - Now uses exact coordinates to scroll and reveal matches at top or bottom
-- Autosave: should have two options; 1: enable this session 2: enable persistantly in all future sessions until turned off (with better option naming for option2)
-- Autosave notification in status bar is too fast and too anonymous, can we have the notification stay visible for a few seconds longer? perhaps with slightly larger and bold font?
+- ~Autosave: should have two options; 1: enable this session 2: enable persistantly in all future sessions until turned off (with better option naming for option2)~ **FIXED** - Menu now has 'Enable for This Session' and 'Enable Always' options with persistent settings storage
+- ~Autosave notification in status bar is too fast and too anonymous, can we have the notification stay visible for a few seconds longer? perhaps with slightly larger and bold font?~ **FIXED** - Notification now shows for 5 seconds with larger, bold text and pulse animation
 
