@@ -113,6 +113,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     frame: false, // Remove default title bar
+    icon: path.join(__dirname, 'icon.svg'), // Custom app icon
     autoHideMenuBar: false, // Keep menu visible
     webPreferences: {
       nodeIntegration: true,
