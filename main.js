@@ -113,6 +113,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     frame: false, // Remove default title bar
+    autoHideMenuBar: false, // Keep menu visible
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -120,6 +121,9 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Make menu visible even with frameless window
+  mainWindow.setMenuBarVisibility(true);
 
   // Set initial title
   updateWindowTitle(true); // New file, unsaved
