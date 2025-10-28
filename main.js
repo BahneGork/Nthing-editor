@@ -11,9 +11,12 @@ let hasUnsavedChanges = false;
 let autosaveEnabled = false;
 let autosaveInterval = 5 * 60 * 1000; // Default: 5 minutes in milliseconds
 let autosaveTimer = null;
+let autosavePersistent = false; // Whether autosave setting persists across sessions
 
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
+// Path to store app settings
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 // Update window title with filename and save status
 function updateWindowTitle(unsaved = false) {
@@ -112,6 +115,41 @@ function clearRecentFiles() {
   createMenu();
 }
 
+// Load app settings from disk
+function loadSettings() {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(data);
+
+      // Load autosave settings
+      if (settings.autosave) {
+        autosaveEnabled = settings.autosave.enabled || false;
+        autosaveInterval = settings.autosave.interval || (5 * 60 * 1000);
+        autosavePersistent = settings.autosave.persistent || false;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading settings:', err);
+  }
+}
+
+// Save app settings to disk
+function saveSettings() {
+  try {
+    const settings = {
+      autosave: {
+        enabled: autosavePersistent ? autosaveEnabled : false, // Only save if persistent
+        interval: autosaveInterval,
+        persistent: autosavePersistent
+      }
+    };
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving settings:', err);
+  }
+}
+
 // Autosave functions
 function startAutosave() {
   stopAutosave(); // Clear any existing timer
@@ -138,13 +176,21 @@ function stopAutosave() {
   sendAutosaveStatus();
 }
 
-function toggleAutosave(enabled) {
+function toggleAutosave(enabled, persistent = false) {
   autosaveEnabled = enabled;
+  autosavePersistent = persistent;
+
   if (enabled) {
     startAutosave();
   } else {
     stopAutosave();
   }
+
+  // Save settings if persistent
+  if (persistent) {
+    saveSettings();
+  }
+
   createMenu(); // Rebuild menu to update checkmark
 }
 
@@ -153,6 +199,12 @@ function setAutosaveInterval(minutes) {
   if (autosaveEnabled) {
     startAutosave(); // Restart with new interval
   }
+
+  // Save settings if persistent mode is on
+  if (autosavePersistent) {
+    saveSettings();
+  }
+
   createMenu(); // Rebuild menu to update checkmark
 }
 
@@ -195,11 +247,19 @@ function createWindow() {
     }
   }, 60000); // Every 60 seconds
 
+  // Load app settings
+  loadSettings();
+
   // Load recent files
   loadRecentFiles();
 
   // Create application menu
   createMenu();
+
+  // Start autosave if it was enabled persistently
+  if (autosaveEnabled && autosavePersistent) {
+    startAutosave();
+  }
 }
 
 function createMenu() {
@@ -273,11 +333,19 @@ function createMenu() {
           label: 'Autosave',
           submenu: [
             {
-              label: 'Enable Autosave',
+              label: 'Enable for This Session',
               type: 'checkbox',
-              checked: autosaveEnabled,
+              checked: autosaveEnabled && !autosavePersistent,
               click: (menuItem) => {
-                toggleAutosave(menuItem.checked);
+                toggleAutosave(menuItem.checked, false);
+              }
+            },
+            {
+              label: 'Enable Always',
+              type: 'checkbox',
+              checked: autosaveEnabled && autosavePersistent,
+              click: (menuItem) => {
+                toggleAutosave(menuItem.checked, true);
               }
             },
             { type: 'separator' },
