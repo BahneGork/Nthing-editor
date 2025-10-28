@@ -122,9 +122,6 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
-  // Make menu visible even with frameless window
-  mainWindow.setMenuBarVisibility(true);
-
   // Set initial title
   updateWindowTitle(true); // New file, unsaved
 
@@ -406,6 +403,14 @@ ipcMain.on('maximize-window', () => {
 ipcMain.on('close-window', () => {
   if (mainWindow) {
     mainWindow.close();
+  }
+});
+
+// Handle menu button click - show menu as popup
+ipcMain.on('show-menu', (event) => {
+  const menu = Menu.getApplicationMenu();
+  if (menu && mainWindow) {
+    menu.popup({ window: mainWindow });
   }
 });
 
