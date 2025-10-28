@@ -463,6 +463,64 @@ ipcMain.on('open-recent-file-by-index', (event, index) => {
   }
 });
 
+// Handle pasted/dropped image saving
+ipcMain.on('save-pasted-image', (event, { data, type }) => {
+  saveImage(event, data, type, null);
+});
+
+ipcMain.on('save-dropped-image', (event, { data, type, name }) => {
+  saveImage(event, data, type, name);
+});
+
+function saveImage(event, base64Data, mimeType, originalName) {
+  // If no file is open, can't save relative images
+  if (!currentFilePath) {
+    dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Save File First',
+      message: 'Please save your markdown file before inserting images.',
+      buttons: ['OK']
+    });
+    return;
+  }
+
+  // Get directory of current file
+  const fileDir = path.dirname(currentFilePath);
+  const imagesDir = path.join(fileDir, 'images');
+
+  // Create images directory if it doesn't exist
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir, { recursive: true });
+  }
+
+  // Generate filename
+  const timestamp = Date.now();
+  const extension = mimeType.split('/')[1] || 'png';
+  const filename = originalName || `image-${timestamp}.${extension}`;
+  const imagePath = path.join(imagesDir, filename);
+
+  // Remove base64 prefix (e.g., "data:image/png;base64,")
+  const base64Content = base64Data.split(',')[1];
+  const buffer = Buffer.from(base64Content, 'base64');
+
+  // Write image file
+  try {
+    fs.writeFileSync(imagePath, buffer);
+
+    // Return relative path for markdown
+    const relativePath = `images/${filename}`;
+    event.sender.send('image-saved', relativePath);
+  } catch (err) {
+    console.error('Error saving image:', err);
+    dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      title: 'Error Saving Image',
+      message: `Could not save image: ${err.message}`,
+      buttons: ['OK']
+    });
+  }
+}
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {

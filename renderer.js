@@ -238,6 +238,98 @@ editor.addEventListener('input', () => {
   }
 });
 
+// Handle image paste from clipboard
+editor.addEventListener('paste', async (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+
+      const file = item.getAsFile();
+      if (!file) continue;
+
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target.result;
+
+        // Send to main process to save image
+        ipcRenderer.send('save-pasted-image', {
+          data: base64Data,
+          type: file.type
+        });
+      };
+      reader.readAsDataURL(file);
+      break;
+    }
+  }
+});
+
+// Handle drag and drop for images
+editor.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+});
+
+editor.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const files = e.dataTransfer?.files;
+  if (!files || files.length === 0) return;
+
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target.result;
+
+        // Send to main process to save image
+        ipcRenderer.send('save-dropped-image', {
+          data: base64Data,
+          type: file.type,
+          name: file.name
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
+
+// Listen for image saved response
+ipcRenderer.on('image-saved', (event, imagePath) => {
+  // Insert markdown image syntax at cursor
+  const cursorPos = editor.selectionStart;
+  const textBefore = editor.value.substring(0, cursorPos);
+  const textAfter = editor.value.substring(cursorPos);
+
+  const imageMarkdown = `![image](${imagePath})`;
+  editor.value = textBefore + imageMarkdown + textAfter;
+
+  // Place cursor after inserted image
+  const newCursorPos = cursorPos + imageMarkdown.length;
+  editor.setSelectionRange(newCursorPos, newCursorPos);
+  editor.focus();
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // Update CodeMirror if in writing mode with formatting
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: editor.value
+      }
+    });
+  }
+});
+
 // Scroll synchronization
 let isEditorScrolling = false;
 let isPreviewScrolling = false;
