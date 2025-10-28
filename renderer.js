@@ -970,6 +970,43 @@ function toggleNumberedList() {
   formatList('numbered');
 }
 
+// Insert table template
+function insertTable() {
+  const cursorPos = editor.selectionStart;
+  const textBefore = editor.value.substring(0, cursorPos);
+  const textAfter = editor.value.substring(cursorPos);
+
+  // Default 3x3 table template
+  const tableTemplate = `| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+`;
+
+  // Insert table at cursor position
+  editor.value = textBefore + tableTemplate + textAfter;
+
+  // Place cursor at first cell content
+  const newCursorPos = cursorPos + '| '.length;
+  editor.setSelectionRange(newCursorPos, newCursorPos + 'Column 1'.length);
+  editor.focus();
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // If in writing mode with formatting enabled, update CodeMirror
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: editor.value
+      }
+    });
+  }
+}
+
 function formatList(type) {
   const start = editor.selectionStart;
   const end = editor.selectionEnd;
@@ -1069,6 +1106,11 @@ ipcRenderer.on('toggle-bullet-list', () => {
 
 ipcRenderer.on('toggle-numbered-list', () => {
   toggleNumberedList();
+});
+
+// Listen for insert table command
+ipcRenderer.on('insert-table', () => {
+  insertTable();
 });
 
 // Handle link clicks in preview

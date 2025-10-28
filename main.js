@@ -279,6 +279,14 @@ function createMenu() {
           click: () => {
             mainWindow.webContents.send('toggle-numbered-list');
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'Insert Table',
+          accelerator: 'CmdOrCtrl+T',
+          click: () => {
+            mainWindow.webContents.send('insert-table');
+          }
         }
       ]
     },
