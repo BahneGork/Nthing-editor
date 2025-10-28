@@ -238,6 +238,73 @@ editor.addEventListener('input', () => {
   }
 });
 
+// Auto-continue lists on Enter
+editor.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    const cursorPos = editor.selectionStart;
+    const text = editor.value;
+
+    // Find the current line
+    const lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
+    const lineEnd = text.indexOf('\n', cursorPos);
+    const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+    // Check for bullet list (-, *, +)
+    const bulletMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
+    if (bulletMatch) {
+      e.preventDefault();
+      const indent = bulletMatch[1];
+      const bullet = bulletMatch[2];
+      const content = bulletMatch[3];
+
+      // If line is empty (just the bullet), remove it and create normal line
+      if (content.trim() === '') {
+        const newText = text.substring(0, lineStart) + indent + text.substring(cursorPos);
+        editor.value = newText;
+        editor.setSelectionRange(lineStart + indent.length, lineStart + indent.length);
+      } else {
+        // Continue the bullet list
+        const newBullet = `\n${indent}${bullet} `;
+        const newText = text.substring(0, cursorPos) + newBullet + text.substring(cursorPos);
+        editor.value = newText;
+        editor.setSelectionRange(cursorPos + newBullet.length, cursorPos + newBullet.length);
+      }
+
+      updatePreview();
+      updateStats();
+      updateLineNumbers();
+      return;
+    }
+
+    // Check for numbered list (1., 2., etc.)
+    const numberMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
+    if (numberMatch) {
+      e.preventDefault();
+      const indent = numberMatch[1];
+      const number = parseInt(numberMatch[2]);
+      const content = numberMatch[3];
+
+      // If line is empty (just the number), remove it and create normal line
+      if (content.trim() === '') {
+        const newText = text.substring(0, lineStart) + indent + text.substring(cursorPos);
+        editor.value = newText;
+        editor.setSelectionRange(lineStart + indent.length, lineStart + indent.length);
+      } else {
+        // Continue the numbered list
+        const newNumber = `\n${indent}${number + 1}. `;
+        const newText = text.substring(0, cursorPos) + newNumber + text.substring(cursorPos);
+        editor.value = newText;
+        editor.setSelectionRange(cursorPos + newNumber.length, cursorPos + newNumber.length);
+      }
+
+      updatePreview();
+      updateStats();
+      updateLineNumbers();
+      return;
+    }
+  }
+});
+
 // Handle image paste from clipboard
 editor.addEventListener('paste', async (e) => {
   const items = e.clipboardData?.items;
@@ -641,6 +708,19 @@ function initializeCodeMirror() {
           updatePreview();
           updateStats();
           updateLineNumbers();
+
+          // Mark content as changed and notify main process (debounced)
+          if (!contentChangedSinceLastSave) {
+            contentChangedSinceLastSave = true;
+            // Clear existing timeout
+            if (contentChangeTimeout) {
+              clearTimeout(contentChangeTimeout);
+            }
+            // Debounce: wait 300ms before sending the message
+            contentChangeTimeout = setTimeout(() => {
+              ipcRenderer.send('content-changed');
+            }, 300);
+          }
         }
       })
     ]
