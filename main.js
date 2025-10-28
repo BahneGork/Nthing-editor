@@ -180,6 +180,25 @@ function createMenu() {
       ]
     },
     {
+      label: 'Format',
+      submenu: [
+        {
+          label: 'Toggle Bullet List',
+          accelerator: 'CmdOrCtrl+Shift+8',
+          click: () => {
+            mainWindow.webContents.send('toggle-bullet-list');
+          }
+        },
+        {
+          label: 'Toggle Numbered List',
+          accelerator: 'CmdOrCtrl+Shift+7',
+          click: () => {
+            mainWindow.webContents.send('toggle-numbered-list');
+          }
+        }
+      ]
+    },
+    {
       label: 'View',
       submenu: [
         {

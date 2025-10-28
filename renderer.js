@@ -854,6 +854,116 @@ function clearHighlights() {
   matchCountDisplay.textContent = '';
 }
 
+// List formatting functions
+function toggleBulletList() {
+  formatList('bullet');
+}
+
+function toggleNumberedList() {
+  formatList('numbered');
+}
+
+function formatList(type) {
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  const text = editor.value;
+
+  // Get the lines that are selected
+  const beforeSelection = text.substring(0, start);
+  const selection = text.substring(start, end);
+  const afterSelection = text.substring(end);
+
+  // Find the start of the first selected line
+  const lineStart = beforeSelection.lastIndexOf('\n') + 1;
+  // Find the end of the last selected line
+  let lineEnd = end;
+  const nextNewline = text.indexOf('\n', end);
+  if (nextNewline !== -1) {
+    lineEnd = nextNewline;
+  } else {
+    lineEnd = text.length;
+  }
+
+  // Get the full lines
+  const fullSelection = text.substring(lineStart, lineEnd);
+  const lines = fullSelection.split('\n');
+
+  // Check if all lines are already formatted as the requested list type
+  const bulletRegex = /^[\s]*[-*+]\s+/;
+  const numberedRegex = /^[\s]*\d+\.\s+/;
+
+  let allBullets = true;
+  let allNumbered = true;
+
+  for (const line of lines) {
+    if (line.trim().length === 0) continue; // Skip empty lines
+    if (!bulletRegex.test(line)) allBullets = false;
+    if (!numberedRegex.test(line)) allNumbered = false;
+  }
+
+  let newLines;
+  if (type === 'bullet') {
+    if (allBullets) {
+      // Remove bullet formatting
+      newLines = lines.map(line => line.replace(bulletRegex, ''));
+    } else {
+      // Add bullet formatting
+      newLines = lines.map(line => {
+        if (line.trim().length === 0) return line;
+        // Remove existing list markers first
+        const cleaned = line.replace(bulletRegex, '').replace(numberedRegex, '');
+        return '- ' + cleaned;
+      });
+    }
+  } else if (type === 'numbered') {
+    if (allNumbered) {
+      // Remove numbered formatting
+      newLines = lines.map(line => line.replace(numberedRegex, ''));
+    } else {
+      // Add numbered formatting
+      let number = 1;
+      newLines = lines.map(line => {
+        if (line.trim().length === 0) return line;
+        // Remove existing list markers first
+        const cleaned = line.replace(bulletRegex, '').replace(numberedRegex, '');
+        return `${number++}. ` + cleaned;
+      });
+    }
+  }
+
+  // Replace the text
+  const newText = text.substring(0, lineStart) + newLines.join('\n') + text.substring(lineEnd);
+  editor.value = newText;
+
+  // Update cursor position - select the modified lines
+  const newLineEnd = lineStart + newLines.join('\n').length;
+  editor.setSelectionRange(lineStart, newLineEnd);
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // If in writing mode with formatting enabled, update CodeMirror
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: editor.value
+      }
+    });
+  }
+}
+
+// Listen for list formatting commands
+ipcRenderer.on('toggle-bullet-list', () => {
+  toggleBulletList();
+});
+
+ipcRenderer.on('toggle-numbered-list', () => {
+  toggleNumberedList();
+});
+
 // Handle link clicks in preview
 preview.addEventListener('click', (e) => {
   if (e.target.tagName === 'A') {
