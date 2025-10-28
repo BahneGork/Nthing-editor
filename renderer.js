@@ -76,6 +76,8 @@ let syncScrollEnabled = true; // Scroll sync state
 let showFormatting = false; // Formatting display state
 let showPreview = true; // Preview visibility state
 let codemirrorView = null; // CodeMirror instance
+let contentChangedSinceLastSave = false; // Track unsaved changes
+let contentChangeTimeout = null; // Debounce timer
 
 // Configure marked options
 marked.setOptions({
@@ -164,6 +166,19 @@ editor.addEventListener('input', () => {
   updatePreview();
   updateStats();
   updateLineNumbers();
+
+  // Mark content as changed and notify main process (debounced)
+  if (!contentChangedSinceLastSave) {
+    contentChangedSinceLastSave = true;
+    // Clear existing timeout
+    if (contentChangeTimeout) {
+      clearTimeout(contentChangeTimeout);
+    }
+    // Debounce: wait 300ms before sending the message
+    contentChangeTimeout = setTimeout(() => {
+      ipcRenderer.send('content-changed');
+    }, 300);
+  }
 });
 
 // Scroll synchronization
@@ -550,6 +565,7 @@ if (savedFormattingPref !== null) {
 ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   editor.value = content;
   currentFilePath = filePath;
+  contentChangedSinceLastSave = false; // Reset unsaved flag
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -560,6 +576,7 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
 ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
+  contentChangedSinceLastSave = false; // Reset unsaved flag for new file
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -575,6 +592,7 @@ ipcRenderer.on('save-file-request', () => {
 // Listen for file saved
 ipcRenderer.on('file-saved', (event, filePath) => {
   currentFilePath = filePath;
+  contentChangedSinceLastSave = false; // Reset unsaved flag after save
   updateStatus(`Saved: ${filePath}`);
 });
 

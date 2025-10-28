@@ -6,9 +6,59 @@ let mainWindow;
 let currentFilePath = null;
 let recentFiles = [];
 const MAX_RECENT_FILES = 10;
+let lastSaveTime = null;
 
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
+
+// Update window title with filename and save status
+function updateWindowTitle(unsaved = false) {
+  let title = '';
+
+  if (currentFilePath) {
+    // Get filename without extension
+    const filename = path.basename(currentFilePath, path.extname(currentFilePath));
+    title = filename;
+  } else {
+    title = 'Untitled';
+  }
+
+  // Add save status
+  if (unsaved) {
+    title += ' - Not saved';
+  } else if (lastSaveTime) {
+    const now = new Date();
+    const savedDate = new Date(lastSaveTime);
+    const diffMs = now - savedDate;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    let timeStr;
+    if (diffMins < 1) {
+      timeStr = 'just now';
+    } else if (diffMins === 1) {
+      timeStr = '1 minute ago';
+    } else if (diffMins < 60) {
+      timeStr = `${diffMins} minutes ago`;
+    } else {
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours === 1) {
+        timeStr = '1 hour ago';
+      } else if (diffHours < 24) {
+        timeStr = `${diffHours} hours ago`;
+      } else {
+        // Show date/time for older saves
+        timeStr = savedDate.toLocaleString();
+      }
+    }
+
+    title += ` - Last saved ${timeStr}`;
+  } else {
+    title += ' - Not saved';
+  }
+
+  title += ' - Nthing';
+  mainWindow.setTitle(title);
+}
 
 // Load recent files from disk
 function loadRecentFiles() {
@@ -68,6 +118,9 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
+  // Set initial title
+  updateWindowTitle(true); // New file, unsaved
+
   // Load recent files
   loadRecentFiles();
 
@@ -113,7 +166,9 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             currentFilePath = null;
+            lastSaveTime = null;
             mainWindow.webContents.send('new-file');
+            updateWindowTitle(true); // New file, unsaved
           }
         },
         {
@@ -268,8 +323,10 @@ function openFileByPath(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     currentFilePath = filePath;
+    lastSaveTime = null; // Reset save time when opening file
     addToRecentFiles(filePath);
     mainWindow.webContents.send('file-opened', { content, filePath });
+    updateWindowTitle(false); // File just opened, not unsaved
   } catch (err) {
     dialog.showMessageBox(mainWindow, {
       type: 'error',
@@ -307,12 +364,19 @@ ipcMain.on('save-content', (event, content) => {
   if (currentFilePath) {
     try {
       fs.writeFileSync(currentFilePath, content, 'utf-8');
+      lastSaveTime = Date.now();
       addToRecentFiles(currentFilePath);
       mainWindow.webContents.send('file-saved', currentFilePath);
+      updateWindowTitle(false); // Just saved, not unsaved
     } catch (err) {
       console.error('Error saving file:', err);
     }
   }
+});
+
+// Handle content changed (mark as unsaved)
+ipcMain.on('content-changed', () => {
+  updateWindowTitle(true); // Mark as unsaved
 });
 
 app.whenReady().then(createWindow);
