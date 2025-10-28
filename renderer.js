@@ -126,6 +126,7 @@ const syncScrollToggle = document.getElementById('sync-scroll-toggle');
 const showFormattingToggle = document.getElementById('show-formatting-toggle');
 const showPreviewToggle = document.getElementById('show-preview-toggle');
 const codemirrorContainer = document.getElementById('codemirror-container');
+const autosaveStatus = document.getElementById('autosave-status');
 
 let currentFilePath = null;
 let currentMode = 'editor'; // 'editor' or 'writing'
@@ -1393,6 +1394,25 @@ ipcRenderer.on('toggle-numbered-list', () => {
 // Listen for insert table command
 ipcRenderer.on('insert-table', () => {
   insertTable();
+});
+
+// Listen for autosave status updates
+ipcRenderer.on('autosave-status', (event, { enabled, interval }) => {
+  if (enabled) {
+    autosaveStatus.textContent = `Autosave: ${interval} min`;
+  } else {
+    autosaveStatus.textContent = '';
+  }
+});
+
+// Listen for autosave saving notification
+ipcRenderer.on('autosave-saving', () => {
+  // Show brief notification in status
+  const originalStatus = status.textContent;
+  status.textContent = 'Autosaving...';
+  setTimeout(() => {
+    status.textContent = originalStatus;
+  }, 2000);
 });
 
 // Handle link clicks in preview

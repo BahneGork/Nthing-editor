@@ -118,11 +118,15 @@ function startAutosave() {
   if (autosaveEnabled && autosaveInterval > 0) {
     autosaveTimer = setInterval(() => {
       if (hasUnsavedChanges && currentFilePath) {
+        // Notify renderer that autosave is saving
+        mainWindow.webContents.send('autosave-saving');
         // Request content from renderer and save
         mainWindow.webContents.send('save-file-request');
       }
     }, autosaveInterval);
   }
+  // Send autosave status to renderer
+  sendAutosaveStatus();
 }
 
 function stopAutosave() {
@@ -130,6 +134,8 @@ function stopAutosave() {
     clearInterval(autosaveTimer);
     autosaveTimer = null;
   }
+  // Send autosave status to renderer
+  sendAutosaveStatus();
 }
 
 function toggleAutosave(enabled) {
@@ -150,6 +156,15 @@ function setAutosaveInterval(minutes) {
   createMenu(); // Rebuild menu to update checkmark
 }
 
+function sendAutosaveStatus() {
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send('autosave-status', {
+      enabled: autosaveEnabled,
+      interval: autosaveInterval / 60000 // Convert to minutes
+    });
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -164,6 +179,11 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Send autosave status after page loads
+  mainWindow.webContents.on('did-finish-load', () => {
+    sendAutosaveStatus();
+  });
 
   // Set initial title
   updateWindowTitle(true); // New file, unsaved
