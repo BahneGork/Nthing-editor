@@ -47,7 +47,10 @@ if (tags) {
     {tag: tags.heading5, fontSize: "1em", fontWeight: "bold"},
     {tag: tags.heading6, fontSize: "1em", fontWeight: "bold"},
     {tag: tags.strong, fontWeight: "bold"},
-    {tag: tags.emphasis, fontStyle: "italic"}
+    {tag: tags.emphasis, fontStyle: "italic"},
+    // YAML frontmatter - grey monospace styling
+    {tag: tags.meta, fontSize: "13px", fontWeight: "normal", fontFamily: "Consolas, Monaco, monospace", color: "#6b7280", backgroundColor: "#f9fafb"},
+    {tag: tags.processingInstruction, color: "#999"}
   ]);
 } else {
   console.log('Tags not available, will use CSS fallback');
@@ -73,6 +76,8 @@ let syncScrollEnabled = true; // Scroll sync state
 let showFormatting = false; // Formatting display state
 let showPreview = true; // Preview visibility state
 let codemirrorView = null; // CodeMirror instance
+let contentChangedSinceLastSave = false; // Track unsaved changes
+let contentChangeTimeout = null; // Debounce timer
 
 // Configure marked options
 marked.setOptions({
@@ -161,6 +166,19 @@ editor.addEventListener('input', () => {
   updatePreview();
   updateStats();
   updateLineNumbers();
+
+  // Mark content as changed and notify main process (debounced)
+  if (!contentChangedSinceLastSave) {
+    contentChangedSinceLastSave = true;
+    // Clear existing timeout
+    if (contentChangeTimeout) {
+      clearTimeout(contentChangeTimeout);
+    }
+    // Debounce: wait 300ms before sending the message
+    contentChangeTimeout = setTimeout(() => {
+      ipcRenderer.send('content-changed');
+    }, 300);
+  }
 });
 
 // Scroll synchronization
@@ -547,6 +565,7 @@ if (savedFormattingPref !== null) {
 ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   editor.value = content;
   currentFilePath = filePath;
+  contentChangedSinceLastSave = false; // Reset unsaved flag
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -557,6 +576,7 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
 ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
+  contentChangedSinceLastSave = false; // Reset unsaved flag for new file
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -572,6 +592,7 @@ ipcRenderer.on('save-file-request', () => {
 // Listen for file saved
 ipcRenderer.on('file-saved', (event, filePath) => {
   currentFilePath = filePath;
+  contentChangedSinceLastSave = false; // Reset unsaved flag after save
   updateStatus(`Saved: ${filePath}`);
 });
 
@@ -598,6 +619,52 @@ const replaceBtn = document.getElementById('replace-btn');
 const replaceAllBtn = document.getElementById('replace-all-btn');
 const closeDialogBtn = document.getElementById('close-dialog');
 const matchCountDisplay = document.getElementById('match-count');
+
+// Make dialog draggable
+let isDragging = false;
+let currentX;
+let currentY;
+let initialX;
+let initialY;
+
+const dialogHeader = dialog.querySelector('.dialog-header');
+
+dialogHeader.addEventListener('mousedown', (e) => {
+  isDragging = true;
+
+  // Get initial mouse position
+  initialX = e.clientX - dialog.offsetLeft;
+  initialY = e.clientY - dialog.offsetTop;
+
+  dialogHeader.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    e.preventDefault();
+
+    currentX = e.clientX - initialX;
+    currentY = e.clientY - initialY;
+
+    // Keep dialog within viewport bounds
+    const maxX = window.innerWidth - dialog.offsetWidth;
+    const maxY = window.innerHeight - dialog.offsetHeight;
+
+    currentX = Math.max(0, Math.min(currentX, maxX));
+    currentY = Math.max(0, Math.min(currentY, maxY));
+
+    dialog.style.left = currentX + 'px';
+    dialog.style.top = currentY + 'px';
+    dialog.style.transform = 'none';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isDragging) {
+    isDragging = false;
+    dialogHeader.style.cursor = 'grab';
+  }
+});
 
 let matches = [];
 let currentMatchIndex = -1;
@@ -804,6 +871,116 @@ function clearHighlights() {
   currentMatchIndex = -1;
   matchCountDisplay.textContent = '';
 }
+
+// List formatting functions
+function toggleBulletList() {
+  formatList('bullet');
+}
+
+function toggleNumberedList() {
+  formatList('numbered');
+}
+
+function formatList(type) {
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  const text = editor.value;
+
+  // Get the lines that are selected
+  const beforeSelection = text.substring(0, start);
+  const selection = text.substring(start, end);
+  const afterSelection = text.substring(end);
+
+  // Find the start of the first selected line
+  const lineStart = beforeSelection.lastIndexOf('\n') + 1;
+  // Find the end of the last selected line
+  let lineEnd = end;
+  const nextNewline = text.indexOf('\n', end);
+  if (nextNewline !== -1) {
+    lineEnd = nextNewline;
+  } else {
+    lineEnd = text.length;
+  }
+
+  // Get the full lines
+  const fullSelection = text.substring(lineStart, lineEnd);
+  const lines = fullSelection.split('\n');
+
+  // Check if all lines are already formatted as the requested list type
+  const bulletRegex = /^[\s]*[-*+]\s+/;
+  const numberedRegex = /^[\s]*\d+\.\s+/;
+
+  let allBullets = true;
+  let allNumbered = true;
+
+  for (const line of lines) {
+    if (line.trim().length === 0) continue; // Skip empty lines
+    if (!bulletRegex.test(line)) allBullets = false;
+    if (!numberedRegex.test(line)) allNumbered = false;
+  }
+
+  let newLines;
+  if (type === 'bullet') {
+    if (allBullets) {
+      // Remove bullet formatting
+      newLines = lines.map(line => line.replace(bulletRegex, ''));
+    } else {
+      // Add bullet formatting
+      newLines = lines.map(line => {
+        if (line.trim().length === 0) return line;
+        // Remove existing list markers first
+        const cleaned = line.replace(bulletRegex, '').replace(numberedRegex, '');
+        return '- ' + cleaned;
+      });
+    }
+  } else if (type === 'numbered') {
+    if (allNumbered) {
+      // Remove numbered formatting
+      newLines = lines.map(line => line.replace(numberedRegex, ''));
+    } else {
+      // Add numbered formatting
+      let number = 1;
+      newLines = lines.map(line => {
+        if (line.trim().length === 0) return line;
+        // Remove existing list markers first
+        const cleaned = line.replace(bulletRegex, '').replace(numberedRegex, '');
+        return `${number++}. ` + cleaned;
+      });
+    }
+  }
+
+  // Replace the text
+  const newText = text.substring(0, lineStart) + newLines.join('\n') + text.substring(lineEnd);
+  editor.value = newText;
+
+  // Update cursor position - select the modified lines
+  const newLineEnd = lineStart + newLines.join('\n').length;
+  editor.setSelectionRange(lineStart, newLineEnd);
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // If in writing mode with formatting enabled, update CodeMirror
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: editor.value
+      }
+    });
+  }
+}
+
+// Listen for list formatting commands
+ipcRenderer.on('toggle-bullet-list', () => {
+  toggleBulletList();
+});
+
+ipcRenderer.on('toggle-numbered-list', () => {
+  toggleNumberedList();
+});
 
 // Handle link clicks in preview
 preview.addEventListener('click', (e) => {
