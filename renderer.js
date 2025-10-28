@@ -677,6 +677,7 @@ function updateStatus(message) {
 
 // Find & Replace functionality
 const dialog = document.getElementById('find-replace-dialog');
+const dialogTitle = document.getElementById('dialog-title');
 const findInput = document.getElementById('find-input');
 const replaceInput = document.getElementById('replace-input');
 const caseSensitive = document.getElementById('case-sensitive');
@@ -741,6 +742,10 @@ let showReplace = false;
 // Listen for show find dialog
 ipcRenderer.on('show-find-dialog', (event, withReplace) => {
   showReplace = withReplace;
+
+  // Update dialog title
+  dialogTitle.textContent = withReplace ? 'Find & Replace' : 'Find';
+
   if (withReplace) {
     replaceInput.parentElement.style.display = 'flex';
     replaceBtn.style.display = 'inline-block';
@@ -846,8 +851,24 @@ function highlightMatches() {
   if (matches.length === 0) return;
 
   const match = matches[currentMatchIndex];
-  editor.focus();
+
+  // Calculate line number to scroll to
+  const textBeforeMatch = editor.value.substring(0, match.start);
+  const lineNumber = textBeforeMatch.split('\n').length;
+
+  // Get approximate scroll position
+  const lineHeight = 24; // Approximate line height in pixels
+  const scrollTop = (lineNumber - 1) * lineHeight;
+
+  // Scroll editor to show the match
+  editor.scrollTop = Math.max(0, scrollTop - editor.clientHeight / 2);
+
+  // Select the matched text in the editor (this highlights it visually)
   editor.setSelectionRange(match.start, match.end);
+
+  // Keep focus on the find input, not the editor
+  // This way the text stays highlighted but typing goes to find input
+  findInput.focus();
 
   matchCountDisplay.textContent = `Match ${currentMatchIndex + 1} of ${matches.length}`;
 }
