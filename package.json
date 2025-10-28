@@ -8,7 +8,10 @@
     "dev": "electron .",
     "build": "electron-builder --win",
     "build:portable": "electron-builder --win portable",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "release:patch": "npm version patch && npm run build",
+    "release:minor": "npm version minor && npm run build",
+    "release:major": "npm version major && npm run build"
   },
   "keywords": ["markdown", "editor", "electron", "writing", "notes"],
   "author": "",
