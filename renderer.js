@@ -30,6 +30,15 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key === 'Alt') {
     ipcRenderer.send('show-menu');
   }
+
+  // Ctrl+1 through Ctrl+9 for recent files
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 9) {
+      e.preventDefault();
+      ipcRenderer.send('open-recent-file-by-index', num - 1);
+    }
+  }
 });
 
 // Listen for title updates from main process

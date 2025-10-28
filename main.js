@@ -414,6 +414,14 @@ ipcMain.on('show-menu', (event) => {
   }
 });
 
+// Handle opening recent file by index (Ctrl+1 through Ctrl+9)
+ipcMain.on('open-recent-file-by-index', (event, index) => {
+  if (index >= 0 && index < recentFiles.length) {
+    const filePath = recentFiles[index];
+    openRecentFile(filePath);
+  }
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
