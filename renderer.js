@@ -708,6 +708,19 @@ function initializeCodeMirror() {
           updatePreview();
           updateStats();
           updateLineNumbers();
+
+          // Mark content as changed and notify main process (debounced)
+          if (!contentChangedSinceLastSave) {
+            contentChangedSinceLastSave = true;
+            // Clear existing timeout
+            if (contentChangeTimeout) {
+              clearTimeout(contentChangeTimeout);
+            }
+            // Debounce: wait 300ms before sending the message
+            contentChangeTimeout = setTimeout(() => {
+              ipcRenderer.send('content-changed');
+            }, 300);
+          }
         }
       })
     ]
