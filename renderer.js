@@ -47,7 +47,10 @@ if (tags) {
     {tag: tags.heading5, fontSize: "1em", fontWeight: "bold"},
     {tag: tags.heading6, fontSize: "1em", fontWeight: "bold"},
     {tag: tags.strong, fontWeight: "bold"},
-    {tag: tags.emphasis, fontStyle: "italic"}
+    {tag: tags.emphasis, fontStyle: "italic"},
+    // YAML frontmatter - grey monospace styling
+    {tag: tags.meta, fontSize: "13px", fontWeight: "normal", fontFamily: "Consolas, Monaco, monospace", color: "#6b7280", backgroundColor: "#f9fafb"},
+    {tag: tags.processingInstruction, color: "#999"}
   ]);
 } else {
   console.log('Tags not available, will use CSS fallback');
