@@ -45,6 +45,24 @@ body {
   color: #333;
 }
 
+.menu-btn {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-left: 8px;
+  transition: background-color 0.2s;
+  -webkit-app-region: no-drag;
+}
+
+.menu-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
 .titlebar-center {
   position: absolute;
   left: 50%;

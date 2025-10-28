@@ -5,6 +5,7 @@ const { marked } = require('marked');
 const minimizeBtn = document.getElementById('minimize-btn');
 const maximizeBtn = document.getElementById('maximize-btn');
 const closeBtn = document.getElementById('close-btn');
+const menuBtn = document.getElementById('menu-btn');
 const titlebarText = document.getElementById('titlebar-text');
 
 minimizeBtn.addEventListener('click', () => {
@@ -17,6 +18,18 @@ maximizeBtn.addEventListener('click', () => {
 
 closeBtn.addEventListener('click', () => {
   ipcRenderer.send('close-window');
+});
+
+// Menu button - shows application menu
+menuBtn.addEventListener('click', () => {
+  ipcRenderer.send('show-menu');
+});
+
+// Alt key shows menu
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key === 'Alt') {
+    ipcRenderer.send('show-menu');
+  }
 });
 
 // Listen for title updates from main process
