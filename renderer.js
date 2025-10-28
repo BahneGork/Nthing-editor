@@ -602,6 +602,52 @@ const replaceAllBtn = document.getElementById('replace-all-btn');
 const closeDialogBtn = document.getElementById('close-dialog');
 const matchCountDisplay = document.getElementById('match-count');
 
+// Make dialog draggable
+let isDragging = false;
+let currentX;
+let currentY;
+let initialX;
+let initialY;
+
+const dialogHeader = dialog.querySelector('.dialog-header');
+
+dialogHeader.addEventListener('mousedown', (e) => {
+  isDragging = true;
+
+  // Get initial mouse position
+  initialX = e.clientX - dialog.offsetLeft;
+  initialY = e.clientY - dialog.offsetTop;
+
+  dialogHeader.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    e.preventDefault();
+
+    currentX = e.clientX - initialX;
+    currentY = e.clientY - initialY;
+
+    // Keep dialog within viewport bounds
+    const maxX = window.innerWidth - dialog.offsetWidth;
+    const maxY = window.innerHeight - dialog.offsetHeight;
+
+    currentX = Math.max(0, Math.min(currentX, maxX));
+    currentY = Math.max(0, Math.min(currentY, maxY));
+
+    dialog.style.left = currentX + 'px';
+    dialog.style.top = currentY + 'px';
+    dialog.style.transform = 'none';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isDragging) {
+    isDragging = false;
+    dialogHeader.style.cursor = 'grab';
+  }
+});
+
 let matches = [];
 let currentMatchIndex = -1;
 let showReplace = false;
