@@ -780,6 +780,7 @@ const replaceBtn = document.getElementById('replace-btn');
 const replaceAllBtn = document.getElementById('replace-all-btn');
 const closeDialogBtn = document.getElementById('close-dialog');
 const matchCountDisplay = document.getElementById('match-count');
+const highlightOverlay = document.getElementById('highlight-overlay');
 
 // Make dialog draggable
 let isDragging = false;
@@ -865,6 +866,7 @@ ipcRenderer.on('show-find-dialog', (event, withReplace) => {
 closeDialogBtn.addEventListener('click', () => {
   dialog.classList.add('hidden');
   clearHighlights();
+  clearHighlightOverlay();
 });
 
 // Close dialog on Escape key
@@ -872,6 +874,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !dialog.classList.contains('hidden')) {
     dialog.classList.add('hidden');
     clearHighlights();
+    clearHighlightOverlay();
   }
 });
 
@@ -962,7 +965,86 @@ function highlightMatches() {
   // This way the text stays highlighted but typing goes to find input
   findInput.focus();
 
+  // Draw yellow highlight overlay
+  drawHighlightOverlay(match);
+
   matchCountDisplay.textContent = `Match ${currentMatchIndex + 1} of ${matches.length}`;
+}
+
+function drawHighlightOverlay(match) {
+  // Clear previous highlights
+  highlightOverlay.innerHTML = '';
+
+  // Get text coordinates
+  const coords = getTextCoordinates(editor, match.start, match.end);
+
+  if (coords) {
+    const mark = document.createElement('div');
+    mark.className = 'highlight-mark';
+    mark.style.left = coords.left + 'px';
+    mark.style.top = coords.top + 'px';
+    mark.style.width = coords.width + 'px';
+    mark.style.height = coords.height + 'px';
+    highlightOverlay.appendChild(mark);
+  }
+}
+
+function getTextCoordinates(textarea, start, end) {
+  // Create a mirror div to measure text position
+  const mirror = document.createElement('div');
+  const computed = window.getComputedStyle(textarea);
+
+  // Copy all relevant styles
+  mirror.style.position = 'absolute';
+  mirror.style.visibility = 'hidden';
+  mirror.style.whiteSpace = 'pre-wrap';
+  mirror.style.wordWrap = 'break-word';
+  mirror.style.font = computed.font;
+  mirror.style.fontSize = computed.fontSize;
+  mirror.style.fontFamily = computed.fontFamily;
+  mirror.style.lineHeight = computed.lineHeight;
+  mirror.style.padding = computed.padding;
+  mirror.style.border = computed.border;
+  mirror.style.width = textarea.clientWidth + 'px';
+
+  document.body.appendChild(mirror);
+
+  // Get text before the match
+  const textBefore = textarea.value.substring(0, start);
+  const matchedText = textarea.value.substring(start, end);
+
+  // Measure position
+  mirror.textContent = textBefore;
+  const beforeRect = mirror.getBoundingClientRect();
+  const beforeHeight = mirror.scrollHeight;
+
+  // Add a span for the matched text to measure its width
+  mirror.textContent = textBefore;
+  const matchSpan = document.createElement('span');
+  matchSpan.textContent = matchedText;
+  mirror.appendChild(matchSpan);
+
+  const matchRect = matchSpan.getBoundingClientRect();
+  const mirrorRect = mirror.getBoundingClientRect();
+
+  // Calculate relative position
+  const left = matchRect.left - mirrorRect.left + parseInt(computed.paddingLeft);
+  const top = beforeHeight - textarea.scrollTop;
+  const width = matchSpan.offsetWidth;
+  const height = parseInt(computed.lineHeight) || 24;
+
+  document.body.removeChild(mirror);
+
+  return {
+    left: left,
+    top: top,
+    width: width,
+    height: height
+  };
+}
+
+function clearHighlightOverlay() {
+  highlightOverlay.innerHTML = '';
 }
 
 function findNext() {

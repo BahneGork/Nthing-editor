@@ -218,6 +218,17 @@ body {
   display: none;
 }
 
+/* Bright yellow selection for find results */
+#editor::selection {
+  background-color: #ffeb3b; /* Bright yellow like a marker */
+  color: inherit;
+}
+
+#editor::-moz-selection {
+  background-color: #ffeb3b;
+  color: inherit;
+}
+
 /* CodeMirror container */
 .codemirror-container {
   flex: 1;
@@ -229,6 +240,25 @@ body {
 
 .codemirror-container.hidden {
   display: none;
+}
+
+/* Highlight overlay for find results */
+.highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.highlight-overlay .highlight-mark {
+  position: absolute;
+  background-color: #ffeb3b; /* Bright yellow like a marker */
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .codemirror-container .cm-editor {
