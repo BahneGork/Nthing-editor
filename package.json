@@ -51,21 +51,21 @@
           "name": "Markdown File",
           "description": "Markdown Document",
           "role": "Editor",
-          "icon": "build/icon.ico"
+          "icon": "build/Nthing.ico"
         },
         {
           "ext": "markdown",
           "name": "Markdown File",
           "description": "Markdown Document",
           "role": "Editor",
-          "icon": "build/icon.ico"
+          "icon": "build/Nthing.ico"
         },
         {
           "ext": "txt",
           "name": "Text File",
           "description": "Plain Text Document",
           "role": "Editor",
-          "icon": "build/icon.ico"
+          "icon": "build/Nthing.ico"
         }
       ]
     },
