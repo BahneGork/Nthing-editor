@@ -12,6 +12,7 @@ let autosaveEnabled = false;
 let autosaveInterval = 5 * 60 * 1000; // Default: 5 minutes in milliseconds
 let autosaveTimer = null;
 let autosavePersistent = false; // Whether autosave setting persists across sessions
+let titleUpdateTimer = null; // Timer for updating title every minute
 
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
@@ -64,8 +65,12 @@ function updateWindowTitle(unsaved = false) {
   }
 
   // Send to renderer to update custom title bar
-  if (mainWindow && mainWindow.webContents) {
-    mainWindow.webContents.send('update-title', titleText);
+  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+    try {
+      mainWindow.webContents.send('update-title', titleText);
+    } catch (err) {
+      console.error('Error updating title:', err);
+    }
   }
 }
 
@@ -241,11 +246,21 @@ function createWindow() {
   updateWindowTitle(true); // New file, unsaved
 
   // Update title every minute to keep "last saved" time current
-  setInterval(() => {
-    if (lastSaveTime) {
+  titleUpdateTimer = setInterval(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && lastSaveTime) {
       updateWindowTitle(false);
     }
   }, 60000); // Every 60 seconds
+
+  // Clean up timers when window is closed
+  mainWindow.on('closed', () => {
+    if (titleUpdateTimer) {
+      clearInterval(titleUpdateTimer);
+      titleUpdateTimer = null;
+    }
+    stopAutosave();
+    mainWindow = null;
+  });
 
   // Load app settings
   loadSettings();
