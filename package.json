@@ -44,7 +44,30 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "fileAssociations": [
+        {
+          "ext": "md",
+          "name": "Markdown File",
+          "description": "Markdown Document",
+          "role": "Editor",
+          "icon": "build/icon.ico"
+        },
+        {
+          "ext": "markdown",
+          "name": "Markdown File",
+          "description": "Markdown Document",
+          "role": "Editor",
+          "icon": "build/icon.ico"
+        },
+        {
+          "ext": "txt",
+          "name": "Text File",
+          "description": "Plain Text Document",
+          "role": "Editor",
+          "icon": "build/icon.ico"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

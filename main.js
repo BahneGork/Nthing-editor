@@ -828,7 +828,107 @@ function saveImage(event, base64Data, mimeType, originalName) {
   }
 }
 
-app.whenReady().then(createWindow);
+// Handle opening files from command line or double-click
+let filePathToOpen = null;
+
+// Windows/Linux: Check command line arguments
+if (process.platform === 'win32' || process.platform === 'linux') {
+  // Skip first arg (electron) and second arg (main.js)
+  if (process.argv.length >= 2) {
+    const potentialFile = process.argv[process.argv.length - 1];
+    // Check if it's a file path (not a flag or app path)
+    if (potentialFile && !potentialFile.startsWith('-') && potentialFile !== '.' &&
+        (potentialFile.endsWith('.md') || potentialFile.endsWith('.markdown') || potentialFile.endsWith('.txt'))) {
+      filePathToOpen = potentialFile;
+    }
+  }
+}
+
+// Prevent multiple instances - if app is already running, send file to existing instance
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  // Handle second instance (when file is double-clicked while app is running)
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Focus existing window
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+
+      // Check if a file was passed
+      const filePath = commandLine[commandLine.length - 1];
+      if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt'))) {
+        // Check for unsaved changes
+        if (hasUnsavedChanges) {
+          dialog.showMessageBox(mainWindow, {
+            type: 'warning',
+            title: 'Unsaved Changes',
+            message: 'You have unsaved changes. Do you want to save before opening another file?',
+            buttons: ['Save', 'Don\'t Save', 'Cancel'],
+            defaultId: 0,
+            cancelId: 2
+          }).then(result => {
+            if (result.response === 0) {
+              // Save then open
+              mainWindow.webContents.send('save-file-request');
+              setTimeout(() => {
+                openFileByPath(filePath);
+              }, 200);
+            } else if (result.response === 1) {
+              // Don't save, just open
+              openFileByPath(filePath);
+            }
+          });
+        } else {
+          openFileByPath(filePath);
+        }
+      }
+    }
+  });
+
+  app.whenReady().then(() => {
+    createWindow();
+
+    // Open file if one was passed on startup
+    if (filePathToOpen) {
+      setTimeout(() => {
+        openFileByPath(filePathToOpen);
+      }, 500); // Small delay to ensure window is ready
+    }
+  });
+}
+
+// macOS: Handle file opening
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  if (mainWindow) {
+    if (hasUnsavedChanges) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Do you want to save before opening another file?',
+        buttons: ['Save', 'Don\'t Save', 'Cancel'],
+        defaultId: 0,
+        cancelId: 2
+      }).then(result => {
+        if (result.response === 0) {
+          mainWindow.webContents.send('save-file-request');
+          setTimeout(() => {
+            openFileByPath(filePath);
+          }, 200);
+        } else if (result.response === 1) {
+          openFileByPath(filePath);
+        }
+      });
+    } else {
+      openFileByPath(filePath);
+    }
+  } else {
+    filePathToOpen = filePath;
+  }
+});
 
 app.on('window-all-closed', () => {
   stopAutosave(); // Clean up autosave timer
