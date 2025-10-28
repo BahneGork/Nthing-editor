@@ -172,13 +172,15 @@ function startAutosave() {
   sendAutosaveStatus();
 }
 
-function stopAutosave() {
+function stopAutosave(skipStatusUpdate = false) {
   if (autosaveTimer) {
     clearInterval(autosaveTimer);
     autosaveTimer = null;
   }
-  // Send autosave status to renderer
-  sendAutosaveStatus();
+  // Send autosave status to renderer (skip if window is closing)
+  if (!skipStatusUpdate) {
+    sendAutosaveStatus();
+  }
 }
 
 function toggleAutosave(enabled, persistent = false) {
@@ -214,11 +216,15 @@ function setAutosaveInterval(minutes) {
 }
 
 function sendAutosaveStatus() {
-  if (mainWindow && mainWindow.webContents) {
-    mainWindow.webContents.send('autosave-status', {
-      enabled: autosaveEnabled,
-      interval: autosaveInterval / 60000 // Convert to minutes
-    });
+  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+    try {
+      mainWindow.webContents.send('autosave-status', {
+        enabled: autosaveEnabled,
+        interval: autosaveInterval / 60000 // Convert to minutes
+      });
+    } catch (err) {
+      console.error('Error sending autosave status:', err);
+    }
   }
 }
 
@@ -258,7 +264,7 @@ function createWindow() {
       clearInterval(titleUpdateTimer);
       titleUpdateTimer = null;
     }
-    stopAutosave();
+    stopAutosave(true); // Skip status update since window is closing
     mainWindow = null;
   });
 
@@ -931,7 +937,7 @@ app.on('open-file', (event, filePath) => {
 });
 
 app.on('window-all-closed', () => {
-  stopAutosave(); // Clean up autosave timer
+  stopAutosave(true); // Clean up autosave timer, skip status update
   if (process.platform !== 'darwin') {
     app.quit();
   }
