@@ -191,6 +191,58 @@ body {
   display: flex;
 }
 
+/* Focus mode toggle */
+.focus-mode-toggle {
+  display: none;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.focus-mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.focus-mode-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Show focus mode toggle only in Writing mode */
+.container[data-mode="writing"] .focus-mode-toggle {
+  display: flex;
+}
+
+/* Typewriter mode toggle */
+.typewriter-mode-toggle {
+  display: none;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.typewriter-mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.typewriter-mode-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Show typewriter mode toggle only in Writing mode */
+.container[data-mode="writing"] .typewriter-mode-toggle {
+  display: flex;
+}
+
 #editor {
   flex: 1;
   padding: 16px;

@@ -124,6 +124,8 @@ const container = document.querySelector('.container');
 const paneTitle = document.getElementById('pane-title');
 const syncScrollToggle = document.getElementById('sync-scroll-toggle');
 const showFormattingToggle = document.getElementById('show-formatting-toggle');
+const focusModeToggle = document.getElementById('focus-mode-toggle');
+const typewriterModeToggle = document.getElementById('typewriter-mode-toggle');
 const showPreviewToggle = document.getElementById('show-preview-toggle');
 const codemirrorContainer = document.getElementById('codemirror-container');
 const autosaveStatus = document.getElementById('autosave-status');
@@ -584,7 +586,13 @@ function switchMode(mode) {
       toggleFormatting(false);
       showFormattingToggle.checked = false;
     }
-    // Remove focus mode when switching to editor mode
+    // Disable focus mode and typewriter mode when switching to editor mode
+    if (focusModeEnabled) {
+      toggleFocusMode(false);
+    }
+    if (typewriterModeEnabled) {
+      toggleTypewriterMode(false);
+    }
     codemirrorContainer.classList.remove('focus-mode-enabled');
   }
 }
@@ -598,6 +606,11 @@ function toggleViewMode() {
 // Toggle Focus Mode - dims non-active lines in Writing Focus mode
 function toggleFocusMode(enabled) {
   focusModeEnabled = enabled;
+
+  // Update checkbox to match
+  if (focusModeToggle) {
+    focusModeToggle.checked = enabled;
+  }
 
   // Only apply focus mode when in writing mode with CodeMirror active
   if (codemirrorView && currentMode === 'writing' && showFormatting) {
@@ -624,6 +637,11 @@ function toggleFocusMode(enabled) {
 // Toggle Typewriter Mode - keeps cursor vertically centered
 function toggleTypewriterMode(enabled) {
   typewriterModeEnabled = enabled;
+
+  // Update checkbox to match
+  if (typewriterModeToggle) {
+    typewriterModeToggle.checked = enabled;
+  }
 
   // Center the cursor immediately if enabling
   if (enabled && codemirrorView && currentMode === 'writing' && showFormatting) {
@@ -879,6 +897,16 @@ function toggleFormatting(enabled) {
 // Formatting toggle handler
 showFormattingToggle.addEventListener('change', (e) => {
   toggleFormatting(e.target.checked);
+});
+
+// Focus mode toggle handler
+focusModeToggle.addEventListener('change', (e) => {
+  toggleFocusMode(e.target.checked);
+});
+
+// Typewriter mode toggle handler
+typewriterModeToggle.addEventListener('change', (e) => {
+  toggleTypewriterMode(e.target.checked);
 });
 
 // Load formatting preference
