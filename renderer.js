@@ -138,6 +138,7 @@ let contentChangedSinceLastSave = false; // Track unsaved changes
 let contentChangeTimeout = null; // Debounce timer
 let focusModeEnabled = false; // Focus mode state - dims non-active lines
 let currentActiveLine = null; // Track the currently active line for focus mode
+let typewriterModeEnabled = false; // Typewriter mode state - keeps cursor vertically centered
 
 // Configure marked options
 marked.setOptions({
@@ -608,6 +609,29 @@ function toggleFocusMode(enabled) {
   }
 }
 
+// Toggle Typewriter Mode - keeps cursor vertically centered
+function toggleTypewriterMode(enabled) {
+  typewriterModeEnabled = enabled;
+
+  // Center the cursor immediately if enabling
+  if (enabled && codemirrorView && currentMode === 'writing' && showFormatting) {
+    centerCursor();
+  }
+}
+
+// Center the cursor in the viewport
+function centerCursor() {
+  if (!codemirrorView) return;
+
+  const selection = codemirrorView.state.selection.main;
+  codemirrorView.dispatch({
+    effects: EditorView.scrollIntoView(selection.head, {
+      y: 'center',
+      yMargin: 0
+    })
+  });
+}
+
 // Listen for mode switch from menu
 ipcRenderer.on('switch-mode', (event, mode) => {
   switchMode(mode);
@@ -621,6 +645,11 @@ ipcRenderer.on('toggle-mode', () => {
 // Listen for focus mode toggle from menu
 ipcRenderer.on('toggle-focus-mode', (event, enabled) => {
   toggleFocusMode(enabled);
+});
+
+// Listen for typewriter mode toggle from menu
+ipcRenderer.on('toggle-typewriter-mode', (event, enabled) => {
+  toggleTypewriterMode(enabled);
 });
 
 // Custom theme for Typora-style markdown rendering
@@ -757,6 +786,11 @@ function initializeCodeMirror() {
               ipcRenderer.send('content-changed');
             }, 300);
           }
+        }
+
+        // Typewriter mode - center cursor when selection changes
+        if (update.selectionSet && typewriterModeEnabled && currentMode === 'writing' && showFormatting) {
+          centerCursor();
         }
       })
     ]

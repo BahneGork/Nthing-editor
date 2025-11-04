@@ -527,6 +527,14 @@ function createMenu() {
             mainWindow.webContents.send('toggle-focus-mode', menuItem.checked);
           }
         },
+        {
+          label: 'Typewriter Mode',
+          type: 'checkbox',
+          checked: false,
+          click: (menuItem) => {
+            mainWindow.webContents.send('toggle-typewriter-mode', menuItem.checked);
+          }
+        },
         { type: 'separator' },
         {
           label: 'Toggle Developer Tools',
