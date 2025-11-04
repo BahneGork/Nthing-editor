@@ -821,3 +821,13 @@ body {
 .editor-highlight.current {
   background-color: #ff9800;
 }
+
+/* Focus Mode - Dims non-active lines in Writing Focus mode */
+.focus-mode-enabled .cm-line {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.focus-mode-enabled .cm-line.cm-active-line {
+  opacity: 1;
+}

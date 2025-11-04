@@ -520,6 +520,15 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Focus Mode',
+          type: 'checkbox',
+          checked: false,
+          click: (menuItem) => {
+            mainWindow.webContents.send('toggle-focus-mode', menuItem.checked);
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Toggle Developer Tools',
           accelerator: 'F12',
           click: () => {
