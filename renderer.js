@@ -603,6 +603,18 @@ function toggleFocusMode(enabled) {
   if (codemirrorView && currentMode === 'writing' && showFormatting) {
     if (enabled) {
       codemirrorContainer.classList.add('focus-mode-enabled');
+
+      // Debug: Check what classes are on the lines
+      console.log('Focus mode enabled. Checking line classes...');
+      setTimeout(() => {
+        const lines = codemirrorContainer.querySelectorAll('.cm-line');
+        console.log('Total lines:', lines.length);
+        lines.forEach((line, i) => {
+          if (line.classList.contains('cm-activeLine') || line.classList.contains('cm-active-line')) {
+            console.log('Active line found at index', i, 'with classes:', line.className);
+          }
+        });
+      }, 100);
     } else {
       codemirrorContainer.classList.remove('focus-mode-enabled');
     }

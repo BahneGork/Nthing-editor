@@ -828,6 +828,10 @@ body {
   transition: opacity 0.2s ease;
 }
 
-.focus-mode-enabled .cm-line.cm-active-line {
-  opacity: 1;
+/* Keep active line at full opacity - try multiple selectors for CodeMirror compatibility */
+.focus-mode-enabled .cm-line.cm-activeLine,
+.focus-mode-enabled .cm-line.cm-active-line,
+.focus-mode-enabled .cm-activeLine,
+.focus-mode-enabled .cm-line:has(.cm-activeLine) {
+  opacity: 1 !important;
 }
