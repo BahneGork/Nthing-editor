@@ -1547,3 +1547,215 @@ preview.addEventListener('click', (e) => {
 updatePreview();
 updateStats();
 updateLineNumbers();
+
+// ====================================
+// VERSION HISTORY SIDEBAR
+// ====================================
+
+const versionSidebar = document.getElementById('version-history-sidebar');
+const closeVersionSidebar = document.getElementById('close-version-sidebar');
+const versionList = document.getElementById('version-list');
+const versionEmpty = document.getElementById('version-empty');
+const currentStats = document.getElementById('current-stats');
+
+let versionSidebarOpen = false;
+let currentVersions = [];
+
+// Toggle version sidebar
+function toggleVersionSidebar(show) {
+  versionSidebarOpen = show !== undefined ? show : !versionSidebarOpen;
+
+  if (versionSidebarOpen) {
+    versionSidebar.classList.remove('hidden');
+    document.body.classList.add('version-sidebar-open');
+    loadVersions();
+  } else {
+    versionSidebar.classList.add('hidden');
+    document.body.classList.remove('version-sidebar-open');
+  }
+}
+
+// Close sidebar button
+closeVersionSidebar.addEventListener('click', () => {
+  toggleVersionSidebar(false);
+});
+
+// Load versions from main process
+function loadVersions() {
+  ipcRenderer.send('get-versions');
+  updateCurrentStats();
+}
+
+// Update current file stats
+function updateCurrentStats() {
+  const content = editor.value || '';
+  const words = content.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const size = new Blob([content]).size;
+  const lines = content.split('\n').length;
+
+  currentStats.textContent = `${formatSize(size)} · ${words} words · ${lines} lines`;
+}
+
+// Format file size
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// Format timestamp
+function formatTimestamp(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+
+  // Format as date
+  const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  return date.toLocaleDateString('en-US', options);
+}
+
+// Render version list
+function renderVersions(versions) {
+  currentVersions = versions || [];
+
+  if (currentVersions.length === 0) {
+    versionList.style.display = 'none';
+    versionEmpty.style.display = 'block';
+    return;
+  }
+
+  versionList.style.display = 'block';
+  versionEmpty.style.display = 'none';
+
+  // Render in reverse order (newest first)
+  const reversedVersions = [...currentVersions].reverse();
+
+  versionList.innerHTML = reversedVersions.map(version => `
+    <div class="version-item" data-version-id="${version.id}">
+      <div class="version-icon">🕐</div>
+      <div class="version-info">
+        <div class="version-timestamp">${formatTimestamp(version.timestamp)}</div>
+        <div class="version-stats">${formatSize(version.size)} · ${version.words} words</div>
+      </div>
+      <div class="version-actions">
+        <button class="version-action-btn restore" data-action="restore" data-version-id="${version.id}">
+          ↻ Restore
+        </button>
+        <button class="version-action-btn delete" data-action="delete" data-version-id="${version.id}">
+          × Delete
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  // Add event listeners
+  versionList.querySelectorAll('.version-action-btn').forEach(btn => {
+    btn.addEventListener('click', handleVersionAction);
+  });
+}
+
+// Handle version actions
+function handleVersionAction(e) {
+  e.stopPropagation();
+  const action = e.target.dataset.action;
+  const versionId = e.target.dataset.versionId;
+
+  if (action === 'restore') {
+    restoreVersion(versionId);
+  } else if (action === 'delete') {
+    deleteVersion(versionId);
+  }
+}
+
+// Restore a version
+function restoreVersion(versionId) {
+  const confirmed = confirm('Restore this version? Your current unsaved changes will be lost.');
+  if (!confirmed) return;
+
+  ipcRenderer.send('restore-version', versionId);
+}
+
+// Delete a version
+function deleteVersion(versionId) {
+  const confirmed = confirm('Delete this version? This action cannot be undone.');
+  if (!confirmed) return;
+
+  ipcRenderer.send('delete-version', versionId);
+}
+
+// Listen for version list from main process
+ipcRenderer.on('versions-list', (event, versions) => {
+  renderVersions(versions);
+});
+
+// Listen for version restored
+ipcRenderer.on('version-restored', (event, content) => {
+  editor.value = content;
+
+  // Update CodeMirror if active
+  if (codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: content
+      }
+    });
+  }
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // Notify user
+  status.textContent = 'Version restored successfully';
+  setTimeout(() => {
+    status.textContent = 'Ready';
+  }, 3000);
+
+  // Reload versions to update list
+  loadVersions();
+});
+
+// Listen for version restore error
+ipcRenderer.on('version-restore-error', (event, error) => {
+  status.textContent = `Error: ${error}`;
+  setTimeout(() => {
+    status.textContent = 'Ready';
+  }, 3000);
+});
+
+// Update versions when file is saved
+ipcRenderer.on('file-saved', () => {
+  if (versionSidebarOpen) {
+    // Slight delay to ensure version is created
+    setTimeout(() => {
+      loadVersions();
+    }, 100);
+  }
+});
+
+// Listen for toggle version sidebar from menu
+ipcRenderer.on('toggle-version-sidebar', () => {
+  toggleVersionSidebar();
+});
+
+// Listen for create snapshot request from menu
+ipcRenderer.on('create-snapshot-request', () => {
+  const content = editor.value || '';
+  ipcRenderer.send('create-snapshot', content);
+
+  status.textContent = 'Snapshot created';
+  setTimeout(() => {
+    status.textContent = 'Ready';
+  }, 2000);
+});

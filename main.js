@@ -656,6 +656,20 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Version History...',
+          accelerator: 'CmdOrCtrl+H',
+          click: () => {
+            mainWindow.webContents.send('toggle-version-sidebar');
+          }
+        },
+        {
+          label: 'Create Snapshot',
+          click: () => {
+            mainWindow.webContents.send('create-snapshot-request');
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Exit',
           accelerator: 'CmdOrCtrl+Q',
           click: () => {

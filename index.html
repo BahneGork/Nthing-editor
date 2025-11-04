@@ -62,6 +62,34 @@
     </div>
   </div>
 
+  <!-- Version History Sidebar -->
+  <div id="version-history-sidebar" class="version-sidebar hidden">
+    <div class="version-sidebar-header">
+      <div class="version-sidebar-title">
+        <span>📜 Version History</span>
+      </div>
+      <button id="close-version-sidebar" class="close-btn">&times;</button>
+    </div>
+    <div class="version-sidebar-content">
+      <div class="version-current">
+        <div class="version-item current">
+          <div class="version-icon">📄</div>
+          <div class="version-info">
+            <div class="version-label">Current</div>
+            <div class="version-stats" id="current-stats">Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="version-list" id="version-list">
+        <!-- Versions will be populated here -->
+      </div>
+      <div class="version-empty" id="version-empty">
+        <p>No versions yet</p>
+        <p class="version-hint">Versions are created automatically when you save</p>
+      </div>
+    </div>
+  </div>
+
   <div class="container" data-mode="editor">
     <div class="editor-pane">
       <div class="pane-header">
