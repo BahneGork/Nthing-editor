@@ -14,6 +14,15 @@ let autosaveTimer = null;
 let autosavePersistent = false; // Whether autosave setting persists across sessions
 let titleUpdateTimer = null; // Timer for updating title every minute
 
+// File versioning settings
+let versioningEnabled = true; // Enable/disable file versioning
+let versionsToKeep = 10; // Number of versions to keep
+let versionStorageMode = 'local'; // 'local' (.nthing-history/ next to file) or 'global' (user-defined path)
+let versionGlobalPath = ''; // Path for global storage
+let versionAutoCleanup = false; // Auto-delete old versions
+let versionCleanupDays = 30; // Days before auto-cleanup
+const crypto = require('crypto'); // For file hashing
+
 // Path to store recent files
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
 // Path to store app settings
@@ -133,6 +142,16 @@ function loadSettings() {
         autosaveInterval = settings.autosave.interval || (5 * 60 * 1000);
         autosavePersistent = settings.autosave.persistent || false;
       }
+
+      // Load versioning settings
+      if (settings.versioning) {
+        versioningEnabled = settings.versioning.enabled !== undefined ? settings.versioning.enabled : true;
+        versionsToKeep = settings.versioning.versionsToKeep || 10;
+        versionStorageMode = settings.versioning.storageMode || 'local';
+        versionGlobalPath = settings.versioning.globalPath || '';
+        versionAutoCleanup = settings.versioning.autoCleanup || false;
+        versionCleanupDays = settings.versioning.cleanupDays || 30;
+      }
     }
   } catch (err) {
     console.error('Error loading settings:', err);
@@ -147,6 +166,14 @@ function saveSettings() {
         enabled: autosavePersistent ? autosaveEnabled : false, // Only save if persistent
         interval: autosaveInterval,
         persistent: autosavePersistent
+      },
+      versioning: {
+        enabled: versioningEnabled,
+        versionsToKeep: versionsToKeep,
+        storageMode: versionStorageMode,
+        globalPath: versionGlobalPath,
+        autoCleanup: versionAutoCleanup,
+        cleanupDays: versionCleanupDays
       }
     };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
@@ -225,6 +252,229 @@ function sendAutosaveStatus() {
     } catch (err) {
       console.error('Error sending autosave status:', err);
     }
+  }
+}
+
+// ==============================================
+// FILE VERSIONING SYSTEM
+// ==============================================
+
+// Get the version directory path for a file
+function getVersionDir(filePath) {
+  if (versionStorageMode === 'global' && versionGlobalPath) {
+    // Global storage mode
+    const filename = path.basename(filePath);
+    return path.join(versionGlobalPath, filename);
+  } else {
+    // Local storage mode (default)
+    const dir = path.dirname(filePath);
+    const filename = path.basename(filePath, path.extname(filePath));
+    return path.join(dir, '.nthing-history', filename);
+  }
+}
+
+// Calculate MD5 hash of file content
+function getFileHash(content) {
+  return crypto.createHash('md5').update(content).digest('hex');
+}
+
+// Get metadata file path
+function getMetadataPath(versionDir) {
+  return path.join(versionDir, 'metadata.json');
+}
+
+// Load version metadata
+function loadVersionMetadata(versionDir) {
+  const metadataPath = getMetadataPath(versionDir);
+  try {
+    if (fs.existsSync(metadataPath)) {
+      const data = fs.readFileSync(metadataPath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error('Error loading version metadata:', err);
+  }
+  return { versions: [] };
+}
+
+// Save version metadata
+function saveVersionMetadata(versionDir, metadata) {
+  const metadataPath = getMetadataPath(versionDir);
+  try {
+    // Ensure directory exists
+    if (!fs.existsSync(versionDir)) {
+      fs.mkdirSync(versionDir, { recursive: true });
+    }
+    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving version metadata:', err);
+  }
+}
+
+// Create a new version of the file
+function createVersion(filePath, content, trigger = 'manual-save') {
+  if (!versioningEnabled || !filePath) {
+    return;
+  }
+
+  try {
+    const versionDir = getVersionDir(filePath);
+    const metadata = loadVersionMetadata(versionDir);
+
+    // Calculate hash to check if content changed
+    const contentHash = getFileHash(content);
+
+    // Don't create version if identical to last version
+    if (metadata.versions.length > 0) {
+      const lastVersion = metadata.versions[metadata.versions.length - 1];
+      if (lastVersion.hash === contentHash) {
+        console.log('Skipping version creation - content unchanged');
+        return;
+      }
+    }
+
+    // Create version directory if it doesn't exist
+    if (!fs.existsSync(versionDir)) {
+      fs.mkdirSync(versionDir, { recursive: true });
+    }
+
+    // Generate version ID
+    const versionId = `v${String(metadata.versions.length + 1).padStart(3, '0')}`;
+    const versionFile = path.join(versionDir, `${versionId}${path.extname(filePath)}`);
+
+    // Save version file
+    fs.writeFileSync(versionFile, content, 'utf-8');
+
+    // Count words and lines
+    const words = content.trim().split(/\s+/).length;
+    const lines = content.split('\n').length;
+
+    // Add to metadata
+    metadata.versions.push({
+      id: versionId,
+      timestamp: new Date().toISOString(),
+      size: Buffer.byteLength(content, 'utf-8'),
+      words: words,
+      lines: lines,
+      hash: contentHash,
+      trigger: trigger
+    });
+
+    // Clean up old versions if needed
+    if (metadata.versions.length > versionsToKeep) {
+      const versionsToDelete = metadata.versions.length - versionsToKeep;
+      for (let i = 0; i < versionsToDelete; i++) {
+        const oldVersion = metadata.versions[i];
+        const oldFile = path.join(versionDir, `${oldVersion.id}${path.extname(filePath)}`);
+        try {
+          if (fs.existsSync(oldFile)) {
+            fs.unlinkSync(oldFile);
+          }
+        } catch (err) {
+          console.error('Error deleting old version:', err);
+        }
+      }
+      metadata.versions = metadata.versions.slice(versionsToDelete);
+    }
+
+    // Clean up by age if enabled
+    if (versionAutoCleanup && versionCleanupDays > 0) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - versionCleanupDays);
+      const cutoffTime = cutoffDate.toISOString();
+
+      const versionsToRemove = [];
+      for (const version of metadata.versions) {
+        if (version.timestamp < cutoffTime) {
+          versionsToRemove.push(version);
+          const oldFile = path.join(versionDir, `${version.id}${path.extname(filePath)}`);
+          try {
+            if (fs.existsSync(oldFile)) {
+              fs.unlinkSync(oldFile);
+            }
+          } catch (err) {
+            console.error('Error deleting old version by age:', err);
+          }
+        }
+      }
+      metadata.versions = metadata.versions.filter(v => !versionsToRemove.includes(v));
+    }
+
+    // Save updated metadata
+    saveVersionMetadata(versionDir, metadata);
+
+    console.log(`Created version ${versionId} for ${path.basename(filePath)}`);
+  } catch (err) {
+    console.error('Error creating version:', err);
+  }
+}
+
+// Get list of versions for a file
+function getVersions(filePath) {
+  if (!filePath) {
+    return [];
+  }
+
+  try {
+    const versionDir = getVersionDir(filePath);
+    const metadata = loadVersionMetadata(versionDir);
+    return metadata.versions;
+  } catch (err) {
+    console.error('Error getting versions:', err);
+    return [];
+  }
+}
+
+// Restore a specific version
+function restoreVersion(filePath, versionId) {
+  if (!filePath || !versionId) {
+    return null;
+  }
+
+  try {
+    const versionDir = getVersionDir(filePath);
+    const versionFile = path.join(versionDir, `${versionId}${path.extname(filePath)}`);
+
+    if (fs.existsSync(versionFile)) {
+      return fs.readFileSync(versionFile, 'utf-8');
+    }
+  } catch (err) {
+    console.error('Error restoring version:', err);
+  }
+
+  return null;
+}
+
+// Delete a specific version
+function deleteVersion(filePath, versionId) {
+  if (!filePath || !versionId) {
+    return false;
+  }
+
+  try {
+    const versionDir = getVersionDir(filePath);
+    const metadata = loadVersionMetadata(versionDir);
+
+    // Find and remove version from metadata
+    const versionIndex = metadata.versions.findIndex(v => v.id === versionId);
+    if (versionIndex === -1) {
+      return false;
+    }
+
+    // Delete the version file
+    const versionFile = path.join(versionDir, `${versionId}${path.extname(filePath)}`);
+    if (fs.existsSync(versionFile)) {
+      fs.unlinkSync(versionFile);
+    }
+
+    // Remove from metadata
+    metadata.versions.splice(versionIndex, 1);
+    saveVersionMetadata(versionDir, metadata);
+
+    return true;
+  } catch (err) {
+    console.error('Error deleting version:', err);
+    return false;
   }
 }
 
@@ -740,6 +990,10 @@ ipcMain.on('save-content', (event, content) => {
       lastSaveTime = Date.now();
       hasUnsavedChanges = false; // Reset unsaved changes flag
       addToRecentFiles(currentFilePath);
+
+      // Create version after successful save
+      createVersion(currentFilePath, content, 'manual-save');
+
       mainWindow.webContents.send('file-saved', currentFilePath);
       updateWindowTitle(false); // Just saved, not unsaved
     } catch (err) {
@@ -752,6 +1006,47 @@ ipcMain.on('save-content', (event, content) => {
 ipcMain.on('content-changed', () => {
   hasUnsavedChanges = true;
   updateWindowTitle(true); // Mark as unsaved
+});
+
+// Handle versioning operations
+ipcMain.on('get-versions', (event) => {
+  if (currentFilePath) {
+    const versions = getVersions(currentFilePath);
+    event.reply('versions-list', versions);
+  } else {
+    event.reply('versions-list', []);
+  }
+});
+
+ipcMain.on('restore-version', (event, versionId) => {
+  if (currentFilePath && versionId) {
+    const content = restoreVersion(currentFilePath, versionId);
+    if (content !== null) {
+      event.reply('version-restored', content);
+    } else {
+      event.reply('version-restore-error', 'Failed to restore version');
+    }
+  }
+});
+
+ipcMain.on('delete-version', (event, versionId) => {
+  if (currentFilePath && versionId) {
+    const success = deleteVersion(currentFilePath, versionId);
+    if (success) {
+      // Send updated version list
+      const versions = getVersions(currentFilePath);
+      event.reply('versions-list', versions);
+    }
+  }
+});
+
+ipcMain.on('create-snapshot', (event, content) => {
+  if (currentFilePath && content) {
+    createVersion(currentFilePath, content, 'manual-snapshot');
+    // Send updated version list
+    const versions = getVersions(currentFilePath);
+    event.reply('versions-list', versions);
+  }
 });
 
 // Handle window controls
