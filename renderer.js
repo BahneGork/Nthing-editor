@@ -136,6 +136,8 @@ let showPreview = true; // Preview visibility state
 let codemirrorView = null; // CodeMirror instance
 let contentChangedSinceLastSave = false; // Track unsaved changes
 let contentChangeTimeout = null; // Debounce timer
+let focusModeEnabled = false; // Focus mode state - dims non-active lines
+let currentActiveLine = null; // Track the currently active line for focus mode
 
 // Configure marked options
 marked.setOptions({
@@ -581,6 +583,8 @@ function switchMode(mode) {
       toggleFormatting(false);
       showFormattingToggle.checked = false;
     }
+    // Remove focus mode when switching to editor mode
+    codemirrorContainer.classList.remove('focus-mode-enabled');
   }
 }
 
@@ -588,6 +592,20 @@ function switchMode(mode) {
 function toggleViewMode() {
   const newMode = currentMode === 'editor' ? 'writing' : 'editor';
   switchMode(newMode);
+}
+
+// Toggle Focus Mode - dims non-active lines in Writing Focus mode
+function toggleFocusMode(enabled) {
+  focusModeEnabled = enabled;
+
+  // Only apply focus mode when in writing mode with CodeMirror active
+  if (codemirrorView && currentMode === 'writing' && showFormatting) {
+    if (enabled) {
+      codemirrorContainer.classList.add('focus-mode-enabled');
+    } else {
+      codemirrorContainer.classList.remove('focus-mode-enabled');
+    }
+  }
 }
 
 // Listen for mode switch from menu
@@ -598,6 +616,11 @@ ipcRenderer.on('switch-mode', (event, mode) => {
 // Listen for toggle mode from menu
 ipcRenderer.on('toggle-mode', () => {
   toggleViewMode();
+});
+
+// Listen for focus mode toggle from menu
+ipcRenderer.on('toggle-focus-mode', (event, enabled) => {
+  toggleFocusMode(enabled);
 });
 
 // Custom theme for Typora-style markdown rendering
@@ -708,6 +731,8 @@ function initializeCodeMirror() {
       syntaxHighlighting(customHighlightStyle || defaultHighlightStyle),
       // Line wrapping
       EditorView.lineWrapping,
+      // Highlight active line for focus mode
+      highlightActiveLine(),
       // Custom themes
       markdownTheme,
       markdownBaseTheme,
@@ -782,10 +807,18 @@ function toggleFormatting(enabled) {
         }
       });
     }
+
+    // Apply focus mode if it's enabled
+    if (focusModeEnabled) {
+      codemirrorContainer.classList.add('focus-mode-enabled');
+    }
   } else {
     // Show textarea, hide CodeMirror
     editor.classList.remove('hidden');
     codemirrorContainer.classList.add('hidden');
+
+    // Remove focus mode when disabling formatting
+    codemirrorContainer.classList.remove('focus-mode-enabled');
 
     // Sync content from CodeMirror to textarea if it exists
     if (codemirrorView) {
