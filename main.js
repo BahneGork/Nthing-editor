@@ -1381,17 +1381,18 @@ COMPARING BACKUPS:
 • The Compare window shows your current note on the left and the backup on the right
 
 COLOR CODING IN COMPARE WINDOW:
-🔴 RED (left side) = Lines that will be LOST if you restore
+❌ RED BACKGROUND (left side) = Lines that will be LOST if you restore
    • These lines exist in your current note
    • They were added after the backup was created
    • Restoring will DELETE them
 
-🟢 GREEN (right side) = Lines that will be RESTORED
+✅ GREEN BACKGROUND (right side) = Lines that will be RESTORED
    • These lines exist in the backup
    • They were deleted or changed since the backup
    • Restoring will bring them BACK
+   • Click the ← arrow button to select individual lines
 
-⚪ WHITE = Lines that are the same in both versions
+⚪ NO BACKGROUND = Lines that are the same in both versions
 
 RESTORING OPTIONS:
 
