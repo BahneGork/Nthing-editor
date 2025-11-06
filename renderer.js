@@ -271,6 +271,11 @@ editor.addEventListener('input', () => {
       ipcRenderer.send('content-changed');
     }, 300);
   }
+
+  // Typewriter mode for textarea in Writing Focus Mode (when not using CodeMirror)
+  if (typewriterModeEnabled && currentMode === 'writing' && !codemirrorView) {
+    centerTextareaCursor();
+  }
 });
 
 // Auto-continue lists on Enter
@@ -337,6 +342,23 @@ editor.addEventListener('keydown', (e) => {
       updateLineNumbers();
       return;
     }
+  }
+});
+
+// Typewriter mode: center on arrow key navigation
+editor.addEventListener('keyup', (e) => {
+  if (typewriterModeEnabled && currentMode === 'writing' && !codemirrorView) {
+    // Arrow keys and navigation keys
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+      centerTextareaCursor();
+    }
+  }
+});
+
+// Typewriter mode: center on mouse click
+editor.addEventListener('click', () => {
+  if (typewriterModeEnabled && currentMode === 'writing' && !codemirrorView) {
+    centerTextareaCursor();
   }
 });
 
@@ -699,13 +721,17 @@ function toggleTypewriterMode(enabled) {
     typewriterModeToggle.checked = enabled;
   }
 
-  // Center the cursor immediately if enabling
-  if (enabled && codemirrorView && currentMode === 'writing' && showFormatting) {
-    centerCursor();
+  // Center the cursor immediately if enabling (only in Writing Focus Mode)
+  if (enabled && currentMode === 'writing') {
+    if (codemirrorView && showFormatting) {
+      centerCursor();
+    } else {
+      centerTextareaCursor();
+    }
   }
 }
 
-// Center the cursor in the viewport
+// Center the cursor in the viewport (CodeMirror)
 function centerCursor() {
   if (!codemirrorView) return;
 
@@ -716,6 +742,30 @@ function centerCursor() {
       yMargin: 0
     })
   });
+}
+
+// Center the cursor in the viewport (textarea)
+function centerTextareaCursor() {
+  if (!editor) return;
+
+  // Get cursor position
+  const cursorPos = editor.selectionStart;
+  const textBeforeCursor = editor.value.substring(0, cursorPos);
+  const linesBeforeCursor = textBeforeCursor.split('\n').length;
+
+  // Calculate line height (from CSS or compute)
+  const computedStyle = window.getComputedStyle(editor);
+  const lineHeight = parseFloat(computedStyle.lineHeight);
+
+  // Calculate cursor's vertical position
+  const cursorTop = (linesBeforeCursor - 1) * lineHeight;
+
+  // Calculate target scroll position (center the cursor)
+  const editorHeight = editor.clientHeight;
+  const targetScroll = cursorTop - (editorHeight / 2) + (lineHeight / 2);
+
+  // Apply smooth scroll
+  editor.scrollTop = Math.max(0, targetScroll);
 }
 
 // Listen for mode switch from menu
