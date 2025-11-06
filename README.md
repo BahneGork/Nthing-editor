@@ -30,6 +30,120 @@ Press Ctrl+T to insert a table template. Ctrl+Shift+7 and Ctrl+Shift+8 toggle nu
 
 Paste images from clipboard or drag them in - they go into an `images/` folder automatically.
 
+## Technical Features
+
+Complete feature list for developers and power users:
+
+### Editing Modes
+- **Editor Mode** (split-pane)
+  - Live markdown preview with synchronized scrolling
+  - Line numbers
+  - Monospace font (Consolas/Monaco/Courier)
+  - Raw markdown source editing
+  - Resizable panes with draggable separator (position persists via localStorage)
+  - Bidirectional scroll sync (editor ↔ preview)
+
+- **Writing Focus Mode** (single-pane)
+  - Full-width editor with wider margins (120px)
+  - Serif font (Georgia, 18px)
+  - Toggle "Show Formatting" to switch between raw markdown and rendered view
+  - CodeMirror 6 integration for advanced text editing when showing formatting
+
+- **Focus Mode** (both modes)
+  - Dims all paragraphs except the currently active one
+  - Helps maintain concentration on current section
+
+- **Typewriter Mode** (both modes)
+  - Keeps cursor vertically centered while typing
+  - Reduces eye movement up/down
+
+### File Management
+- **Supported formats**: .md, .markdown, .txt
+- **Multiple open methods**:
+  - File dialog (Ctrl+O)
+  - Drag & drop from Windows Explorer
+  - Double-click files in Explorer (registered file associations)
+  - Command line arguments
+  - Recent files menu (Ctrl+1-9 for last 10 files)
+- **Autosave**:
+  - Configurable intervals: 1, 5, 15, or 30 minutes
+  - Enable for current session or permanently
+  - Status indicator in UI
+- **Unsaved changes detection**: Warns before opening/creating new files
+
+### Backup System
+- **Automatic backups on save**:
+  - Stored in `.nthing-history/[filename]/` folders
+  - MD5 hash deduplication (won't save identical versions)
+  - Keeps up to 10 versions per file
+  - Metadata tracking (timestamp, file size, word count)
+- **Backup comparison window**:
+  - Split-pane diff view (current vs backup)
+  - Color-coded changes: red (will lose), green (will restore), white (unchanged)
+  - Line-by-line comparison with git-style diff
+- **Restoration options**:
+  - Full backup restoration (replace entire file)
+  - Interactive line restoration (select individual lines to restore)
+  - Preview before finalizing changes
+- **Manual snapshots**: Create backups on demand via File menu
+
+### Search & Replace
+- Case-sensitive search toggle
+- Whole word matching
+- Find next/previous navigation
+- Replace single occurrence or all matches
+- Match count and position tracking
+- Visual highlighting in editor
+- Draggable dialog window
+- Auto-fills with selected text when opened
+
+### Formatting Tools
+- **Table insertion** (Ctrl+T): Quick table template
+- **List toggling**:
+  - Bullet lists (Ctrl+Shift+8)
+  - Numbered lists (Ctrl+Shift+7)
+  - Auto-continue on new lines
+- **Markdown rendering**: Full GFM support via marked.js
+- **Code syntax highlighting**: highlight.js for code blocks
+
+### Image Support
+- **Paste from clipboard** (Ctrl+V)
+- **Drag & drop** from file explorer
+- **Auto-save**: Images saved to `images/` folder next to document
+- **Automatic markdown insertion**: Generates `![](images/filename.ext)` syntax
+- **Inline display** in preview pane
+
+### User Interface
+- **Custom title bar** with window controls
+- **Menu system**: File, Edit, Format, View, Help
+- **Status bar**:
+  - Real-time word count
+  - Character count (including spaces)
+  - Line count
+  - Autosave indicator
+- **Keyboard shortcuts** for all major operations (see below)
+- **Collapsible backup sidebar** (Ctrl+Shift+H)
+- **Minimal, distraction-free design**
+
+### Persistence & Storage
+- **Split pane position**: Saves editor/preview ratio to localStorage
+- **Recent files**: Last 10 opened files tracked
+- **Autosave preferences**: Remembered between sessions
+- **Window state**: Position and size persist via Electron
+
+### Markdown Support
+Renders standard markdown plus:
+- Headings (H1-H6)
+- Bold, italic, strikethrough
+- Links and images
+- Ordered and unordered lists
+- Code blocks with syntax highlighting
+- Inline code
+- Blockquotes
+- Tables
+- Horizontal rules
+- Task lists (checkboxes)
+
 ## Installation
 
 Download `Nthing Setup 1.9.0.exe` from releases and run it. The installer will set up file associations for .md, .markdown, and .txt files so you can double-click them to open in Nthing.
@@ -112,6 +226,29 @@ If you're actually distributing this to people, either get a code signing cert (
 ## Built with
 
 Electron, marked.js for markdown parsing, CodeMirror 6 for the text editor in Writing Focus mode, highlight.js for code syntax coloring. MD5 hashing via Node's crypto module for backup deduplication.
+
+## Roadmap
+
+Things I'm thinking about adding:
+
+**Short term** (probably next):
+- Export to PDF/HTML - should be straightforward with Electron's print API
+- Outline/TOC sidebar - parse headers and make them clickable
+- Interactive task lists - `- [ ]` checkboxes that actually work in the preview
+
+**Medium term** (would be nice):
+- Dark theme - people keep asking about this
+- File tree sidebar for working with multiple markdown files in a folder
+- Strikethrough support (`~~text~~`)
+
+**Long term** (maybe):
+- Math equations (LaTeX/KaTeX) for academic writing
+- Diagram support (Mermaid) for flowcharts and stuff
+- Export to Word (.docx) - probably need pandoc for this
+
+The goal is to keep it simple. Not trying to compete with full IDEs or bloated editors. Just want a clean markdown editor that doesn't get in the way.
+
+If you want something specific, open an issue. Or submit a PR if you're feeling adventurous.
 
 ## License
 

@@ -111,14 +111,37 @@ body {
 
 .editor-pane,
 .preview-pane {
-  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 200px; /* Prevent panes from getting too small */
 }
 
 .editor-pane {
-  border-right: 1px solid #ddd;
+  flex: 0 0 50%; /* Initial 50% width, but can be resized */
+  border-right: none;
+}
+
+.preview-pane {
+  flex: 1; /* Take remaining space */
+}
+
+/* Draggable separator */
+.separator {
+  width: 5px;
+  background-color: #ddd;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0; /* Don't shrink the separator */
+  transition: background-color 0.2s;
+}
+
+.separator:hover {
+  background-color: #4a90e2;
+}
+
+.separator.dragging {
+  background-color: #4a90e2;
 }
 
 .editor-wrapper {

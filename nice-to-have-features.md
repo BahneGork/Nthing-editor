@@ -66,18 +66,20 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - CSS customization
 - We briefly discussed dark theme for title bar
 
-### ❌ Focus Mode
-- **Priority**: Low-Medium
+### ✅ Focus Mode
+- **Status**: Implemented
 - Dim/hide all paragraphs except current one
 - Different from our Writing Focus mode
 - Reduces distractions
 - Good for writers
+- Available in both Editor and Writing Focus modes
 
-### ❌ Typewriter Mode
-- **Priority**: Low
+### ✅ Typewriter Mode
+- **Status**: Implemented
 - Keep current line vertically centered
 - Reduces eye movement up/down
 - Popular with long-form writers
+- Available in both Editor and Writing Focus modes
 
 ### ❌ Math Support (LaTeX)
 - **Priority**: Low (unless targeting academic users)
@@ -110,16 +112,17 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - `x^2^` for superscript
 - Useful for scientific writing
 
-### ❌ File Versioning / Local History
-- **Priority**: Medium
-- Keep last N versions of file (10-20 snapshots)
-- Version created on manual saves and autosaves (when changes exist)
-- Store in `.nthing-history/` folder next to markdown file
-- UI to browse/restore previous versions (timestamp, preview, restore button)
+### ✅ File Versioning / Local History (Note Backups)
+- **Status**: Implemented (v1.9.0)
+- Keeps up to 10 versions per file
+- Backups created automatically on save (with MD5 deduplication)
+- Stored in `.nthing-history/` folder next to markdown file
+- UI sidebar to browse versions (Ctrl+Shift+H)
+- Shows timestamp, file size, and word count for each backup
+- Visual diff window with color-coded changes (red/green/white)
+- Two restoration modes: full backup or interactive line-by-line
+- Manual snapshot creation via File menu
 - Safety net against accidental deletions/overwrites
-- Similar to VS Code's Timeline feature
-- Storage concerns: Minimal for text files, but needs testing with large files
-- Could use incremental diffs instead of full copies for efficiency
 
 ---
 
@@ -139,11 +142,15 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - Export functionality (PDF, HTML, Word)
 - Outline panel for navigation
 - File tree sidebar
-- Focus Mode (dim other paragraphs)
-- Typewriter Mode
 - Math support
 - Diagram support
 - Themes/customization
+
+**What we've added since:**
+- ✅ Focus Mode (dim other paragraphs)
+- ✅ Typewriter Mode
+- ✅ Note backup system with visual diff and restoration
+- ✅ Draggable separator for resizing editor/preview panes
 
 ---
 
