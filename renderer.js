@@ -1719,29 +1719,47 @@ function renderVersions(versions) {
   // Render in reverse order (newest first)
   const reversedVersions = [...currentVersions].reverse();
 
-  versionList.innerHTML = reversedVersions.map(version => `
-    <div class="version-item" data-version-id="${version.id}" data-timestamp="${formatTimestamp(version.timestamp)}">
-      <div class="version-icon">🕐</div>
-      <div class="version-info">
-        <div class="version-timestamp">${formatTimestamp(version.timestamp)}</div>
-        <div class="version-stats">${formatSize(version.size)} · ${version.words} words</div>
-      </div>
-      <div class="version-actions">
-        <button class="version-action-btn preview" data-action="preview" data-version-id="${version.id}">
-          👁 Preview
-        </button>
-        <button class="version-action-btn restore" data-action="restore" data-version-id="${version.id}">
-          ↻ Restore
-        </button>
-        <button class="version-action-btn delete" data-action="delete" data-version-id="${version.id}">
-          × Delete
-        </button>
-      </div>
-    </div>
-  `).join('');
+  versionList.innerHTML = reversedVersions.map((version, index) => {
+    // Calculate changes from previous version (the one after this in reversed array)
+    const prevVersion = reversedVersions[index + 1];
+    let changeInfo = '';
 
-  // Add event listeners
-  versionList.querySelectorAll('.version-action-btn').forEach(btn => {
+    if (prevVersion) {
+      const linesDiff = version.lines - prevVersion.lines;
+      const wordsDiff = version.words - prevVersion.words;
+
+      const lineParts = [];
+      if (linesDiff > 0) lineParts.push(`+${linesDiff} lines`);
+      else if (linesDiff < 0) lineParts.push(`${linesDiff} lines`);
+
+      const wordParts = [];
+      if (wordsDiff > 0) wordParts.push(`+${wordsDiff} words`);
+      else if (wordsDiff < 0) wordParts.push(`${wordsDiff} words`);
+
+      if (lineParts.length > 0 || wordParts.length > 0) {
+        changeInfo = `<div class="version-changes">${[...lineParts, ...wordParts].join(', ')}</div>`;
+      }
+    }
+
+    return `
+      <div class="version-item" data-version-id="${version.id}" data-timestamp="${formatTimestamp(version.timestamp)}">
+        <div class="version-main">
+          <div class="version-icon">🕐</div>
+          <div class="version-info">
+            <div class="version-timestamp">${formatTimestamp(version.timestamp)}</div>
+            <div class="version-stats">${formatSize(version.size)} · ${version.words} words · ${version.lines} lines</div>
+            ${changeInfo}
+          </div>
+        </div>
+        <button class="version-preview-btn" data-action="preview" data-version-id="${version.id}" title="Compare with current">
+          👁
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Add event listeners for preview buttons
+  versionList.querySelectorAll('.version-preview-btn').forEach(btn => {
     btn.addEventListener('click', handleVersionAction);
   });
 }
