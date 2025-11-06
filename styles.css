@@ -980,16 +980,17 @@ body {
 
 .version-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   padding: 12px;
   border-radius: 6px;
-  cursor: pointer;
   transition: background 0.2s;
   gap: 12px;
+  border: 1px solid transparent;
 }
 
 .version-item:hover:not(.current) {
   background: #f5f5f5;
+  border-color: #e0e0e0;
 }
 
 .version-item.current {
@@ -997,9 +998,18 @@ body {
   cursor: default;
 }
 
+.version-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
 .version-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .version-info {
@@ -1016,66 +1026,45 @@ body {
 
 .version-timestamp {
   font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
+  color: #555;
+  margin-bottom: 3px;
+  font-weight: 500;
 }
 
 .version-stats {
   font-size: 11px;
-  color: #888;
+  color: #777;
+  margin-bottom: 3px;
 }
 
-.version-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
+.version-changes {
+  font-size: 11px;
+  color: #4a90e2;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-.version-item:hover .version-actions {
-  opacity: 1;
-}
-
-.version-action-btn {
+.version-preview-btn {
   background: #fff;
   border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 4px 8px;
-  font-size: 11px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  opacity: 0.6;
+  flex-shrink: 0;
 }
 
-.version-action-btn:hover {
-  background: #f0f0f0;
-  border-color: #999;
+.version-item:hover .version-preview-btn {
+  opacity: 1;
+  border-color: #4a90e2;
 }
 
-.version-action-btn.preview {
-  color: #7b1fa2;
-  border-color: #7b1fa2;
-}
-
-.version-action-btn.preview:hover {
-  background: #f3e5f5;
-}
-
-.version-action-btn.restore {
-  color: #1976d2;
-  border-color: #1976d2;
-}
-
-.version-action-btn.restore:hover {
+.version-preview-btn:hover {
   background: #e3f2fd;
-}
-
-.version-action-btn.delete {
-  color: #d32f2f;
-  border-color: #d32f2f;
-}
-
-.version-action-btn.delete:hover {
-  background: #ffebee;
+  border-color: #4a90e2;
+  transform: scale(1.05);
 }
 
 .version-list {
