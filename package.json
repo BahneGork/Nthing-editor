@@ -59,13 +59,6 @@
           "description": "Markdown Document",
           "role": "Editor",
           "icon": "Nthing.ico"
-        },
-        {
-          "ext": "txt",
-          "name": "Text File",
-          "description": "Plain Text Document",
-          "role": "Editor",
-          "icon": "Nthing.ico"
         }
       ]
     },
