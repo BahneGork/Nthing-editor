@@ -2,6 +2,11 @@
 ; This script adds file associations and thorough cleanup during uninstallation
 
 !macro customInstall
+  ; Force override existing file associations for .md and .markdown
+  ; Delete existing associations first to ensure clean slate
+  DeleteRegKey HKCR ".md"
+  DeleteRegKey HKCR ".markdown"
+
   ; Register file associations for .md and .markdown files only
   WriteRegStr HKCR ".md" "" "Nthing.MarkdownFile"
   WriteRegStr HKCR ".markdown" "" "Nthing.MarkdownFile"
@@ -13,26 +18,34 @@
   WriteRegStr HKCR "Nthing.MarkdownFile\shell\open" "" "Open with Nthing"
   WriteRegStr HKCR "Nthing.MarkdownFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
 
-  ; Also register as an option in "Open With" context menu
+  ; Also register in user-level registry (HKCU) to override per-user associations
+  WriteRegStr HKCU "Software\Classes\.md" "" "Nthing.MarkdownFile"
+  WriteRegStr HKCU "Software\Classes\.markdown" "" "Nthing.MarkdownFile"
+  WriteRegStr HKCU "Software\Classes\Nthing.MarkdownFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
+
+  ; Register as an option in "Open With" context menu
   WriteRegStr HKCR "Applications\Nthing.exe" "" "Nthing Markdown Editor"
   WriteRegStr HKCR "Applications\Nthing.exe\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
   WriteRegStr HKCR "Applications\Nthing.exe\SupportedTypes" ".md" ""
   WriteRegStr HKCR "Applications\Nthing.exe\SupportedTypes" ".markdown" ""
 
-  ; Notify Windows that file associations have changed
+  ; Notify Windows that file associations have changed (force rebuild icon cache)
   System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
 
-  DetailPrint "Registered file associations for .md and .markdown"
+  DetailPrint "Registered file associations for .md and .markdown (forced override)"
 !macroend
 
 !macro customUnInstall
   ; Close any running instances
   ${ifNot} ${isUpdated}
-    ; Remove file associations
+    ; Remove file associations (both system and user level)
     DeleteRegKey HKCR ".md"
     DeleteRegKey HKCR ".markdown"
     DeleteRegKey HKCR "Nthing.MarkdownFile"
     DeleteRegKey HKCR "Applications\Nthing.exe"
+    DeleteRegKey HKCU "Software\Classes\.md"
+    DeleteRegKey HKCU "Software\Classes\.markdown"
+    DeleteRegKey HKCU "Software\Classes\Nthing.MarkdownFile"
 
     ; Notify Windows that file associations have changed
     System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
