@@ -1430,7 +1430,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'About Nthing',
     message: 'Nthing',
-    detail: `Version 1.8.0
+    detail: `Version 1.9.0
 
 A distraction-free markdown editor where nothing else matters.
 
