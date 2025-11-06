@@ -30,7 +30,7 @@ Paste images from clipboard or drag them in - they go into an `images/` folder a
 
 ## Technical Features
 
-Complete feature list for developers and power users:
+Complete list of features:
 
 ### Editing Modes
 - **Editor Mode** (split-pane)
