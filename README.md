@@ -19,6 +19,7 @@ A distraction-free markdown editor where nothing else matters. Built with Electr
 ### File Management
 - **Open Recent** - Quick access to your last 10 opened files
 - **File Associations** - Double-click .md, .markdown, or .txt files to open in Nthing
+- **Drag & Drop Files** - Drag text files from Explorer directly into the window to open them
 - Unsaved changes warning when opening/creating new files
 
 ### Search & Replace
@@ -40,7 +41,7 @@ A distraction-free markdown editor where nothing else matters. Built with Electr
 - **Table Insertion** - Quick table template (Ctrl+T)
 - **List Formatting** - Toggle bullet and numbered lists
 - **Auto-Continue Lists** - Automatically continue lists on new lines
-- **Image Support** - Paste from clipboard or drag & drop (auto-saves to `images/` folder)
+- **Image Support** - Paste from clipboard or drag & drop images (auto-saves to `images/` folder)
 
 ### User Interface
 - Clean, modern UI with custom title bar
