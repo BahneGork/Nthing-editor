@@ -2,25 +2,27 @@
 ; This script adds file associations and thorough cleanup during uninstallation
 
 !macro customInstall
-  ; Register file associations for .md, .markdown, and .txt files
+  ; Register file associations for .md and .markdown files only
   WriteRegStr HKCR ".md" "" "Nthing.MarkdownFile"
   WriteRegStr HKCR ".markdown" "" "Nthing.MarkdownFile"
-  WriteRegStr HKCR ".txt" "" "Nthing.TextFile"
 
-  ; Register ProgID for Markdown files
+  ; Register ProgID for Markdown files with "Open with Nthing" command
   WriteRegStr HKCR "Nthing.MarkdownFile" "" "Markdown Document"
   WriteRegStr HKCR "Nthing.MarkdownFile\DefaultIcon" "" "$INSTDIR\Nthing.exe,0"
+  WriteRegStr HKCR "Nthing.MarkdownFile\shell" "" "open"
+  WriteRegStr HKCR "Nthing.MarkdownFile\shell\open" "" "Open with Nthing"
   WriteRegStr HKCR "Nthing.MarkdownFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
 
-  ; Register ProgID for Text files
-  WriteRegStr HKCR "Nthing.TextFile" "" "Text Document"
-  WriteRegStr HKCR "Nthing.TextFile\DefaultIcon" "" "$INSTDIR\Nthing.exe,0"
-  WriteRegStr HKCR "Nthing.TextFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
+  ; Also register as an option in "Open With" context menu
+  WriteRegStr HKCR "Applications\Nthing.exe" "" "Nthing Markdown Editor"
+  WriteRegStr HKCR "Applications\Nthing.exe\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
+  WriteRegStr HKCR "Applications\Nthing.exe\SupportedTypes" ".md" ""
+  WriteRegStr HKCR "Applications\Nthing.exe\SupportedTypes" ".markdown" ""
 
   ; Notify Windows that file associations have changed
   System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
 
-  DetailPrint "Registered file associations for .md, .markdown, and .txt"
+  DetailPrint "Registered file associations for .md and .markdown"
 !macroend
 
 !macro customUnInstall
@@ -29,9 +31,8 @@
     ; Remove file associations
     DeleteRegKey HKCR ".md"
     DeleteRegKey HKCR ".markdown"
-    DeleteRegKey HKCR ".txt"
     DeleteRegKey HKCR "Nthing.MarkdownFile"
-    DeleteRegKey HKCR "Nthing.TextFile"
+    DeleteRegKey HKCR "Applications\Nthing.exe"
 
     ; Notify Windows that file associations have changed
     System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'

@@ -144,7 +144,7 @@ Renders standard markdown plus:
 
 ## Installation
 
-Download `Nthing Setup 1.9.2.exe` from releases and run it. The installer will set up file associations for .md, .markdown, and .txt files so you can double-click them to open in Nthing.
+Download `Nthing Setup 1.9.2.exe` from releases and run it. The installer will set up file associations for .md and .markdown files so you can double-click them to open in Nthing.
 
 Windows Defender might complain because the app isn't code-signed (certificates cost $100-400/year). It's a false positive - see the section below if you need to add an exclusion.
 
