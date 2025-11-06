@@ -1929,7 +1929,7 @@ document.addEventListener('drop', (e) => {
 
 const separator = document.getElementById('separator');
 const editorPane = document.querySelector('.editor-pane');
-let isDragging = false;
+let isSeparatorDragging = false;
 
 // Only set up separator dragging if separator exists (Editor Mode only)
 if (separator && editorPane && container) {
@@ -1951,7 +1951,7 @@ if (separator && editorPane && container) {
 
   // Handle separator mousedown
   separator.addEventListener('mousedown', (e) => {
-    isDragging = true;
+    isSeparatorDragging = true;
     separator.classList.add('dragging');
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none'; // Prevent text selection during drag
@@ -1960,7 +1960,7 @@ if (separator && editorPane && container) {
 
   // Handle mouse move for dragging
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
+    if (!isSeparatorDragging) return;
 
     const containerRect = container.getBoundingClientRect();
     const containerWidth = containerRect.width;
@@ -1975,8 +1975,8 @@ if (separator && editorPane && container) {
 
   // Handle mouseup to stop dragging
   document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
+    if (isSeparatorDragging) {
+      isSeparatorDragging = false;
       separator.classList.remove('dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
