@@ -358,6 +358,21 @@ editor.addEventListener('drop', async (e) => {
   const files = e.dataTransfer?.files;
   if (!files || files.length === 0) return;
 
+  // Check if it's a markdown/text file first
+  const firstFile = files[0];
+  const fileName = firstFile.name.toLowerCase();
+  const isTextFile = fileName.endsWith('.md') ||
+                     fileName.endsWith('.markdown') ||
+                     fileName.endsWith('.txt');
+
+  if (isTextFile) {
+    // Handle text file drop - open the file
+    const filePath = firstFile.path;
+    ipcRenderer.send('open-dropped-file', filePath);
+    return;
+  }
+
+  // Handle image drops
   for (const file of files) {
     if (file.type.startsWith('image/')) {
       // Read file as base64
@@ -1831,4 +1846,38 @@ ipcRenderer.on('restore-content', (event, content) => {
 
   // Reload versions to update list
   loadVersions();
+});
+
+// Window-level drag-and-drop for opening files (anywhere in window)
+document.addEventListener('dragover', (e) => {
+  // Prevent default to allow drop
+  e.preventDefault();
+  e.stopPropagation();
+
+  // Only allow file drops
+  if (e.dataTransfer.types.includes('Files')) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+});
+
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const files = e.dataTransfer?.files;
+  if (!files || files.length === 0) return;
+
+  // Check if it's a text file (markdown or txt)
+  const firstFile = files[0];
+  const fileName = firstFile.name.toLowerCase();
+  const isTextFile = fileName.endsWith('.md') ||
+                     fileName.endsWith('.markdown') ||
+                     fileName.endsWith('.txt');
+
+  if (isTextFile) {
+    // Handle text file drop - open the file
+    const filePath = firstFile.path;
+    ipcRenderer.send('open-dropped-file', filePath);
+  }
+  // Note: Image drops are handled by editor-specific listener above
 });
