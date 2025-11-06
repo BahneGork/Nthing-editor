@@ -1,6 +1,27 @@
+/**
+ * compare.js - Backup Comparison Window (Renderer Process)
+ *
+ * This file runs in a separate window for comparing current file vs backup.
+ * Responsibilities:
+ * - Perform line-by-line diff between current and backup content
+ * - Display color-coded diff (red=removed, green=added, white=unchanged)
+ * - Interactive line restoration (click arrows to select lines)
+ * - Preview selected lines in left pane
+ * - Send restored content back to main window
+ * - Full backup restoration
+ *
+ * Diff Algorithm:
+ * Simple line-by-line comparison (not using Myers or LCS algorithms).
+ * Classifies each line as: unchanged, removed, added, or modified.
+ * Modified lines are shown as removed+added for clarity.
+ */
+
 const { ipcRenderer } = require('electron');
 
-// DOM elements
+// ==========================================
+// DOM Element References
+// ==========================================
+
 const currentContent = document.getElementById('current-content');
 const backupContent = document.getElementById('backup-content');
 const backupVersion = document.getElementById('backup-version');
@@ -17,14 +38,17 @@ const minimizeBtn = document.getElementById('minimize-btn');
 const maximizeBtn = document.getElementById('maximize-btn');
 const closeBtn = document.getElementById('close-btn');
 
+// ==========================================
 // State
-let currentText = '';
-let backupText = '';
-let currentLines = [];
-let backupLines = [];
-let diffData = [];
-let selectedLines = new Set();
-let versionId = '';
+// ==========================================
+
+let currentText = '';        // Current file content
+let backupText = '';         // Backup file content
+let currentLines = [];       // Current file split into lines
+let backupLines = [];        // Backup file split into lines
+let diffData = [];           // Array of diff objects {type, currentLine, backupLine, index}
+let selectedLines = new Set(); // Indexes of backup lines user has selected to restore
+let versionId = '';          // Backup version ID (e.g., "v003")
 
 // Title bar functionality
 minimizeBtn.addEventListener('click', () => {
@@ -57,15 +81,29 @@ ipcRenderer.on('compare-data', (event, data) => {
   updateSummary();
 });
 
-// Perform line-by-line diff
+/**
+ * Perform line-by-line diff between current and backup content
+ *
+ * Algorithm:
+ * 1. Split both files into arrays of lines
+ * 2. Compare line-by-line at each index position
+ * 3. Classify each line pair:
+ *    - unchanged: both lines exist and are identical
+ *    - modified: both lines exist but differ
+ *    - removed: line exists in current but not backup (will be lost on restore)
+ *    - added: line exists in backup but not current (will be restored)
+ *
+ * Note: This is a simple positional diff, not a smart LCS (Longest Common Subsequence)
+ * algorithm. It works well for small edits but may not optimally align heavily
+ * rearranged content. The advantage is simplicity and speed.
+ */
 function performDiff() {
   currentLines = currentText.split('\n');
   backupLines = backupText.split('\n');
 
-  // Simple line-by-line comparison
-  // This uses a basic algorithm - can be improved with LCS (Longest Common Subsequence)
   diffData = [];
 
+  // Compare up to the longest file's line count
   const maxLines = Math.max(currentLines.length, backupLines.length);
 
   for (let i = 0; i < maxLines; i++) {
@@ -73,7 +111,7 @@ function performDiff() {
     const backupLine = i < backupLines.length ? backupLines[i] : null;
 
     if (currentLine === backupLine) {
-      // Unchanged line
+      // Lines match - unchanged
       diffData.push({
         type: 'unchanged',
         current: currentLine,
@@ -81,7 +119,8 @@ function performDiff() {
         lineNum: i
       });
     } else if (currentLine !== null && backupLine !== null) {
-      // Modified line - show as removed in current, added in backup
+      // Both exist but differ - modified
+      // Shown as red (current) and green (backup) in UI
       diffData.push({
         type: 'modified',
         current: currentLine,
@@ -89,7 +128,7 @@ function performDiff() {
         lineNum: i
       });
     } else if (currentLine !== null && backupLine === null) {
-      // Line exists only in current (will be removed on restore)
+      // Only in current file - will be removed on restore
       diffData.push({
         type: 'removed',
         current: currentLine,
@@ -97,7 +136,7 @@ function performDiff() {
         lineNum: i
       });
     } else if (currentLine === null && backupLine !== null) {
-      // Line exists only in backup (will be added on restore)
+      // Only in backup - will be added on restore
       diffData.push({
         type: 'added',
         current: null,
