@@ -1216,6 +1216,40 @@ ipcMain.on('save-dropped-image', (event, { data, type, name }) => {
   saveImage(event, data, type, name);
 });
 
+// Handle dropped text file
+ipcMain.on('open-dropped-file', (event, filePath) => {
+  // Check for unsaved changes before opening
+  if (hasUnsavedChanges) {
+    dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Do you want to save before opening this file?',
+      buttons: ['Save', 'Don\'t Save', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2
+    }).then(result => {
+      if (result.response === 0) {
+        // Save
+        mainWindow.webContents.send('save-file-request');
+        // Wait for save to complete, then open dropped file
+        const saveHandler = () => {
+          ipcMain.removeListener('save-content', saveHandler);
+          setTimeout(() => {
+            openFileByPath(filePath);
+          }, 100);
+        };
+        ipcMain.once('save-content', saveHandler);
+      } else if (result.response === 1) {
+        // Don't Save
+        openFileByPath(filePath);
+      }
+      // If Cancel (response === 2), do nothing
+    });
+  } else {
+    openFileByPath(filePath);
+  }
+});
+
 function saveImage(event, base64Data, mimeType, originalName) {
   // If no file is open, can't save relative images
   if (!currentFilePath) {
