@@ -144,7 +144,7 @@ Renders standard markdown plus:
 
 ## Installation
 
-Download `Nthing Setup 1.9.0.exe` from releases and run it. The installer will set up file associations for .md, .markdown, and .txt files so you can double-click them to open in Nthing.
+Download `Nthing Setup 1.9.1.exe` from releases and run it. The installer will set up file associations for .md, .markdown, and .txt files so you can double-click them to open in Nthing.
 
 Windows Defender might complain because the app isn't code-signed (certificates cost $100-400/year). It's a false positive - see the section below if you need to add an exclusion.
 
@@ -203,7 +203,7 @@ Backups go in `.nthing-history/[filename]/` folders next to your files.
 
 ## Building it yourself
 
-Run `npm run build` to create a Windows installer. It'll show up in `dist/Nthing Setup 1.9.0.exe`. There's also `npm run build:portable` if you want a standalone exe.
+Run `npm run build` to create a Windows installer. It'll show up in `dist/Nthing Setup 1.9.1.exe`. There's also `npm run build:portable` if you want a standalone exe.
 
 The project uses electron-builder. Config is in package.json if you want to tweak it.
 
