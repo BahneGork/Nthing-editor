@@ -492,6 +492,10 @@ body {
   display: none;
 }
 
+.container[data-mode="writing"] .separator {
+  display: none;
+}
+
 .container[data-mode="writing"] .editor-pane {
   border-right: none;
   max-width: none;
