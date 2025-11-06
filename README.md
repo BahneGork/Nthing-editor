@@ -50,22 +50,40 @@ A distraction-free markdown editor where nothing else matters. Built with Electr
 - Synchronized scrolling between editor and preview
 - Distraction-free, minimal interface
 
-## Installation & Running
+## Installation
 
-### Prerequisites
+### For Users (Recommended)
+
+1. Download the latest installer: `Nthing Setup 1.9.0.exe` from the releases
+2. Run the installer
+3. Choose installation directory (or use default)
+4. The installer will:
+   - Install Nthing to your chosen location
+   - Create desktop shortcut
+   - Add to Start Menu
+   - Register .md, .markdown, and .txt file associations
+5. Launch Nthing from desktop or Start Menu
+
+**Note:** Windows Defender may show a warning about unsigned applications. This is a false positive. See [Windows Defender False Positive Warning](#windows-defender-false-positive-warning) below for details.
+
+### For Developers (Running from Source)
+
+**Prerequisites:**
 - Node.js (version 14 or higher)
 - npm (comes with Node.js)
 
-### Setup on Windows
-
-1. Clone this repository or download the files
-2. Open Command Prompt or PowerShell in the project directory
-3. Install dependencies:
+**Setup:**
+1. Clone this repository
+   ```bash
+   git clone https://github.com/BahneGork/markdowneditor1.git
+   cd markdowneditor1
    ```
+2. Install dependencies:
+   ```bash
    npm install
    ```
-4. Run the application:
-   ```
+3. Run the application:
+   ```bash
    npm start
    ```
 
@@ -261,11 +279,13 @@ nthing/
         └── metadata.json
 ```
 
-## Building for Distribution
+## Building for Distribution (Developers)
 
 This project is pre-configured with electron-builder to create Windows installers.
 
 ### Quick Build
+
+If you want to build the installer yourself:
 
 ```bash
 npm install
@@ -273,6 +293,8 @@ npm run build
 ```
 
 This will create a Windows installer at `dist/Nthing Setup 1.9.0.exe`
+
+You can then distribute this installer to users.
 
 ### Windows Defender False Positive Warning
 
