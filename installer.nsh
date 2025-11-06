@@ -1,9 +1,41 @@
 ; Custom NSIS installer script for Nthing
-; This script adds thorough cleanup during uninstallation
+; This script adds file associations and thorough cleanup during uninstallation
+
+!macro customInstall
+  ; Register file associations for .md, .markdown, and .txt files
+  WriteRegStr HKCR ".md" "" "Nthing.MarkdownFile"
+  WriteRegStr HKCR ".markdown" "" "Nthing.MarkdownFile"
+  WriteRegStr HKCR ".txt" "" "Nthing.TextFile"
+
+  ; Register ProgID for Markdown files
+  WriteRegStr HKCR "Nthing.MarkdownFile" "" "Markdown Document"
+  WriteRegStr HKCR "Nthing.MarkdownFile\DefaultIcon" "" "$INSTDIR\Nthing.exe,0"
+  WriteRegStr HKCR "Nthing.MarkdownFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
+
+  ; Register ProgID for Text files
+  WriteRegStr HKCR "Nthing.TextFile" "" "Text Document"
+  WriteRegStr HKCR "Nthing.TextFile\DefaultIcon" "" "$INSTDIR\Nthing.exe,0"
+  WriteRegStr HKCR "Nthing.TextFile\shell\open\command" "" '"$INSTDIR\Nthing.exe" "%1"'
+
+  ; Notify Windows that file associations have changed
+  System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
+
+  DetailPrint "Registered file associations for .md, .markdown, and .txt"
+!macroend
 
 !macro customUnInstall
   ; Close any running instances
   ${ifNot} ${isUpdated}
+    ; Remove file associations
+    DeleteRegKey HKCR ".md"
+    DeleteRegKey HKCR ".markdown"
+    DeleteRegKey HKCR ".txt"
+    DeleteRegKey HKCR "Nthing.MarkdownFile"
+    DeleteRegKey HKCR "Nthing.TextFile"
+
+    ; Notify Windows that file associations have changed
+    System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
+
     ; Remove AppData folder (contains settings, cache, recent files)
     RMDir /r "$APPDATA\nthing"
 
@@ -14,7 +46,7 @@
     RMDir /r "$TEMP\nthing"
 
     ; Log cleanup
-    DetailPrint "Cleaned up user data folders"
+    DetailPrint "Cleaned up user data folders and file associations"
   ${endIf}
 !macroend
 
