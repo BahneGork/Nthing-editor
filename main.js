@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 let mainWindow;
+let compareWindow = null;
 let currentFilePath = null;
 let recentFiles = [];
 const MAX_RECENT_FILES = 10;
@@ -656,14 +657,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Version History...',
-          accelerator: 'CmdOrCtrl+H',
+          label: 'Note Backups...',
+          accelerator: 'CmdOrCtrl+Shift+H',
           click: () => {
             mainWindow.webContents.send('toggle-version-sidebar');
           }
         },
         {
-          label: 'Create Snapshot',
+          label: 'Create Backup',
           click: () => {
             mainWindow.webContents.send('create-snapshot-request');
           }
@@ -805,6 +806,30 @@ function createMenu() {
           accelerator: 'F12',
           click: () => {
             mainWindow.webContents.toggleDevTools();
+          }
+        }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About Note Backups',
+          click: () => {
+            showHelpDialog();
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Keyboard Shortcuts',
+          click: () => {
+            showKeyboardShortcuts();
+          }
+        },
+        {
+          label: 'About Nthing',
+          click: () => {
+            showAboutDialog();
           }
         }
       ]
@@ -1063,6 +1088,86 @@ ipcMain.on('create-snapshot', (event, content) => {
   }
 });
 
+// Open compare window for backup comparison
+ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
+  if (compareWindow) {
+    compareWindow.focus();
+    return;
+  }
+
+  compareWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    },
+    parent: mainWindow,
+    modal: false
+  });
+
+  compareWindow.loadFile('compare.html');
+
+  compareWindow.on('closed', () => {
+    compareWindow = null;
+  });
+
+  // Once loaded, send comparison data
+  compareWindow.webContents.on('did-finish-load', () => {
+    if (currentFilePath && versionId) {
+      // Get current content from main window
+      mainWindow.webContents.send('get-current-content-for-compare');
+
+      // Wait for current content response
+      ipcMain.once('current-content-response', (e, currentContent) => {
+        // Get backup content
+        const backupContent = restoreVersion(currentFilePath, versionId);
+
+        if (backupContent !== null && compareWindow) {
+          compareWindow.webContents.send('compare-data', {
+            current: currentContent,
+            backup: backupContent,
+            versionId: versionId,
+            timestamp: timestamp
+          });
+        }
+      });
+    }
+  });
+});
+
+// Apply partial restoration (selected lines)
+ipcMain.on('apply-partial-restore', (event, content) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('restore-content', content);
+  }
+});
+
+// Apply full backup restoration
+ipcMain.on('apply-full-restore', (event, content) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('restore-content', content);
+  }
+});
+
+// Compare window controls
+ipcMain.on('minimize-compare-window', () => {
+  if (compareWindow) {
+    compareWindow.minimize();
+  }
+});
+
+ipcMain.on('maximize-compare-window', () => {
+  if (compareWindow) {
+    if (compareWindow.isMaximized()) {
+      compareWindow.unmaximize();
+    } else {
+      compareWindow.maximize();
+    }
+  }
+});
+
 // Handle window controls
 ipcMain.on('minimize-window', () => {
   if (mainWindow) {
@@ -1219,6 +1324,131 @@ if (!gotTheLock) {
       }
     }
   });
+
+// Help dialog functions
+function showHelpDialog() {
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'About Note Backups',
+    message: 'Note Backups System',
+    detail: `Nthing automatically creates backups of your notes when you save, protecting your work from accidental changes or deletions.
+
+HOW IT WORKS:
+• Backups are created automatically when you save your note
+• Up to 10 backup versions are kept by default
+• Backups are stored in a hidden .nthing-history folder next to your note
+
+VIEWING BACKUPS:
+• Open the Note Backups sidebar: File > Note Backups (Ctrl+Shift+H)
+• Each backup shows: timestamp, file size, and word count
+
+COMPARING BACKUPS:
+• Click the "👁 Preview" button to open the Compare window
+• The Compare window shows your current note on the left and the backup on the right
+
+COLOR CODING IN COMPARE WINDOW:
+🔴 RED (left side) = Lines that will be LOST if you restore
+   • These lines exist in your current note
+   • They were added after the backup was created
+   • Restoring will DELETE them
+
+🟢 GREEN (right side) = Lines that will be RESTORED
+   • These lines exist in the backup
+   • They were deleted or changed since the backup
+   • Restoring will bring them BACK
+
+⚪ WHITE = Lines that are the same in both versions
+
+RESTORING OPTIONS:
+
+1. RESTORE INDIVIDUAL LINES (Advanced):
+   • Click the "←" arrow next to any green line
+   • The line appears in your current note (preview)
+   • Click "✓" to deselect
+   • Click "Finalize Restoration" to apply your selections
+   • Only the selected lines will be restored
+
+2. RESTORE FULL BACKUP:
+   • Click "Restore Full Backup" button
+   • Replaces your entire current note with the backup
+   • A confirmation dialog will appear
+
+MANAGING BACKUPS:
+• Create manual backup: File > Create Backup
+• Delete old backups: Click "× Delete" in the sidebar
+• Backups are automatically cleaned up when limit is reached
+
+SAFETY TIPS:
+• Always review the Compare window before restoring
+• Use "Preview" mode to see exactly what will change
+• Create a manual backup before major edits
+• The red/green colors show exactly what you'll gain or lose`,
+    buttons: ['OK']
+  });
+}
+
+function showKeyboardShortcuts() {
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Keyboard Shortcuts',
+    message: 'Nthing Keyboard Shortcuts',
+    detail: `FILE:
+Ctrl+N - New file
+Ctrl+O - Open file
+Ctrl+1-9 - Open recent file (1 = most recent)
+Ctrl+S - Save file
+Ctrl+Shift+S - Save As
+Ctrl+Q - Quit
+
+EDIT:
+Ctrl+Z - Undo
+Ctrl+Y - Redo
+Ctrl+X - Cut
+Ctrl+C - Copy
+Ctrl+V - Paste
+Ctrl+A - Select All
+Ctrl+F - Find
+Ctrl+H - Find & Replace
+
+FORMAT:
+Ctrl+Shift+8 - Toggle bullet list
+Ctrl+Shift+7 - Toggle numbered list
+Ctrl+T - Insert table
+
+VIEW:
+F9 - Toggle between Editor and Writing Focus modes
+F12 - Toggle Developer Tools
+
+BACKUPS:
+Ctrl+Shift+H - Open Note Backups sidebar`,
+    buttons: ['OK']
+  });
+}
+
+function showAboutDialog() {
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'About Nthing',
+    message: 'Nthing',
+    detail: `Version 1.8.0
+
+A distraction-free markdown editor where nothing else matters.
+
+Features:
+• Two editing modes (Editor & Writing Focus)
+• Live markdown preview
+• Find & Replace
+• Note backup system
+• Real-time statistics
+• Autosave
+• And much more...
+
+Built with Electron and marked.js
+
+© 2025 Nthing`,
+    buttons: ['OK']
+  });
+}
 
   app.whenReady().then(() => {
     createWindow();

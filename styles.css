@@ -888,7 +888,7 @@ body {
   opacity: 1 !important;
 }
 
-/* Version History Sidebar */
+/* Note Backups Sidebar */
 .version-sidebar {
   position: fixed;
   right: 0;
@@ -1026,6 +1026,15 @@ body {
 .version-action-btn:hover {
   background: #f0f0f0;
   border-color: #999;
+}
+
+.version-action-btn.preview {
+  color: #7b1fa2;
+  border-color: #7b1fa2;
+}
+
+.version-action-btn.preview:hover {
+  background: #f3e5f5;
 }
 
 .version-action-btn.restore {

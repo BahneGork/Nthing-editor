@@ -924,6 +924,18 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   editor.value = content;
   currentFilePath = filePath;
   contentChangedSinceLastSave = false; // Reset unsaved flag
+
+  // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
+  if (codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: content
+      }
+    });
+  }
+
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -935,6 +947,18 @@ ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
   contentChangedSinceLastSave = false; // Reset unsaved flag for new file
+
+  // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
+  if (codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: ''
+      }
+    });
+  }
+
   updatePreview();
   updateStats();
   updateLineNumbers();
@@ -1640,13 +1664,16 @@ function renderVersions(versions) {
   const reversedVersions = [...currentVersions].reverse();
 
   versionList.innerHTML = reversedVersions.map(version => `
-    <div class="version-item" data-version-id="${version.id}">
+    <div class="version-item" data-version-id="${version.id}" data-timestamp="${formatTimestamp(version.timestamp)}">
       <div class="version-icon">🕐</div>
       <div class="version-info">
         <div class="version-timestamp">${formatTimestamp(version.timestamp)}</div>
         <div class="version-stats">${formatSize(version.size)} · ${version.words} words</div>
       </div>
       <div class="version-actions">
+        <button class="version-action-btn preview" data-action="preview" data-version-id="${version.id}">
+          👁 Preview
+        </button>
         <button class="version-action-btn restore" data-action="restore" data-version-id="${version.id}">
           ↻ Restore
         </button>
@@ -1669,11 +1696,22 @@ function handleVersionAction(e) {
   const action = e.target.dataset.action;
   const versionId = e.target.dataset.versionId;
 
-  if (action === 'restore') {
+  if (action === 'preview') {
+    previewVersion(versionId, e.target);
+  } else if (action === 'restore') {
     restoreVersion(versionId);
   } else if (action === 'delete') {
     deleteVersion(versionId);
   }
+}
+
+// Preview a version in compare window
+function previewVersion(versionId, buttonElement) {
+  // Get timestamp from parent version-item
+  const versionItem = buttonElement.closest('.version-item');
+  const timestamp = versionItem ? versionItem.dataset.timestamp : '';
+
+  ipcRenderer.send('open-compare-window', versionId, timestamp);
 }
 
 // Restore a version
@@ -1749,13 +1787,48 @@ ipcRenderer.on('toggle-version-sidebar', () => {
   toggleVersionSidebar();
 });
 
-// Listen for create snapshot request from menu
+// Listen for create backup request from menu
 ipcRenderer.on('create-snapshot-request', () => {
   const content = editor.value || '';
   ipcRenderer.send('create-snapshot', content);
 
-  status.textContent = 'Snapshot created';
+  status.textContent = 'Backup created';
   setTimeout(() => {
     status.textContent = 'Ready';
   }, 2000);
+});
+
+// Handle request for current content (for compare window)
+ipcRenderer.on('get-current-content-for-compare', () => {
+  const content = editor.value || '';
+  ipcRenderer.send('current-content-response', content);
+});
+
+// Handle restored content from compare window
+ipcRenderer.on('restore-content', (event, content) => {
+  editor.value = content;
+
+  // Update CodeMirror if active
+  if (codemirrorView) {
+    codemirrorView.dispatch({
+      changes: {
+        from: 0,
+        to: codemirrorView.state.doc.length,
+        insert: content
+      }
+    });
+  }
+
+  updatePreview();
+  updateStats();
+  updateLineNumbers();
+
+  // Notify user
+  status.textContent = 'Content restored successfully';
+  setTimeout(() => {
+    status.textContent = 'Ready';
+  }, 3000);
+
+  // Reload versions to update list
+  loadVersions();
 });
