@@ -1,32 +1,52 @@
+/**
+ * main.js - Electron Main Process
+ *
+ * This file runs in the Electron main process with full Node.js access.
+ * Responsibilities:
+ * - Window management (creating and managing app windows)
+ * - File I/O operations (open, save, read, write files)
+ * - Backup system (creating and managing file versions)
+ * - Menu creation and handling
+ * - IPC communication with renderer processes
+ * - Recent files tracking
+ * - Autosave management
+ *
+ * The main process has no direct DOM access - all UI updates are sent
+ * to renderer processes via IPC (Inter-Process Communication).
+ */
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-let mainWindow;
-let compareWindow = null;
-let currentFilePath = null;
-let recentFiles = [];
-const MAX_RECENT_FILES = 10;
-let lastSaveTime = null;
-let hasUnsavedChanges = false;
-let autosaveEnabled = false;
-let autosaveInterval = 5 * 60 * 1000; // Default: 5 minutes in milliseconds
-let autosaveTimer = null;
-let autosavePersistent = false; // Whether autosave setting persists across sessions
-let titleUpdateTimer = null; // Timer for updating title every minute
+// ==========================================
+// Global State
+// ==========================================
 
-// File versioning settings
-let versioningEnabled = true; // Enable/disable file versioning
-let versionsToKeep = 10; // Number of versions to keep
-let versionStorageMode = 'local'; // 'local' (.nthing-history/ next to file) or 'global' (user-defined path)
-let versionGlobalPath = ''; // Path for global storage
-let versionAutoCleanup = false; // Auto-delete old versions
-let versionCleanupDays = 30; // Days before auto-cleanup
-const crypto = require('crypto'); // For file hashing
+let mainWindow;                  // Main application window
+let compareWindow = null;        // Backup comparison window (created on demand)
+let currentFilePath = null;      // Path to currently open file
+let recentFiles = [];            // Array of recently opened file paths
+const MAX_RECENT_FILES = 10;    // Maximum recent files to track
+let lastSaveTime = null;         // Timestamp of last save (for title bar)
+let hasUnsavedChanges = false;   // Whether current file has unsaved changes
+let autosaveEnabled = false;     // Whether autosave is currently active
+let autosaveInterval = 5 * 60 * 1000; // Autosave interval (default: 5 minutes)
+let autosaveTimer = null;        // setInterval timer for autosave
+let autosavePersistent = false;  // Whether autosave setting persists across sessions
+let titleUpdateTimer = null;     // Timer for updating title bar every minute
 
-// Path to store recent files
+// Backup system configuration
+let versioningEnabled = true;     // Enable/disable backup creation on save
+let versionsToKeep = 10;          // Maximum backups to keep per file
+let versionStorageMode = 'local'; // 'local' = .nthing-history/ folder next to file
+let versionGlobalPath = '';       // Path for global storage (if not using local)
+let versionAutoCleanup = false;   // Auto-delete backups older than X days
+let versionCleanupDays = 30;      // Days before auto-cleanup kicks in
+const crypto = require('crypto'); // For MD5 hashing (backup deduplication)
+
+// Persistent storage paths
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
-// Path to store app settings
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 // Update window title with filename and save status
@@ -313,6 +333,19 @@ function saveVersionMetadata(versionDir, metadata) {
 }
 
 // Create a new version of the file
+/**
+ * Create a backup version of a file
+ *
+ * This is the core of the backup system. It:
+ * 1. Calculates MD5 hash of content to detect duplicates
+ * 2. Creates a new backup file (v001.md, v002.md, etc.)
+ * 3. Updates metadata.json with timestamp, size, word count
+ * 4. Removes oldest backups if we exceed versionsToKeep (default: 10)
+ *
+ * @param {string} filePath - Path to the file being backed up
+ * @param {string} content - File content to backup
+ * @param {string} trigger - What triggered the backup ('manual-save', 'autosave', etc.)
+ */
 function createVersion(filePath, content, trigger = 'manual-save') {
   if (!versioningEnabled || !filePath) {
     return;
@@ -322,10 +355,11 @@ function createVersion(filePath, content, trigger = 'manual-save') {
     const versionDir = getVersionDir(filePath);
     const metadata = loadVersionMetadata(versionDir);
 
-    // Calculate hash to check if content changed
+    // Calculate MD5 hash to detect if content actually changed
+    // This prevents creating duplicate backups when you save without changes
     const contentHash = getFileHash(content);
 
-    // Don't create version if identical to last version
+    // Skip backup creation if content is identical to last backup
     if (metadata.versions.length > 0) {
       const lastVersion = metadata.versions[metadata.versions.length - 1];
       if (lastVersion.hash === contentHash) {

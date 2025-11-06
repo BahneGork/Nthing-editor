@@ -1,5 +1,29 @@
+/**
+ * renderer.js - Electron Renderer Process (Main Window)
+ *
+ * This file runs in the browser/renderer context with DOM access.
+ * Responsibilities:
+ * - UI interactions and updates
+ * - Markdown rendering with marked.js
+ * - Editor mode switching (Editor Mode vs Writing Focus Mode)
+ * - Search & Replace functionality
+ * - Synchronized scrolling between editor and preview
+ * - Image handling (paste and drag & drop)
+ * - Autosave UI updates
+ * - Backup sidebar management
+ * - CodeMirror integration for Writing Focus mode with formatting
+ * - Resizable pane separator
+ *
+ * Communicates with main process via IPC for file operations and window management.
+ * Cannot directly access file system - must ask main process via ipcRenderer.send().
+ */
+
 const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
+
+// ==========================================
+// DOM Element References
+// ==========================================
 
 // Custom title bar controls
 const minimizeBtn = document.getElementById('minimize-btn');
@@ -427,20 +451,33 @@ ipcRenderer.on('image-saved', (event, imagePath) => {
 let isEditorScrolling = false;
 let isPreviewScrolling = false;
 
+// ==========================================
+// Synchronized Scrolling (Editor ↔ Preview)
+// ==========================================
+// When scrolling either pane, the other pane scrolls to maintain relative position.
+// Uses percentage-based scrolling so it works regardless of content length differences.
+//
+// To prevent infinite loops:
+// - Set isEditorScrolling = true before updating preview scroll
+// - Set isPreviewScrolling = true before updating editor scroll
+// - Check these flags at the start of each handler to break the loop
+// - Reset flags after 50ms timeout
+
 editor.addEventListener('scroll', () => {
-  // Sync line numbers in editor mode
+  // Keep line numbers in sync with editor scroll position
   if (currentMode === 'editor' && lineNumbers) {
     lineNumbers.scrollTop = editor.scrollTop;
   }
 
-  // Update find highlight overlay position when scrolling
+  // Update find/replace highlight overlay position
   if (currentMatchIndex >= 0 && matches.length > 0) {
     drawHighlightOverlay(matches[currentMatchIndex]);
   }
 
-  // Sync preview in editor mode only if sync is enabled
+  // Only sync in Editor Mode when sync is enabled
   if (currentMode !== 'editor' || !syncScrollEnabled) return;
 
+  // Break infinite loop: if preview triggered this, ignore
   if (isPreviewScrolling) {
     isPreviewScrolling = false;
     return;
@@ -448,13 +485,14 @@ editor.addEventListener('scroll', () => {
 
   isEditorScrolling = true;
 
-  // Calculate scroll percentage
+  // Calculate scroll position as percentage (0.0 to 1.0)
   const scrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
 
-  // Apply to preview
+  // Apply same percentage to preview
   const previewScrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
   preview.scrollTop = previewScrollTop;
 
+  // Reset flag after brief delay
   setTimeout(() => {
     isEditorScrolling = false;
   }, 50);
@@ -462,8 +500,10 @@ editor.addEventListener('scroll', () => {
 
 // Bidirectional sync: Allow preview to scroll editor
 function handlePreviewScroll() {
+  // Only sync in Editor Mode when sync is enabled
   if (currentMode !== 'editor' || !syncScrollEnabled) return;
 
+  // Break infinite loop: if editor triggered this, ignore
   if (isEditorScrolling) {
     isEditorScrolling = false;
     return;
@@ -471,13 +511,14 @@ function handlePreviewScroll() {
 
   isPreviewScrolling = true;
 
-  // Calculate scroll percentage
+  // Calculate scroll position as percentage (0.0 to 1.0)
   const scrollPercentage = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
 
-  // Apply to editor
+  // Apply same percentage to editor
   const editorScrollTop = scrollPercentage * (editor.scrollHeight - editor.clientHeight);
   editor.scrollTop = editorScrollTop;
 
+  // Reset flag after brief delay
   setTimeout(() => {
     isPreviewScrolling = false;
   }, 50);
