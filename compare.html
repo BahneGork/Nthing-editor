@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare Backup</title>
+  <link rel="stylesheet" href="compare.css">
+</head>
+<body>
+  <!-- Custom Title Bar -->
+  <div class="custom-titlebar">
+    <div class="titlebar-left">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%234a90e2'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-size='10' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E" alt="Nthing" class="app-icon">
+      <span class="app-name">Nthing</span>
+    </div>
+    <div class="titlebar-center">
+      <span id="titlebar-text">Compare Backup</span>
+    </div>
+    <div class="titlebar-right">
+      <button id="minimize-btn" class="titlebar-btn" title="Minimize">&#8212;</button>
+      <button id="maximize-btn" class="titlebar-btn" title="Maximize">&#9723;</button>
+      <button id="close-btn" class="titlebar-btn close" title="Close">&times;</button>
+    </div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="summary-section">
+    <div class="summary-title">If you restore this backup:</div>
+    <div class="summary-stats">
+      <div class="summary-item removed">
+        <span class="summary-icon">🔴</span>
+        <span class="summary-text">You will <strong>LOSE</strong> <span id="removed-count">0</span> lines (new content added after backup)</span>
+      </div>
+      <div class="summary-item added">
+        <span class="summary-icon">🟢</span>
+        <span class="summary-text">You will <strong>GET BACK</strong> <span id="added-count">0</span> lines (deleted since backup)</span>
+      </div>
+    </div>
+    <div class="summary-warning">⚠️ Be sure this is what you want before restoring!</div>
+  </div>
+
+  <!-- Split Pane Container -->
+  <div class="compare-container">
+    <!-- Current Version (Left) -->
+    <div class="compare-pane current-pane">
+      <div class="pane-header">
+        <span class="pane-title">Current (what you have now)</span>
+        <span class="pane-badge preview">Preview</span>
+      </div>
+      <div class="pane-content">
+        <div id="current-content" class="content-viewer"></div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Backup Version (Right) -->
+    <div class="compare-pane backup-pane">
+      <div class="pane-header">
+        <span class="pane-title">Backup <span id="backup-version"></span> <span id="backup-time"></span></span>
+      </div>
+      <div class="pane-content">
+        <div id="backup-content" class="content-viewer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-bar">
+    <div class="action-left">
+      <span id="selection-count" class="selection-count">No lines selected</span>
+    </div>
+    <div class="action-right">
+      <button id="finalize-btn" class="btn btn-primary" disabled>Finalize Restoration</button>
+      <button id="restore-full-btn" class="btn btn-warning">Restore Full Backup</button>
+      <button id="close-window-btn" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <script src="compare.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "versions": [
+    {
+      "id": "v001",
+      "timestamp": "2025-11-06T06:45:18.319Z",
+      "size": 4280,
+      "words": 754,
+      "lines": 24,
+      "hash": "46e1973b4d8ef86f3099e6a475435ec4",
+      "trigger": "manual-save"
+    }
+  ]
+}
