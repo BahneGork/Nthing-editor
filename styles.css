@@ -497,6 +497,7 @@ body {
 }
 
 .container[data-mode="writing"] .editor-pane {
+  flex: 1; /* Take full width in writing mode */
   border-right: none;
   max-width: none;
 }
