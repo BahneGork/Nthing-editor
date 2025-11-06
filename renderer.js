@@ -1929,7 +1929,6 @@ document.addEventListener('drop', (e) => {
 
 const separator = document.getElementById('separator');
 const editorPane = document.querySelector('.editor-pane');
-const container = document.querySelector('.container');
 let isDragging = false;
 
 // Only set up separator dragging if separator exists (Editor Mode only)
