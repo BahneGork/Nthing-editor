@@ -126,8 +126,8 @@ body {
   flex: 1; /* Take remaining space */
 }
 
-/* Draggable separator */
-.separator {
+/* Draggable pane separator (not status bar separators) */
+.container > .separator {
   width: 5px;
   background-color: #ddd;
   cursor: col-resize;
@@ -136,12 +136,20 @@ body {
   transition: background-color 0.2s;
 }
 
-.separator:hover {
+.container > .separator:hover {
   background-color: #4a90e2;
 }
 
-.separator.dragging {
+.container > .separator.dragging {
   background-color: #4a90e2;
+}
+
+/* Status bar separators - just visual dividers */
+.stats .separator {
+  color: #ccc;
+  margin: 0 8px;
+  user-select: none;
+  pointer-events: none;
 }
 
 .editor-wrapper {
