@@ -2,8 +2,6 @@
 
 A markdown editor where nothing else matters. Just write.
 
-Built with Electron because I wanted something that didn't get in the way.
-
 ## What it does
 
 There are two modes: Editor Mode shows your markdown source on the left with a live preview on the right. Writing Focus Mode gives you a single pane with wider margins and a serif font - good for when you just want to write without seeing the raw markdown.
