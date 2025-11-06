@@ -4,17 +4,50 @@ A distraction-free markdown editor where nothing else matters. Built with Electr
 
 ## Features
 
+### Core Editing
 - **Two editing modes**: Editor Mode (split-pane with preview) and Writing Focus Mode (distraction-free)
 - **Editor Mode**: Line numbers, raw source code, live preview with synchronized scrolling
 - **Writing Focus Mode**: Wider margins, larger serif font, distraction-free writing
+- **Focus Mode**: Dim all paragraphs except the active one for better concentration
+- **Typewriter Mode**: Keep cursor vertically centered while typing
+- **Show Formatting**: Toggle between rendered markdown and source code in Writing Focus mode
 - Open and read markdown files (.md, .markdown, .txt)
 - Save and Save As functionality
+- **Autosave**: Configurable intervals (1, 5, 15, or 30 minutes)
+- **Real-time statistics**: Word count, character count, and line count
+
+### File Management
 - **Open Recent** - Quick access to your last 10 opened files
+- **File Associations** - Double-click .md, .markdown, or .txt files to open in Nthing
+- Unsaved changes warning when opening/creating new files
+
+### Search & Replace
 - **Find & Replace** with case-sensitive and whole-word options
-- **Real-time word, character, and line count**
+- Movable, draggable find dialog
+- Match count and navigation
+- Visual highlighting of search results
+
+### Note Backup System
+- **Automatic Backups** - Created on save with MD5 hash deduplication
+- **Backup History** - Keep up to 10 versions with timestamps
+- **Backup Comparison** - Visual diff window showing changes
+- **Color-Coded Diff**: 🔴 Red (will be lost) / 🟢 Green (will be restored)
+- **Interactive Restoration** - Select individual lines to restore or restore full backup
+- **Storage**: Local `.nthing-history/` folder next to each file
+- **Manual Snapshots** - Create backups on demand
+
+### Formatting Tools
+- **Table Insertion** - Quick table template (Ctrl+T)
+- **List Formatting** - Toggle bullet and numbered lists
+- **Auto-Continue Lists** - Automatically continue lists on new lines
+- **Image Support** - Paste from clipboard or drag & drop (auto-saves to `images/` folder)
+
+### User Interface
+- Clean, modern UI with custom title bar
+- Native File, Edit, Format, View, and Help menus
 - Keyboard shortcuts for all major operations
-- Native File, Edit, and View menus
-- Clean, modern UI
+- Synchronized scrolling between editor and preview
+- Distraction-free, minimal interface
 
 ## Installation & Running
 
@@ -38,42 +71,74 @@ A distraction-free markdown editor where nothing else matters. Built with Electr
 ## Usage
 
 ### Keyboard Shortcuts
+
+**File:**
 - `Ctrl+N` - New file
 - `Ctrl+O` - Open file
 - `Ctrl+1-9` - Open recent file (1 = most recent)
 - `Ctrl+S` - Save file
 - `Ctrl+Shift+S` - Save As
+- `Ctrl+Q` - Quit application
+
+**Edit:**
+- `Ctrl+Z` - Undo
+- `Ctrl+Y` - Redo
+- `Ctrl+X` - Cut
+- `Ctrl+C` - Copy
+- `Ctrl+V` - Paste
+- `Ctrl+A` - Select All
 - `Ctrl+F` - Find
 - `Ctrl+H` - Find & Replace
-- `Ctrl+Q` - Quit application
 - `Esc` - Close Find & Replace dialog
 
+**Format:**
+- `Ctrl+T` - Insert table
+- `Ctrl+Shift+8` - Toggle bullet list
+- `Ctrl+Shift+7` - Toggle numbered list
+
+**View:**
+- `F9` - Toggle between Editor and Writing Focus modes
+- `F12` - Toggle Developer Tools
+
+**Backups:**
+- `Ctrl+Shift+H` - Open Note Backups sidebar
+
 ### Menu Options
-Use the **File** menu to:
-- Create a new file
-- Open existing markdown files
-- **Open Recent** - Access your last 10 opened files with one click
-- Save your work
-- Save to a new file location
 
-### Open Recent Files
-The editor remembers your last 10 opened files:
-- Access via **File > Open Recent** menu
-- Use keyboard shortcuts `Ctrl+1` through `Ctrl+9` for quick access
-- Files are automatically added when opened or saved
-- Clear the list with **File > Open Recent > Clear Recent Files**
-- Files that no longer exist are automatically removed from the list
+**File Menu:**
+- New - Create a new file
+- Open - Open existing markdown files
+- **Open Recent** - Access your last 10 opened files
+- Save / Save As
+- **Autosave** - Enable for this session or always, with configurable intervals
+- **Note Backups** - View backup history (Ctrl+Shift+H)
+- **Create Backup** - Manually create a backup snapshot
+- Exit
 
-The **Edit** menu provides:
+**Edit Menu:**
 - Undo/Redo
 - Cut/Copy/Paste
 - Select All
 - Find
 - Find & Replace
 
-The **View** menu provides:
+**Format Menu:**
+- Toggle Bullet List (Ctrl+Shift+8)
+- Toggle Numbered List (Ctrl+Shift+7)
+- Insert Table (Ctrl+T)
+
+**View Menu:**
+- Toggle View Mode (F9)
 - **Editor Mode** - Split-pane with preview and line numbers
 - **Writing Focus Mode** - Distraction-free writing
+- **Focus Mode** - Highlight active paragraph only
+- **Typewriter Mode** - Keep cursor centered
+- Toggle Developer Tools (F12)
+
+**Help Menu:**
+- **About Note Backups** - Complete backup system documentation
+- Keyboard Shortcuts - Full shortcut reference
+- About Nthing - Version and app information
 
 ### Editing Modes
 
@@ -120,6 +185,50 @@ The editor and preview panes stay in sync as you scroll in Editor Mode:
 - **Bidirectional** - Works both ways for maximum flexibility
 - **Proportional** - Maintains relative position regardless of content length
 
+### Note Backup System
+
+Nthing automatically protects your work with an intelligent backup system:
+
+**Automatic Backups:**
+- Created automatically when you save your notes
+- MD5 hash deduplication prevents duplicate backups
+- Keeps up to 10 versions by default
+- Stored in `.nthing-history/` folder next to your file
+
+**Viewing Backups:**
+- Open the sidebar: File > Note Backups (Ctrl+Shift+H)
+- Each backup shows: timestamp, file size, and word count
+- Click **👁 Preview** to compare versions
+
+**Comparing Versions:**
+- Opens a split-pane comparison window
+- **Left pane**: Your current note (live preview)
+- **Right pane**: Selected backup version
+- **Color coding**:
+  - 🔴 **Red** (left) = Lines you will LOSE if you restore
+  - 🟢 **Green** (right) = Lines you will GET BACK
+  - ⚪ **White** = Unchanged lines
+
+**Restoring Options:**
+
+1. **Interactive Line Restoration** (Advanced):
+   - Click **←** arrows next to green lines to select them
+   - Selected lines appear in the preview (left pane)
+   - Click **✓** to deselect
+   - Click **Finalize Restoration** to apply your selections
+   - Only the selected lines will be restored
+
+2. **Full Backup Restoration**:
+   - Click **Restore Full Backup** button
+   - Confirmation dialog appears
+   - Entire backup replaces your current note
+
+**Safety Features:**
+- Visual preview before restoration
+- Color-coded diff shows exactly what will change
+- Confirmation dialogs for destructive actions
+- Manual backup creation anytime
+
 ## Supported Markdown Features
 
 - Headings (# H1, ## H2, etc.)
@@ -134,13 +243,21 @@ The editor and preview panes stay in sync as you scroll in Editor Mode:
 ## File Structure
 
 ```
-markdown-editor/
-├── main.js           # Electron main process
-├── index.html        # Application UI
-├── styles.css        # Styling
+nthing/
+├── main.js           # Electron main process, backup system
+├── index.html        # Main application UI
+├── styles.css        # Main application styling
 ├── renderer.js       # UI logic and markdown rendering
+├── compare.html      # Backup comparison window UI
+├── compare.css       # Comparison window styling
+├── compare.js        # Diff algorithm and restoration logic
 ├── package.json      # Project configuration
-└── README.md         # This file
+├── README.md         # This file
+└── .nthing-history/  # Local backup storage (auto-created)
+    └── [filename]/
+        ├── v001.md
+        ├── v002.md
+        └── metadata.json
 ```
 
 ## Building for Distribution
@@ -154,7 +271,7 @@ npm install
 npm run build
 ```
 
-This will create a Windows installer at `dist/Nthing Setup 1.0.0.exe`
+This will create a Windows installer at `dist/Nthing Setup 1.9.0.exe`
 
 ### Windows Defender False Positive Warning
 
@@ -201,7 +318,10 @@ The installer includes:
 
 - **Electron** - Desktop app framework
 - **marked.js** - Markdown parsing and rendering
-- **Node.js** - File system operations
+- **CodeMirror 6** - Advanced text editing in Writing Focus mode
+- **highlight.js** - Syntax highlighting for code blocks
+- **Node.js** - File system operations and backup management
+- **crypto** (Node.js) - MD5 hashing for backup deduplication
 
 ## License
 
