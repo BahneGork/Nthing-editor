@@ -1932,61 +1932,64 @@ const editorPane = document.querySelector('.editor-pane');
 const container = document.querySelector('.container');
 let isDragging = false;
 
-// Load saved split position from localStorage
-function loadSplitPosition() {
-  const savedPosition = localStorage.getItem('editorSplitPosition');
-  if (savedPosition) {
-    const percentage = parseFloat(savedPosition);
-    if (percentage >= 20 && percentage <= 80) { // Sanity check
-      editorPane.style.flexBasis = `${percentage}%`;
+// Only set up separator dragging if separator exists (Editor Mode only)
+if (separator && editorPane && container) {
+  // Load saved split position from localStorage
+  function loadSplitPosition() {
+    const savedPosition = localStorage.getItem('editorSplitPosition');
+    if (savedPosition) {
+      const percentage = parseFloat(savedPosition);
+      if (percentage >= 20 && percentage <= 80) { // Sanity check
+        editorPane.style.flexBasis = `${percentage}%`;
+      }
     }
   }
-}
 
-// Save split position to localStorage
-function saveSplitPosition(percentage) {
-  localStorage.setItem('editorSplitPosition', percentage);
-}
-
-// Handle separator mousedown
-separator.addEventListener('mousedown', (e) => {
-  isDragging = true;
-  separator.classList.add('dragging');
-  document.body.style.cursor = 'col-resize';
-  document.body.style.userSelect = 'none'; // Prevent text selection during drag
-  e.preventDefault();
-});
-
-// Handle mouse move for dragging
-document.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-
-  const containerRect = container.getBoundingClientRect();
-  const containerWidth = containerRect.width;
-  const mouseX = e.clientX - containerRect.left;
-
-  // Calculate percentage (with min/max limits)
-  let percentage = (mouseX / containerWidth) * 100;
-  percentage = Math.max(20, Math.min(80, percentage)); // Limit between 20% and 80%
-
-  editorPane.style.flexBasis = `${percentage}%`;
-});
-
-// Handle mouseup to stop dragging
-document.addEventListener('mouseup', () => {
-  if (isDragging) {
-    isDragging = false;
-    separator.classList.remove('dragging');
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-
-    // Save the current position
-    const containerWidth = container.getBoundingClientRect().width;
-    const editorWidth = editorPane.getBoundingClientRect().width;
-    const percentage = (editorWidth / containerWidth) * 100;
-    saveSplitPosition(percentage);
+  // Save split position to localStorage
+  function saveSplitPosition(percentage) {
+    localStorage.setItem('editorSplitPosition', percentage);
   }
-});
 
-// Load saved position on startup
-loadSplitPosition();
+  // Handle separator mousedown
+  separator.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    separator.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none'; // Prevent text selection during drag
+    e.preventDefault();
+  });
+
+  // Handle mouse move for dragging
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const mouseX = e.clientX - containerRect.left;
+
+    // Calculate percentage (with min/max limits)
+    let percentage = (mouseX / containerWidth) * 100;
+    percentage = Math.max(20, Math.min(80, percentage)); // Limit between 20% and 80%
+
+    editorPane.style.flexBasis = `${percentage}%`;
+  });
+
+  // Handle mouseup to stop dragging
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      separator.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Save the current position
+      const containerWidth = container.getBoundingClientRect().width;
+      const editorWidth = editorPane.getBoundingClientRect().width;
+      const percentage = (editorWidth / containerWidth) * 100;
+      saveSplitPosition(percentage);
+    }
+  });
+
+  // Load saved position on startup
+  loadSplitPosition();
+}
