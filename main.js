@@ -848,7 +848,7 @@ function createMenu() {
       label: 'Help',
       submenu: [
         {
-          label: 'About Note Backups',
+          label: 'Note Backups Help',
           click: () => {
             showHelpDialog();
           }
