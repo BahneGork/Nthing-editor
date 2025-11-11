@@ -246,7 +246,7 @@ function saveSettings() {
   try {
     const settings = {
       autosave: {
-        enabled: autosavePersistent ? autosaveEnabled : false, // Only save if persistent
+        enabled: autosavePersistent, // Enabled state is now per-window
         interval: autosaveInterval,
         persistent: autosavePersistent
       },
@@ -745,7 +745,7 @@ function createMenu() {
             {
               label: 'Enable for This Session',
               type: 'checkbox',
-              checked: autosaveEnabled && !autosavePersistent,
+              checked: false, // Per-window setting, can't show global state accurately
               click: (menuItem) => {
                 toggleAutosave(menuItem.checked, false);
               }
@@ -753,7 +753,7 @@ function createMenu() {
             {
               label: 'Enable Always',
               type: 'checkbox',
-              checked: autosaveEnabled && autosavePersistent,
+              checked: autosavePersistent,
               click: (menuItem) => {
                 toggleAutosave(menuItem.checked, true);
               }
