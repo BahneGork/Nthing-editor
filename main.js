@@ -23,18 +23,26 @@ const fs = require('fs');
 // Global State
 // ==========================================
 
-let mainWindow;                  // Main application window
-let compareWindow = null;        // Backup comparison window (created on demand)
-let currentFilePath = null;      // Path to currently open file
+// Per-window state management
+const windows = new Map(); // Map of window.id -> window state
+
+// Window state structure:
+// {
+//   window: BrowserWindow,
+//   compareWindow: BrowserWindow or null,
+//   currentFilePath: string or null,
+//   lastSaveTime: number or null,
+//   hasUnsavedChanges: boolean,
+//   autosaveEnabled: boolean,
+//   autosaveTimer: timer or null,
+//   titleUpdateTimer: timer or null
+// }
+
+// Shared state (across all windows)
 let recentFiles = [];            // Array of recently opened file paths
 const MAX_RECENT_FILES = 10;    // Maximum recent files to track
-let lastSaveTime = null;         // Timestamp of last save (for title bar)
-let hasUnsavedChanges = false;   // Whether current file has unsaved changes
-let autosaveEnabled = false;     // Whether autosave is currently active
 let autosaveInterval = 5 * 60 * 1000; // Autosave interval (default: 5 minutes)
-let autosaveTimer = null;        // setInterval timer for autosave
 let autosavePersistent = false;  // Whether autosave setting persists across sessions
-let titleUpdateTimer = null;     // Timer for updating title bar every minute
 
 // Backup system configuration
 let versioningEnabled = true;     // Enable/disable backup creation on save
@@ -49,13 +57,67 @@ const crypto = require('crypto'); // For MD5 hashing (backup deduplication)
 const recentFilesPath = path.join(app.getPath('userData'), 'recent-files.json');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
+// ==========================================
+// Window State Management Helper Functions
+// ==========================================
+
+// Get window state by BrowserWindow
+function getWindowState(win) {
+  if (!win) return null;
+  return windows.get(win.id);
+}
+
+// Get window state from event sender
+function getWindowStateFromEvent(event) {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return getWindowState(win);
+}
+
+// Create initial state for a new window
+function createWindowState(win) {
+  const state = {
+    window: win,
+    compareWindow: null,
+    currentFilePath: null,
+    lastSaveTime: null,
+    hasUnsavedChanges: false,
+    autosaveEnabled: autosavePersistent,
+    autosaveTimer: null,
+    titleUpdateTimer: null
+  };
+  windows.set(win.id, state);
+  return state;
+}
+
+// Clean up window state
+function destroyWindowState(win) {
+  const state = getWindowState(win);
+  if (state) {
+    // Clean up timers
+    if (state.titleUpdateTimer) {
+      clearInterval(state.titleUpdateTimer);
+    }
+    if (state.autosaveTimer) {
+      clearInterval(state.autosaveTimer);
+    }
+    // Clean up compare window
+    if (state.compareWindow && !state.compareWindow.isDestroyed()) {
+      state.compareWindow.close();
+    }
+    windows.delete(win.id);
+  }
+}
+
 // Update window title with filename and save status
-function updateWindowTitle(unsaved = false) {
+function updateWindowTitle(win, unsaved = false) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   let titleText = '';
 
-  if (currentFilePath) {
+  if (state.currentFilePath) {
     // Get filename without extension
-    const filename = path.basename(currentFilePath, path.extname(currentFilePath));
+    const filename = path.basename(state.currentFilePath, path.extname(state.currentFilePath));
     titleText = filename;
   } else {
     titleText = 'Untitled';
@@ -64,9 +126,9 @@ function updateWindowTitle(unsaved = false) {
   // Add save status
   if (unsaved) {
     titleText += ' - Not saved';
-  } else if (lastSaveTime) {
+  } else if (state.lastSaveTime) {
     const now = new Date();
-    const savedDate = new Date(lastSaveTime);
+    const savedDate = new Date(state.lastSaveTime);
     const diffMs = now - savedDate;
     const diffMins = Math.floor(diffMs / 60000);
 
@@ -95,9 +157,9 @@ function updateWindowTitle(unsaved = false) {
   }
 
   // Send to renderer to update custom title bar
-  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+  if (win && !win.isDestroyed() && win.webContents) {
     try {
-      mainWindow.webContents.send('update-title', titleText);
+      win.webContents.send('update-title', titleText);
     } catch (err) {
       console.error('Error updating title:', err);
     }
@@ -203,43 +265,52 @@ function saveSettings() {
   }
 }
 
-// Autosave functions
-function startAutosave() {
-  stopAutosave(); // Clear any existing timer
-  if (autosaveEnabled && autosaveInterval > 0) {
-    autosaveTimer = setInterval(() => {
-      if (hasUnsavedChanges && currentFilePath) {
+// Autosave functions - updated for per-window state
+function startAutosave(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  stopAutosave(win); // Clear any existing timer
+  if (state.autosaveEnabled && autosaveInterval > 0) {
+    state.autosaveTimer = setInterval(() => {
+      if (state.hasUnsavedChanges && state.currentFilePath) {
         // Notify renderer that autosave is saving
-        mainWindow.webContents.send('autosave-saving');
+        win.webContents.send('autosave-saving');
         // Request content from renderer and save
-        mainWindow.webContents.send('save-file-request');
+        win.webContents.send('save-file-request');
       }
     }, autosaveInterval);
   }
   // Send autosave status to renderer
-  sendAutosaveStatus();
+  sendAutosaveStatus(win);
 }
 
-function stopAutosave(skipStatusUpdate = false) {
-  if (autosaveTimer) {
-    clearInterval(autosaveTimer);
-    autosaveTimer = null;
+function stopAutosave(win, skipStatusUpdate = false) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.autosaveTimer) {
+    clearInterval(state.autosaveTimer);
+    state.autosaveTimer = null;
   }
   // Send autosave status to renderer (skip if window is closing)
   if (!skipStatusUpdate) {
-    sendAutosaveStatus();
+    sendAutosaveStatus(win);
   }
 }
 
 function toggleAutosave(enabled, persistent = false) {
-  autosaveEnabled = enabled;
   autosavePersistent = persistent;
 
-  if (enabled) {
-    startAutosave();
-  } else {
-    stopAutosave();
-  }
+  // Apply to all windows
+  windows.forEach((state) => {
+    state.autosaveEnabled = enabled;
+    if (enabled) {
+      startAutosave(state.window);
+    } else {
+      stopAutosave(state.window);
+    }
+  });
 
   // Save settings if persistent
   if (persistent) {
@@ -251,9 +322,13 @@ function toggleAutosave(enabled, persistent = false) {
 
 function setAutosaveInterval(minutes) {
   autosaveInterval = minutes * 60 * 1000; // Convert minutes to milliseconds
-  if (autosaveEnabled) {
-    startAutosave(); // Restart with new interval
-  }
+
+  // Restart autosave on all windows with autosave enabled
+  windows.forEach((state) => {
+    if (state.autosaveEnabled) {
+      startAutosave(state.window);
+    }
+  });
 
   // Save settings if persistent mode is on
   if (autosavePersistent) {
@@ -263,11 +338,14 @@ function setAutosaveInterval(minutes) {
   createMenu(); // Rebuild menu to update checkmark
 }
 
-function sendAutosaveStatus() {
-  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+function sendAutosaveStatus(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (win && !win.isDestroyed() && win.webContents) {
     try {
-      mainWindow.webContents.send('autosave-status', {
-        enabled: autosaveEnabled,
+      win.webContents.send('autosave-status', {
+        enabled: state.autosaveEnabled,
         interval: autosaveInterval / 60000 // Convert to minutes
       });
     } catch (err) {
@@ -513,8 +591,8 @@ function deleteVersion(filePath, versionId) {
   }
 }
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
+function createWindow(filePathToOpen = null) {
+  const win = new BrowserWindow({
     width: 1200,
     height: 800,
     frame: false, // Remove default title bar
@@ -530,52 +608,63 @@ function createWindow() {
     }
   });
 
-  // Load app settings first (needed before window setup)
-  loadSettings();
+  // Create state for this window
+  const state = createWindowState(win);
 
-  mainWindow.loadFile('index.html');
+  // Load app settings first (needed before window setup) - only on first window
+  if (windows.size === 1) {
+    loadSettings();
+  }
+
+  win.loadFile('index.html');
 
   // Show window when ready to prevent white screen
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  win.once('ready-to-show', () => {
+    win.show();
 
     // Load recent files and create menu AFTER window is visible
     // This prevents blocking the window from appearing
     setImmediate(() => {
-      loadRecentFiles();
+      if (windows.size === 1) {
+        loadRecentFiles();
+      }
       createMenu();
     });
   });
 
   // Send autosave status after page loads
-  mainWindow.webContents.on('did-finish-load', () => {
-    sendAutosaveStatus();
+  win.webContents.on('did-finish-load', () => {
+    sendAutosaveStatus(win);
+
+    // Open file if specified
+    if (filePathToOpen) {
+      openFileByPath(win, filePathToOpen);
+    }
   });
 
   // Set initial title
-  updateWindowTitle(true); // New file, unsaved
+  updateWindowTitle(win, true); // New file, unsaved
 
   // Update title every minute to keep "last saved" time current
-  titleUpdateTimer = setInterval(() => {
-    if (mainWindow && !mainWindow.isDestroyed() && lastSaveTime) {
-      updateWindowTitle(false);
+  state.titleUpdateTimer = setInterval(() => {
+    if (win && !win.isDestroyed() && state.lastSaveTime) {
+      updateWindowTitle(win, false);
     }
   }, 60000); // Every 60 seconds
 
-  // Clean up timers when window is closed
-  mainWindow.on('closed', () => {
-    if (titleUpdateTimer) {
-      clearInterval(titleUpdateTimer);
-      titleUpdateTimer = null;
-    }
-    stopAutosave(true); // Skip status update since window is closing
-    mainWindow = null;
+  // Clean up when window is closed
+  win.on('closed', () => {
+    stopAutosave(win, true); // Skip status update since window is closing
+    destroyWindowState(win);
   });
 
   // Start autosave if it was enabled persistently
-  if (autosaveEnabled && autosavePersistent) {
-    startAutosave();
+  if (autosavePersistent) {
+    state.autosaveEnabled = true;
+    startAutosave(win);
   }
+
+  return win;
 }
 
 function createMenu() {
