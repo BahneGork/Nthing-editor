@@ -1183,18 +1183,22 @@ function saveFileAs(win) {
 
 // Handle save content from renderer
 ipcMain.on('save-content', (event, content) => {
-  if (currentFilePath) {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath) {
     try {
-      fs.writeFileSync(currentFilePath, content, 'utf-8');
-      lastSaveTime = Date.now();
-      hasUnsavedChanges = false; // Reset unsaved changes flag
-      addToRecentFiles(currentFilePath);
+      fs.writeFileSync(state.currentFilePath, content, 'utf-8');
+      state.lastSaveTime = Date.now();
+      state.hasUnsavedChanges = false; // Reset unsaved changes flag
+      addToRecentFiles(state.currentFilePath);
 
       // Create version after successful save
-      createVersion(currentFilePath, content, 'manual-save');
+      createVersion(state.currentFilePath, content, 'manual-save');
 
-      mainWindow.webContents.send('file-saved', currentFilePath);
-      updateWindowTitle(false); // Just saved, not unsaved
+      win.webContents.send('file-saved', state.currentFilePath);
+      updateWindowTitle(win, false); // Just saved, not unsaved
     } catch (err) {
       console.error('Error saving file:', err);
     }
@@ -1202,15 +1206,23 @@ ipcMain.on('save-content', (event, content) => {
 });
 
 // Handle content changed (mark as unsaved)
-ipcMain.on('content-changed', () => {
-  hasUnsavedChanges = true;
-  updateWindowTitle(true); // Mark as unsaved
+ipcMain.on('content-changed', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  state.hasUnsavedChanges = true;
+  updateWindowTitle(win, true); // Mark as unsaved
 });
 
 // Handle versioning operations
 ipcMain.on('get-versions', (event) => {
-  if (currentFilePath) {
-    const versions = getVersions(currentFilePath);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath) {
+    const versions = getVersions(state.currentFilePath);
     event.reply('versions-list', versions);
   } else {
     event.reply('versions-list', []);
@@ -1218,8 +1230,12 @@ ipcMain.on('get-versions', (event) => {
 });
 
 ipcMain.on('restore-version', (event, versionId) => {
-  if (currentFilePath && versionId) {
-    const content = restoreVersion(currentFilePath, versionId);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath && versionId) {
+    const content = restoreVersion(state.currentFilePath, versionId);
     if (content !== null) {
       event.reply('version-restored', content);
     } else {
@@ -1229,33 +1245,45 @@ ipcMain.on('restore-version', (event, versionId) => {
 });
 
 ipcMain.on('delete-version', (event, versionId) => {
-  if (currentFilePath && versionId) {
-    const success = deleteVersion(currentFilePath, versionId);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath && versionId) {
+    const success = deleteVersion(state.currentFilePath, versionId);
     if (success) {
       // Send updated version list
-      const versions = getVersions(currentFilePath);
+      const versions = getVersions(state.currentFilePath);
       event.reply('versions-list', versions);
     }
   }
 });
 
 ipcMain.on('create-snapshot', (event, content) => {
-  if (currentFilePath && content) {
-    createVersion(currentFilePath, content, 'manual-snapshot');
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath && content) {
+    createVersion(state.currentFilePath, content, 'manual-snapshot');
     // Send updated version list
-    const versions = getVersions(currentFilePath);
+    const versions = getVersions(state.currentFilePath);
     event.reply('versions-list', versions);
   }
 });
 
 // Open compare window for backup comparison
 ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
-  if (compareWindow) {
-    compareWindow.focus();
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.compareWindow) {
+    state.compareWindow.focus();
     return;
   }
 
-  compareWindow = new BrowserWindow({
+  state.compareWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     frame: false,
@@ -1267,34 +1295,34 @@ ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
       backgroundThrottling: false,
       v8CacheOptions: 'code'
     },
-    parent: mainWindow,
+    parent: win,
     modal: false
   });
 
   // Show compare window when ready
-  compareWindow.once('ready-to-show', () => {
-    compareWindow.show();
+  state.compareWindow.once('ready-to-show', () => {
+    state.compareWindow.show();
   });
 
-  compareWindow.loadFile('compare.html');
+  state.compareWindow.loadFile('compare.html');
 
-  compareWindow.on('closed', () => {
-    compareWindow = null;
+  state.compareWindow.on('closed', () => {
+    state.compareWindow = null;
   });
 
   // Once loaded, send comparison data
-  compareWindow.webContents.on('did-finish-load', () => {
-    if (currentFilePath && versionId) {
+  state.compareWindow.webContents.on('did-finish-load', () => {
+    if (state.currentFilePath && versionId) {
       // Get current content from main window
-      mainWindow.webContents.send('get-current-content-for-compare');
+      win.webContents.send('get-current-content-for-compare');
 
       // Wait for current content response
       ipcMain.once('current-content-response', (e, currentContent) => {
         // Get backup content
-        const backupContent = restoreVersion(currentFilePath, versionId);
+        const backupContent = restoreVersion(state.currentFilePath, versionId);
 
-        if (backupContent !== null && compareWindow) {
-          compareWindow.webContents.send('compare-data', {
+        if (backupContent !== null && state.compareWindow) {
+          state.compareWindow.webContents.send('compare-data', {
             current: currentContent,
             backup: backupContent,
             versionId: versionId,
@@ -1308,88 +1336,115 @@ ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
 
 // Apply partial restoration (selected lines)
 ipcMain.on('apply-partial-restore', (event, content) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('restore-content', content);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && !win.isDestroyed()) {
+    // Find the parent window (the main editor window that opened this compare window)
+    const parentWin = win.getParentWindow();
+    if (parentWin && !parentWin.isDestroyed()) {
+      parentWin.webContents.send('restore-content', content);
+    }
   }
 });
 
 // Apply full backup restoration
 ipcMain.on('apply-full-restore', (event, content) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('restore-content', content);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && !win.isDestroyed()) {
+    // Find the parent window (the main editor window that opened this compare window)
+    const parentWin = win.getParentWindow();
+    if (parentWin && !parentWin.isDestroyed()) {
+      parentWin.webContents.send('restore-content', content);
+    }
   }
 });
 
 // Compare window controls
-ipcMain.on('minimize-compare-window', () => {
-  if (compareWindow) {
-    compareWindow.minimize();
+ipcMain.on('minimize-compare-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.minimize();
   }
 });
 
-ipcMain.on('maximize-compare-window', () => {
-  if (compareWindow) {
-    if (compareWindow.isMaximized()) {
-      compareWindow.unmaximize();
+ipcMain.on('maximize-compare-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    if (win.isMaximized()) {
+      win.unmaximize();
     } else {
-      compareWindow.maximize();
+      win.maximize();
     }
   }
 });
 
 // Handle window controls
-ipcMain.on('minimize-window', () => {
-  if (mainWindow) {
-    mainWindow.minimize();
+ipcMain.on('minimize-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.minimize();
   }
 });
 
-ipcMain.on('maximize-window', () => {
-  if (mainWindow) {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
+ipcMain.on('maximize-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    if (win.isMaximized()) {
+      win.unmaximize();
     } else {
-      mainWindow.maximize();
+      win.maximize();
     }
   }
 });
 
-ipcMain.on('close-window', () => {
-  if (mainWindow) {
-    mainWindow.close();
+ipcMain.on('close-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.close();
   }
 });
 
 // Handle menu button click - show menu as popup
 ipcMain.on('show-menu', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
   const menu = Menu.getApplicationMenu();
-  if (menu && mainWindow) {
-    menu.popup({ window: mainWindow });
+  if (menu && win) {
+    menu.popup({ window: win });
   }
 });
 
 // Handle opening recent file by index (Ctrl+1 through Ctrl+9)
 ipcMain.on('open-recent-file-by-index', (event, index) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
   if (index >= 0 && index < recentFiles.length) {
     const filePath = recentFiles[index];
-    openRecentFile(filePath);
+    openRecentFile(win, filePath);
   }
 });
 
 // Handle pasted/dropped image saving
 ipcMain.on('save-pasted-image', (event, { data, type }) => {
-  saveImage(event, data, type, null);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+  saveImage(win, event, data, type, null);
 });
 
 ipcMain.on('save-dropped-image', (event, { data, type, name }) => {
-  saveImage(event, data, type, name);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+  saveImage(win, event, data, type, name);
 });
 
 // Handle dropped text file
 ipcMain.on('open-dropped-file', (event, filePath) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const state = getWindowState(win);
+  if (!state) return;
+
   // Check for unsaved changes before opening
-  if (hasUnsavedChanges) {
-    dialog.showMessageBox(mainWindow, {
+  if (state.hasUnsavedChanges) {
+    dialog.showMessageBox(win, {
       type: 'warning',
       title: 'Unsaved Changes',
       message: 'You have unsaved changes. Do you want to save before opening this file?',
@@ -1399,23 +1454,23 @@ ipcMain.on('open-dropped-file', (event, filePath) => {
     }).then(result => {
       if (result.response === 0) {
         // Save
-        mainWindow.webContents.send('save-file-request');
+        win.webContents.send('save-file-request');
         // Wait for save to complete, then open dropped file
         const saveHandler = () => {
           ipcMain.removeListener('save-content', saveHandler);
           setTimeout(() => {
-            openFileByPath(filePath);
+            openFileByPath(win, filePath);
           }, 100);
         };
         ipcMain.once('save-content', saveHandler);
       } else if (result.response === 1) {
         // Don't Save
-        openFileByPath(filePath);
+        openFileByPath(win, filePath);
       }
       // If Cancel (response === 2), do nothing
     });
   } else {
-    openFileByPath(filePath);
+    openFileByPath(win, filePath);
   }
 });
 
@@ -1492,7 +1547,10 @@ if (process.platform === 'win32' || process.platform === 'linux') {
 
 // Help dialog functions
 function showHelpDialog() {
-  dialog.showMessageBox(mainWindow, {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
+
+  dialog.showMessageBox(win, {
     type: 'info',
     title: 'About Note Backups',
     message: 'Note Backups System',
@@ -1554,7 +1612,10 @@ SAFETY TIPS:
 }
 
 function showKeyboardShortcuts() {
-  dialog.showMessageBox(mainWindow, {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
+
+  dialog.showMessageBox(win, {
     type: 'info',
     title: 'Keyboard Shortcuts',
     message: 'Nthing Keyboard Shortcuts',
@@ -1592,7 +1653,10 @@ Ctrl+Shift+H - Open Note Backups sidebar`,
 }
 
 function showAboutDialog() {
-  dialog.showMessageBox(mainWindow, {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
+
+  dialog.showMessageBox(win, {
     type: 'info',
     title: 'About Nthing',
     message: 'Nthing',
@@ -1617,23 +1681,22 @@ Built with Electron and marked.js
 }
 
 app.whenReady().then(() => {
-  createWindow();
-
-  // Open file if one was passed on startup
-  if (filePathToOpen) {
-    // Wait for window to be ready, then open file
-    mainWindow.webContents.once('did-finish-load', () => {
-      openFileByPath(filePathToOpen);
-    });
-  }
+  const win = createWindow(filePathToOpen);
+  // File will be opened via createWindow's did-finish-load handler
 });
 
 // macOS: Handle file opening
 app.on('open-file', (event, filePath) => {
   event.preventDefault();
-  if (mainWindow) {
-    if (hasUnsavedChanges) {
-      dialog.showMessageBox(mainWindow, {
+  const allWindows = BrowserWindow.getAllWindows();
+
+  if (allWindows.length > 0) {
+    // Use most recently focused window, or last window if none focused
+    const win = BrowserWindow.getFocusedWindow() || allWindows[allWindows.length - 1];
+    const state = getWindowState(win);
+
+    if (state && state.hasUnsavedChanges) {
+      dialog.showMessageBox(win, {
         type: 'warning',
         title: 'Unsaved Changes',
         message: 'You have unsaved changes. Do you want to save before opening another file?',
@@ -1642,16 +1705,16 @@ app.on('open-file', (event, filePath) => {
         cancelId: 2
       }).then(result => {
         if (result.response === 0) {
-          mainWindow.webContents.send('save-file-request');
+          win.webContents.send('save-file-request');
           setTimeout(() => {
-            openFileByPath(filePath);
+            openFileByPath(win, filePath);
           }, 200);
         } else if (result.response === 1) {
-          openFileByPath(filePath);
+          openFileByPath(win, filePath);
         }
       });
     } else {
-      openFileByPath(filePath);
+      openFileByPath(win, filePath);
     }
   } else {
     filePathToOpen = filePath;
@@ -1659,7 +1722,7 @@ app.on('open-file', (event, filePath) => {
 });
 
 app.on('window-all-closed', () => {
-  stopAutosave(true); // Clean up autosave timer, skip status update
+  // All windows are closed, state cleanup already handled in window 'closed' event
   if (process.platform !== 'darwin') {
     app.quit();
   }
