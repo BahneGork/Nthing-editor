@@ -1560,8 +1560,31 @@ if (process.platform === 'win32' || process.platform === 'linux') {
   }
 }
 
-// Allow multiple instances - each file opens in its own window
-// No single-instance lock needed
+// Single instance lock - reuse process but open multiple windows
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  // Another instance is already running, quit this one
+  app.quit();
+} else {
+  // This is the first instance - listen for second instance events
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // When user double-clicks another .md file, open it in a NEW window
+    const filePath = commandLine[commandLine.length - 1];
+    if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt'))) {
+      // Open the new file in a new window
+      createWindow(filePath);
+    } else {
+      // No file specified - just focus the most recent window
+      const allWindows = BrowserWindow.getAllWindows();
+      if (allWindows.length > 0) {
+        const lastWindow = allWindows[allWindows.length - 1];
+        if (lastWindow.isMinimized()) lastWindow.restore();
+        lastWindow.focus();
+      }
+    }
+  });
+}
 
 // Help dialog functions
 function showHelpDialog() {
