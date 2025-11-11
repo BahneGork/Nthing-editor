@@ -678,7 +678,8 @@ function createMenu() {
         sublabel: filePath,
         accelerator: index < 9 ? `CmdOrCtrl+${index + 1}` : undefined,
         click: () => {
-          openRecentFile(filePath);
+          const win = BrowserWindow.getFocusedWindow();
+          if (win) openRecentFile(win, filePath);
         }
       });
     });
@@ -704,14 +705,16 @@ function createMenu() {
           label: 'New',
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            newFile();
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) newFile(win);
           }
         },
         {
           label: 'Open',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
-            openFile();
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) openFile(win);
           }
         },
         {
@@ -723,14 +726,16 @@ function createMenu() {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',
           click: () => {
-            saveFile();
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) saveFile(win);
           }
         },
         {
           label: 'Save As',
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
-            saveFileAs();
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) saveFileAs(win);
           }
         },
         { type: 'separator' },
@@ -793,13 +798,15 @@ function createMenu() {
           label: 'Note Backups...',
           accelerator: 'CmdOrCtrl+Shift+H',
           click: () => {
-            mainWindow.webContents.send('toggle-version-sidebar');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-version-sidebar');
           }
         },
         {
           label: 'Create Backup',
           click: () => {
-            mainWindow.webContents.send('create-snapshot-request');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('create-snapshot-request');
           }
         },
         { type: 'separator' },
@@ -851,14 +858,16 @@ function createMenu() {
           label: 'Find',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
-            mainWindow.webContents.send('show-find-dialog', false);
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('show-find-dialog', false);
           }
         },
         {
           label: 'Find & Replace',
           accelerator: 'CmdOrCtrl+H',
           click: () => {
-            mainWindow.webContents.send('show-find-dialog', true);
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('show-find-dialog', true);
           }
         }
       ]
@@ -870,14 +879,16 @@ function createMenu() {
           label: 'Toggle Bullet List',
           accelerator: 'CmdOrCtrl+Shift+8',
           click: () => {
-            mainWindow.webContents.send('toggle-bullet-list');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-bullet-list');
           }
         },
         {
           label: 'Toggle Numbered List',
           accelerator: 'CmdOrCtrl+Shift+7',
           click: () => {
-            mainWindow.webContents.send('toggle-numbered-list');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-numbered-list');
           }
         },
         { type: 'separator' },
@@ -885,7 +896,8 @@ function createMenu() {
           label: 'Insert Table',
           accelerator: 'CmdOrCtrl+T',
           click: () => {
-            mainWindow.webContents.send('insert-table');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('insert-table');
           }
         }
       ]
@@ -897,7 +909,8 @@ function createMenu() {
           label: 'Toggle View Mode',
           accelerator: 'F9',
           click: () => {
-            mainWindow.webContents.send('toggle-mode');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-mode');
           }
         },
         { type: 'separator' },
@@ -906,14 +919,16 @@ function createMenu() {
           type: 'radio',
           checked: true,
           click: () => {
-            mainWindow.webContents.send('switch-mode', 'editor');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('switch-mode', 'editor');
           }
         },
         {
           label: 'Writing Focus Mode',
           type: 'radio',
           click: () => {
-            mainWindow.webContents.send('switch-mode', 'writing');
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('switch-mode', 'writing');
           }
         },
         { type: 'separator' },
@@ -922,7 +937,8 @@ function createMenu() {
           type: 'checkbox',
           checked: false,
           click: (menuItem) => {
-            mainWindow.webContents.send('toggle-focus-mode', menuItem.checked);
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-focus-mode', menuItem.checked);
           }
         },
         {
@@ -930,7 +946,8 @@ function createMenu() {
           type: 'checkbox',
           checked: false,
           click: (menuItem) => {
-            mainWindow.webContents.send('toggle-typewriter-mode', menuItem.checked);
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('toggle-typewriter-mode', menuItem.checked);
           }
         },
         { type: 'separator' },
@@ -938,7 +955,8 @@ function createMenu() {
           label: 'Toggle Developer Tools',
           accelerator: 'F12',
           click: () => {
-            mainWindow.webContents.toggleDevTools();
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.toggleDevTools();
           }
         }
       ]
