@@ -1349,49 +1349,8 @@ if (process.platform === 'win32' || process.platform === 'linux') {
   }
 }
 
-// Prevent multiple instances - if app is already running, send file to existing instance
-const gotTheLock = app.requestSingleInstanceLock();
-
-if (!gotTheLock) {
-  app.quit();
-} else {
-  // Handle second instance (when file is double-clicked while app is running)
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Focus existing window
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-
-      // Check if a file was passed
-      const filePath = commandLine[commandLine.length - 1];
-      if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt'))) {
-        // Check for unsaved changes
-        if (hasUnsavedChanges) {
-          dialog.showMessageBox(mainWindow, {
-            type: 'warning',
-            title: 'Unsaved Changes',
-            message: 'You have unsaved changes. Do you want to save before opening another file?',
-            buttons: ['Save', 'Don\'t Save', 'Cancel'],
-            defaultId: 0,
-            cancelId: 2
-          }).then(result => {
-            if (result.response === 0) {
-              // Save then open
-              mainWindow.webContents.send('save-file-request');
-              setTimeout(() => {
-                openFileByPath(filePath);
-              }, 200);
-            } else if (result.response === 1) {
-              // Don't save, just open
-              openFileByPath(filePath);
-            }
-          });
-        } else {
-          openFileByPath(filePath);
-        }
-      }
-    }
-  });
+// Allow multiple instances - each file opens in its own window
+// No single-instance lock needed
 
 // Help dialog functions
 function showHelpDialog() {
@@ -1499,7 +1458,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'About Nthing',
     message: 'Nthing',
-    detail: `Version 1.9.0
+    detail: `Version 1.9.4
 
 A distraction-free markdown editor where nothing else matters.
 
@@ -1519,17 +1478,16 @@ Built with Electron and marked.js
   });
 }
 
-  app.whenReady().then(() => {
-    createWindow();
+app.whenReady().then(() => {
+  createWindow();
 
-    // Open file if one was passed on startup
-    if (filePathToOpen) {
-      setTimeout(() => {
-        openFileByPath(filePathToOpen);
-      }, 500); // Small delay to ensure window is ready
-    }
-  });
-}
+  // Open file if one was passed on startup
+  if (filePathToOpen) {
+    setTimeout(() => {
+      openFileByPath(filePathToOpen);
+    }, 500); // Small delay to ensure window is ready
+  }
+});
 
 // macOS: Handle file opening
 app.on('open-file', (event, filePath) => {
