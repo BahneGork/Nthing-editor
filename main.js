@@ -530,11 +530,21 @@ function createWindow() {
     }
   });
 
+  // Load app settings first (needed before window setup)
+  loadSettings();
+
   mainWindow.loadFile('index.html');
 
   // Show window when ready to prevent white screen
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+
+    // Load recent files and create menu AFTER window is visible
+    // This prevents blocking the window from appearing
+    setImmediate(() => {
+      loadRecentFiles();
+      createMenu();
+    });
   });
 
   // Send autosave status after page loads
@@ -561,15 +571,6 @@ function createWindow() {
     stopAutosave(true); // Skip status update since window is closing
     mainWindow = null;
   });
-
-  // Load app settings
-  loadSettings();
-
-  // Load recent files
-  loadRecentFiles();
-
-  // Create application menu
-  createMenu();
 
   // Start autosave if it was enabled persistently
   if (autosaveEnabled && autosavePersistent) {
@@ -1501,9 +1502,10 @@ app.whenReady().then(() => {
 
   // Open file if one was passed on startup
   if (filePathToOpen) {
-    setTimeout(() => {
+    // Wait for window to be ready, then open file
+    mainWindow.webContents.once('did-finish-load', () => {
       openFileByPath(filePathToOpen);
-    }, 500); // Small delay to ensure window is ready
+    });
   }
 });
 
