@@ -221,7 +221,7 @@ function loadSettings() {
 
       // Load autosave settings
       if (settings.autosave) {
-        autosaveEnabled = settings.autosave.enabled || false;
+        // autosaveEnabled is now per-window, set via autosavePersistent
         autosaveInterval = settings.autosave.interval || (5 * 60 * 1000);
         autosavePersistent = settings.autosave.persistent || false;
       }
