@@ -524,7 +524,9 @@ function createWindow() {
     backgroundColor: '#1e1e1e', // Set background color to prevent white flash
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      backgroundThrottling: false, // Don't throttle when in background
+      v8CacheOptions: 'code' // Enable V8 code caching for faster subsequent loads
     }
   });
 
@@ -1140,12 +1142,21 @@ ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
     width: 1200,
     height: 800,
     frame: false,
+    show: false,
+    backgroundColor: '#1e1e1e',
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      backgroundThrottling: false,
+      v8CacheOptions: 'code'
     },
     parent: mainWindow,
     modal: false
+  });
+
+  // Show compare window when ready
+  compareWindow.once('ready-to-show', () => {
+    compareWindow.show();
   });
 
   compareWindow.loadFile('compare.html');

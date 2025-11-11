@@ -88,12 +88,6 @@ const cmState = require('@codemirror/state');
 const langMarkdown = require('@codemirror/lang-markdown');
 const cmLanguage = require('@codemirror/language');
 
-// Debug: See what's available in each package
-console.log('view exports:', Object.keys(cmView).join(', '));
-console.log('state exports:', Object.keys(cmState).join(', '));
-console.log('lang-markdown exports:', Object.keys(langMarkdown).join(', '));
-console.log('language exports:', Object.keys(cmLanguage).join(', '));
-
 const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
