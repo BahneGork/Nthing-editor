@@ -521,7 +521,7 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.svg'), // Custom app icon
     autoHideMenuBar: false, // Keep menu visible
     show: false, // Don't show window until ready
-    backgroundColor: '#1e1e1e', // Set background color to prevent white flash
+    backgroundColor: '#ffffff', // Set background color to match editor
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -1144,7 +1144,7 @@ ipcMain.on('open-compare-window', (event, versionId, timestamp) => {
     height: 800,
     frame: false,
     show: false,
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#ffffff',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
