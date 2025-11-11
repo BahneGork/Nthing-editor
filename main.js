@@ -520,6 +520,8 @@ function createWindow() {
     frame: false, // Remove default title bar
     icon: path.join(__dirname, 'icon.svg'), // Custom app icon
     autoHideMenuBar: false, // Keep menu visible
+    show: false, // Don't show window until ready
+    backgroundColor: '#1e1e1e', // Set background color to prevent white flash
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -527,6 +529,11 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Show window when ready to prevent white screen
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
 
   // Send autosave status after page loads
   mainWindow.webContents.on('did-finish-load', () => {
