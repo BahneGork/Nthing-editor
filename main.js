@@ -973,10 +973,13 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-function newFile() {
+function newFile(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   // Check for unsaved changes before creating new file
-  if (hasUnsavedChanges) {
-    dialog.showMessageBox(mainWindow, {
+  if (state.hasUnsavedChanges) {
+    dialog.showMessageBox(win, {
       type: 'warning',
       title: 'Unsaved Changes',
       message: 'You have unsaved changes. Do you want to save before creating a new file?',
@@ -986,38 +989,44 @@ function newFile() {
     }).then(result => {
       if (result.response === 0) {
         // Save
-        mainWindow.webContents.send('save-file-request');
+        win.webContents.send('save-file-request');
         // Wait for save to complete, then create new file
         const saveHandler = () => {
           ipcMain.removeListener('save-content', saveHandler);
           setTimeout(() => {
-            createNewFile();
+            createNewFile(win);
           }, 100);
         };
         ipcMain.once('save-content', saveHandler);
       } else if (result.response === 1) {
         // Don't Save
-        createNewFile();
+        createNewFile(win);
       }
       // If Cancel (response === 2), do nothing
     });
   } else {
-    createNewFile();
+    createNewFile(win);
   }
 }
 
-function createNewFile() {
-  currentFilePath = null;
-  lastSaveTime = null;
-  hasUnsavedChanges = false; // New empty file has nothing to save yet
-  mainWindow.webContents.send('new-file');
-  updateWindowTitle(true); // New file, unsaved
+function createNewFile(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  state.currentFilePath = null;
+  state.lastSaveTime = null;
+  state.hasUnsavedChanges = false; // New empty file has nothing to save yet
+  win.webContents.send('new-file');
+  updateWindowTitle(win, true); // New file, unsaved
 }
 
-function openFile() {
+function openFile(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   // Check for unsaved changes before opening
-  if (hasUnsavedChanges) {
-    dialog.showMessageBox(mainWindow, {
+  if (state.hasUnsavedChanges) {
+    dialog.showMessageBox(win, {
       type: 'warning',
       title: 'Unsaved Changes',
       message: 'You have unsaved changes. Do you want to save before opening another file?',
@@ -1027,28 +1036,31 @@ function openFile() {
     }).then(result => {
       if (result.response === 0) {
         // Save
-        mainWindow.webContents.send('save-file-request');
+        win.webContents.send('save-file-request');
         // Wait for save to complete, then show open dialog
         const saveHandler = () => {
           ipcMain.removeListener('save-content', saveHandler);
           setTimeout(() => {
-            showOpenDialog();
+            showOpenDialog(win);
           }, 100);
         };
         ipcMain.once('save-content', saveHandler);
       } else if (result.response === 1) {
         // Don't Save
-        showOpenDialog();
+        showOpenDialog(win);
       }
       // If Cancel (response === 2), do nothing
     });
   } else {
-    showOpenDialog();
+    showOpenDialog(win);
   }
 }
 
-function showOpenDialog() {
-  dialog.showOpenDialog(mainWindow, {
+function showOpenDialog(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  dialog.showOpenDialog(win, {
     properties: ['openFile'],
     filters: [
       { name: 'Markdown Files', extensions: ['md', 'markdown', 'txt'] },
@@ -1057,15 +1069,18 @@ function showOpenDialog() {
   }).then(result => {
     if (!result.canceled && result.filePaths.length > 0) {
       const filePath = result.filePaths[0];
-      openFileByPath(filePath);
+      openFileByPath(win, filePath);
     }
   });
 }
 
-function openRecentFile(filePath) {
+function openRecentFile(win, filePath) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   // Check for unsaved changes before opening
-  if (hasUnsavedChanges) {
-    dialog.showMessageBox(mainWindow, {
+  if (state.hasUnsavedChanges) {
+    dialog.showMessageBox(win, {
       type: 'warning',
       title: 'Unsaved Changes',
       message: 'You have unsaved changes. Do you want to save before opening another file?',
@@ -1075,32 +1090,35 @@ function openRecentFile(filePath) {
     }).then(result => {
       if (result.response === 0) {
         // Save
-        mainWindow.webContents.send('save-file-request');
+        win.webContents.send('save-file-request');
         // Wait for save to complete, then open the file
         // Use a one-time listener for the save-content event
         const saveHandler = () => {
           ipcMain.removeListener('save-content', saveHandler);
           setTimeout(() => {
-            openRecentFileAfterCheck(filePath);
+            openRecentFileAfterCheck(win, filePath);
           }, 100); // Small delay to ensure save completes
         };
         ipcMain.once('save-content', saveHandler);
       } else if (result.response === 1) {
         // Don't Save
-        openRecentFileAfterCheck(filePath);
+        openRecentFileAfterCheck(win, filePath);
       }
       // If Cancel (response === 2), do nothing
     });
   } else {
-    openRecentFileAfterCheck(filePath);
+    openRecentFileAfterCheck(win, filePath);
   }
 }
 
-function openRecentFileAfterCheck(filePath) {
+function openRecentFileAfterCheck(win, filePath) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   if (fs.existsSync(filePath)) {
-    openFileByPath(filePath);
+    openFileByPath(win, filePath);
   } else {
-    dialog.showMessageBox(mainWindow, {
+    dialog.showMessageBox(win, {
       type: 'error',
       title: 'File Not Found',
       message: 'The file could not be found. It may have been moved or deleted.',
@@ -1113,17 +1131,20 @@ function openRecentFileAfterCheck(filePath) {
   }
 }
 
-function openFileByPath(filePath) {
+function openFileByPath(win, filePath) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    currentFilePath = filePath;
-    lastSaveTime = null; // Reset save time when opening file
-    hasUnsavedChanges = false; // Reset unsaved changes flag
+    state.currentFilePath = filePath;
+    state.lastSaveTime = null; // Reset save time when opening file
+    state.hasUnsavedChanges = false; // Reset unsaved changes flag
     addToRecentFiles(filePath);
-    mainWindow.webContents.send('file-opened', { content, filePath });
-    updateWindowTitle(false); // File just opened, not unsaved
+    win.webContents.send('file-opened', { content, filePath });
+    updateWindowTitle(win, false); // File just opened, not unsaved
   } catch (err) {
-    dialog.showMessageBox(mainWindow, {
+    dialog.showMessageBox(win, {
       type: 'error',
       title: 'Error Opening File',
       message: `Could not open file: ${err.message}`,
@@ -1132,24 +1153,30 @@ function openFileByPath(filePath) {
   }
 }
 
-function saveFile() {
-  if (currentFilePath) {
-    mainWindow.webContents.send('save-file-request');
+function saveFile(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  if (state.currentFilePath) {
+    win.webContents.send('save-file-request');
   } else {
-    saveFileAs();
+    saveFileAs(win);
   }
 }
 
-function saveFileAs() {
-  dialog.showSaveDialog(mainWindow, {
+function saveFileAs(win) {
+  const state = getWindowState(win);
+  if (!state) return;
+
+  dialog.showSaveDialog(win, {
     filters: [
       { name: 'Markdown Files', extensions: ['md'] },
       { name: 'All Files', extensions: ['*'] }
     ]
   }).then(result => {
     if (!result.canceled && result.filePath) {
-      currentFilePath = result.filePath;
-      mainWindow.webContents.send('save-file-request');
+      state.currentFilePath = result.filePath;
+      win.webContents.send('save-file-request');
     }
   });
 }
@@ -1392,10 +1419,13 @@ ipcMain.on('open-dropped-file', (event, filePath) => {
   }
 });
 
-function saveImage(event, base64Data, mimeType, originalName) {
+function saveImage(win, event, base64Data, mimeType, originalName) {
+  const state = getWindowState(win);
+  if (!state) return;
+
   // If no file is open, can't save relative images
-  if (!currentFilePath) {
-    dialog.showMessageBox(mainWindow, {
+  if (!state.currentFilePath) {
+    dialog.showMessageBox(win, {
       type: 'warning',
       title: 'Save File First',
       message: 'Please save your markdown file before inserting images.',
@@ -1405,7 +1435,7 @@ function saveImage(event, base64Data, mimeType, originalName) {
   }
 
   // Get directory of current file
-  const fileDir = path.dirname(currentFilePath);
+  const fileDir = path.dirname(state.currentFilePath);
   const imagesDir = path.join(fileDir, 'images');
 
   // Create images directory if it doesn't exist
@@ -1432,7 +1462,7 @@ function saveImage(event, base64Data, mimeType, originalName) {
     event.sender.send('image-saved', relativePath);
   } catch (err) {
     console.error('Error saving image:', err);
-    dialog.showMessageBox(mainWindow, {
+    dialog.showMessageBox(win, {
       type: 'error',
       title: 'Error Saving Image',
       message: `Could not save image: ${err.message}`,
