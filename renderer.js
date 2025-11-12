@@ -1118,6 +1118,11 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   updateStats();
   updateLineNumbers();
   updateStatus(`Opened: ${filePath}`);
+
+  // Update minimap if enabled
+  if (minimapEnabled) {
+    updateMinimap();
+  }
 });
 
 // Listen for new file
@@ -1141,6 +1146,11 @@ ipcRenderer.on('new-file', () => {
   updateStats();
   updateLineNumbers();
   updateStatus('New file');
+
+  // Update minimap if enabled
+  if (minimapEnabled) {
+    updateMinimap();
+  }
 });
 
 // Listen for save request
@@ -1950,6 +1960,11 @@ ipcRenderer.on('version-restored', (event, content) => {
   updateStats();
   updateLineNumbers();
 
+  // Update minimap if enabled
+  if (minimapEnabled) {
+    updateMinimap();
+  }
+
   // Notify user
   status.textContent = 'Version restored successfully';
   setTimeout(() => {
@@ -2018,6 +2033,11 @@ ipcRenderer.on('restore-content', (event, content) => {
   updatePreview();
   updateStats();
   updateLineNumbers();
+
+  // Update minimap if enabled
+  if (minimapEnabled) {
+    updateMinimap();
+  }
 
   // Notify user
   status.textContent = 'Content restored successfully';
