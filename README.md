@@ -164,8 +164,8 @@ Windows Defender might complain because the app isn't code-signed (certificates 
 If you want to run from source instead:
 
 ```bash
-git clone https://github.com/BahneGork/markdowneditor1.git
-cd markdowneditor1
+git clone https://github.com/BahneGork/Nthing-editor.git
+cd Nthing-editor
 npm install
 npm start
 ```
