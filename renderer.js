@@ -1007,6 +1007,13 @@ function toggleFormatting(enabled) {
   console.log('toggleFormatting called:', enabled, 'currentMode:', currentMode);
   showFormatting = enabled;
 
+  // Toggle show-formatting class on container for CSS rules
+  if (enabled) {
+    container.classList.add('show-formatting');
+  } else {
+    container.classList.remove('show-formatting');
+  }
+
   if (enabled && currentMode === 'writing') {
     // Show CodeMirror, hide textarea
     editor.classList.add('hidden');
@@ -2439,21 +2446,21 @@ function updateOutline() {
 
 // Jump to a specific header line
 function jumpToHeader(lineIndex, headerIndex) {
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    // CodeMirror mode
-    const line = editorView.state.doc.line(lineIndex + 1);
-    editorView.dispatch({
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    // CodeMirror mode - use codemirrorView not editorView
+    const line = codemirrorView.state.doc.line(lineIndex + 1);
+    codemirrorView.dispatch({
       selection: { anchor: line.from },
-      scrollIntoView: true
+      effects: cmView.EditorView.scrollIntoView(line.from, { y: 'center' })
     });
-    editorView.focus();
+    codemirrorView.focus();
   } else if (currentMode === 'reader') {
     // Reader mode - scroll preview (use headerIndex, not lineIndex)
     const preview = document.getElementById('preview');
     const headers = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
 
     if (headers[headerIndex]) {
-      headers[headerIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      headers[headerIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   } else {
     // Regular textarea mode
@@ -2467,10 +2474,13 @@ function jumpToHeader(lineIndex, headerIndex) {
     editor.setSelectionRange(position, position);
     editor.focus();
 
-    // Scroll to the line
-    const lineHeight = 18; // Approximate line height
-    const scrollTop = lineIndex * lineHeight;
-    editor.scrollTop = scrollTop - 50; // Offset from top
+    // Calculate line height and scroll to center the line
+    const editorRect = editor.getBoundingClientRect();
+    const editorHeight = editorRect.height;
+    const lineHeight = parseInt(window.getComputedStyle(editor).lineHeight) || 18;
+    const targetScrollTop = (lineIndex * lineHeight) - (editorHeight / 2);
+
+    editor.scrollTop = Math.max(0, targetScrollTop);
   }
 }
 
