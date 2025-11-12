@@ -2304,6 +2304,13 @@ function toggleMinimap(enabled) {
     setTimeout(() => {
       updateMinimap();
     }, 100);
+
+    // If we're in Reader mode, need an extra update after preview is fully rendered
+    if (currentMode === 'reader') {
+      setTimeout(() => {
+        updateMinimap();
+      }, 250);
+    }
   } else {
     minimapSidebar.classList.add('hidden');
     document.body.classList.remove('minimap-sidebar-open');
