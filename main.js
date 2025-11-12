@@ -44,6 +44,7 @@ const MAX_RECENT_FILES = 10;    // Maximum recent files to track
 let autosaveInterval = 5 * 60 * 1000; // Autosave interval (default: 5 minutes)
 let autosavePersistent = false;  // Whether autosave setting persists across sessions
 let defaultStartupMode = 'editor'; // Default mode on startup: 'editor', 'writing', or 'reader'
+let readerModeMargins = 'medium'; // Reader mode margin width: 'none', 'narrow', 'medium', 'wide', 'extra-wide'
 
 // Backup system configuration
 let versioningEnabled = true;     // Enable/disable backup creation on save
@@ -232,6 +233,11 @@ function loadSettings() {
         defaultStartupMode = settings.defaultStartupMode;
       }
 
+      // Load reader mode margins setting
+      if (settings.readerModeMargins) {
+        readerModeMargins = settings.readerModeMargins;
+      }
+
       // Load versioning settings
       if (settings.versioning) {
         versioningEnabled = settings.versioning.enabled !== undefined ? settings.versioning.enabled : true;
@@ -264,7 +270,8 @@ function saveSettings() {
         autoCleanup: versionAutoCleanup,
         cleanupDays: versionCleanupDays
       },
-      defaultStartupMode: defaultStartupMode
+      defaultStartupMode: defaultStartupMode,
+      readerModeMargins: readerModeMargins
     };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
   } catch (err) {
@@ -646,6 +653,9 @@ function createWindow(filePathToOpen = null) {
     // Send default startup mode
     win.webContents.send('set-initial-mode', defaultStartupMode);
 
+    // Send reader mode margins setting
+    win.webContents.send('set-reader-margins', readerModeMargins);
+
     // Open file if specified
     if (filePathToOpen) {
       openFileByPath(win, filePathToOpen);
@@ -1003,6 +1013,77 @@ function createMenu() {
             const win = BrowserWindow.getFocusedWindow();
             if (win) win.webContents.send('toggle-typewriter-mode', menuItem.checked);
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'Reader Mode Margins',
+          submenu: [
+            {
+              label: 'No Margins',
+              type: 'radio',
+              checked: readerModeMargins === 'none',
+              click: () => {
+                readerModeMargins = 'none';
+                saveSettings();
+                BrowserWindow.getAllWindows().forEach(win => {
+                  win.webContents.send('set-reader-margins', readerModeMargins);
+                });
+                createMenu();
+              }
+            },
+            {
+              label: 'Narrow Margins',
+              type: 'radio',
+              checked: readerModeMargins === 'narrow',
+              click: () => {
+                readerModeMargins = 'narrow';
+                saveSettings();
+                BrowserWindow.getAllWindows().forEach(win => {
+                  win.webContents.send('set-reader-margins', readerModeMargins);
+                });
+                createMenu();
+              }
+            },
+            {
+              label: 'Medium Margins',
+              type: 'radio',
+              checked: readerModeMargins === 'medium',
+              click: () => {
+                readerModeMargins = 'medium';
+                saveSettings();
+                BrowserWindow.getAllWindows().forEach(win => {
+                  win.webContents.send('set-reader-margins', readerModeMargins);
+                });
+                createMenu();
+              }
+            },
+            {
+              label: 'Wide Margins',
+              type: 'radio',
+              checked: readerModeMargins === 'wide',
+              click: () => {
+                readerModeMargins = 'wide';
+                saveSettings();
+                BrowserWindow.getAllWindows().forEach(win => {
+                  win.webContents.send('set-reader-margins', readerModeMargins);
+                });
+                createMenu();
+              }
+            },
+            {
+              label: 'Extra Wide Margins',
+              type: 'radio',
+              checked: readerModeMargins === 'extra-wide',
+              click: () => {
+                readerModeMargins = 'extra-wide';
+                saveSettings();
+                BrowserWindow.getAllWindows().forEach(win => {
+                  win.webContents.send('set-reader-margins', readerModeMargins);
+                });
+                createMenu();
+              }
+            }
+          ]
         },
         { type: 'separator' },
         {

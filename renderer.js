@@ -150,6 +150,7 @@ const autosaveStatus = document.getElementById('autosave-status');
 
 let currentFilePath = null;
 let currentMode = 'editor'; // 'editor', 'writing', or 'reader'
+let readerMargins = 'medium'; // Reader mode margins: 'none', 'narrow', 'medium', 'wide', 'extra-wide'
 let syncScrollEnabled = true; // Scroll sync state
 let showFormatting = false; // Formatting display state
 let showPreview = true; // Preview visibility state
@@ -635,6 +636,14 @@ function updateLineNumbers() {
   lineNumbers.textContent = lineNumbersHtml;
 }
 
+// Apply reader mode margins
+function applyReaderMargins() {
+  // Remove all margin classes
+  container.classList.remove('reader-margins-none', 'reader-margins-narrow', 'reader-margins-medium', 'reader-margins-wide', 'reader-margins-extra-wide');
+  // Apply current margin class
+  container.classList.add(`reader-margins-${readerMargins}`);
+}
+
 // Mode switching
 function switchMode(mode) {
   currentMode = mode;
@@ -650,6 +659,8 @@ function switchMode(mode) {
     }
   } else if (mode === 'reader') {
     paneTitle.textContent = 'Reader';
+    // Apply reader mode margins
+    applyReaderMargins();
     // Disable scroll sync in reader mode (no editor to sync)
     preview.removeEventListener('scroll', handlePreviewScroll);
     // Disable formatting when entering reader mode
@@ -808,6 +819,15 @@ ipcRenderer.on('toggle-mode', () => {
 // Listen for initial mode setting from main process
 ipcRenderer.on('set-initial-mode', (event, mode) => {
   switchMode(mode);
+});
+
+// Listen for reader mode margins setting from main process
+ipcRenderer.on('set-reader-margins', (event, margins) => {
+  readerMargins = margins;
+  // Apply margins if currently in reader mode
+  if (currentMode === 'reader') {
+    applyReaderMargins();
+  }
 });
 
 // Listen for focus mode toggle from menu
