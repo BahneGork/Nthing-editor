@@ -517,6 +517,10 @@ body {
   border-left: none;
 }
 
+.container[data-mode="reader"] .preview-pane .pane-header {
+  display: none; /* Hide preview title in reader mode */
+}
+
 /* Reader Mode Margins */
 .container[data-mode="reader"].reader-margins-none .preview-pane {
   padding: 20px;
