@@ -1289,22 +1289,51 @@ body.outline-sidebar-open .status-bar {
   margin-left: 300px;
 }
 
-/* Minimap */
-.minimap-container {
-  position: absolute;
-  top: 42px; /* Start below pane-header */
+/* Minimap Sidebar */
+.minimap-sidebar {
+  position: fixed;
+  top: 32px;
   right: 0;
-  bottom: 0;
-  width: 120px;
-  background: #f8f8f8;
-  border-left: 1px solid #e0e0e0;
-  z-index: 5;
-  overflow: hidden;
-  pointer-events: auto;
+  width: 150px;
+  height: calc(100vh - 32px - 24px);
+  background: #fff;
+  border-left: 1px solid #ddd;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
-.minimap-container.hidden {
-  display: none;
+.minimap-sidebar:not(.hidden) {
+  transform: translateX(0);
+}
+
+.minimap-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f8f8;
+  flex-shrink: 0;
+}
+
+.minimap-sidebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.minimap-sidebar-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #f8f8f8;
 }
 
 #minimap-canvas {
@@ -1326,34 +1355,11 @@ body.outline-sidebar-open .status-bar {
   transition: top 0.05s ease-out, height 0.05s ease-out;
 }
 
-/* Adjust editor wrapper when minimap is visible */
-.editor-pane .editor-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* Adjust container when minimap sidebar is open */
+body.minimap-sidebar-open .container {
+  margin-right: 150px;
 }
 
-/* Add padding-right to editor-wrapper when minimap is visible (minimap comes before editor-wrapper in DOM) */
-.editor-pane .minimap-container:not(.hidden) + .editor-wrapper {
-  width: calc(100% - 120px);
-}
-
-/* Hide minimap in reader mode */
-.container[data-mode="reader"] .minimap-container {
-  display: none;
-}
-
-/* Show minimap in editor mode when enabled */
-.container[data-mode="editor"] .minimap-container:not(.hidden) {
-  display: block;
-}
-
-/* Show minimap in writing mode with show formatting when enabled */
-.container[data-mode="writing"].show-formatting .minimap-container:not(.hidden) {
-  display: block;
-}
-
-/* Hide minimap in writing mode without formatting */
-.container[data-mode="writing"]:not(.show-formatting) .minimap-container {
-  display: none;
+body.minimap-sidebar-open .status-bar {
+  margin-right: 150px;
 }

@@ -135,11 +135,6 @@
           </label>
         </span>
       </div>
-      <!-- Minimap -->
-      <div id="minimap-container" class="minimap-container hidden">
-        <canvas id="minimap-canvas"></canvas>
-        <div id="minimap-viewport" class="minimap-viewport"></div>
-      </div>
       <div class="editor-wrapper">
         <div id="line-numbers" class="line-numbers"></div>
         <textarea id="editor" placeholder="# Start typing markdown here..." spellcheck="false"></textarea>
@@ -153,6 +148,21 @@
       <div id="preview"></div>
     </div>
   </div>
+
+  <!-- Minimap Sidebar -->
+  <div id="minimap-sidebar" class="minimap-sidebar hidden">
+    <div class="minimap-sidebar-header">
+      <div class="minimap-sidebar-title">
+        <span>🗺️ Minimap</span>
+      </div>
+      <button id="close-minimap-sidebar" class="close-btn">&times;</button>
+    </div>
+    <div class="minimap-sidebar-content">
+      <canvas id="minimap-canvas"></canvas>
+      <div id="minimap-viewport" class="minimap-viewport"></div>
+    </div>
+  </div>
+
   <div class="status-bar">
     <span id="status">Ready</span>
     <span id="autosave-status" class="autosave-status"></span>

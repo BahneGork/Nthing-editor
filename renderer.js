@@ -995,6 +995,9 @@ function initializeCodeMirror() {
   console.log('CodeMirror view created:', codemirrorView);
   console.log('CodeMirror DOM:', codemirrorView.dom);
 
+  // Set up minimap listeners for CodeMirror
+  setupCodeMirrorMinimapListeners();
+
   // Debug: Log the actual HTML after a short delay to see class names
   setTimeout(() => {
     console.log('CodeMirror HTML structure:');
@@ -2127,7 +2130,8 @@ if (separator && editorPane && container) {
 // Minimap Feature
 // ==========================================
 
-const minimapContainer = document.getElementById('minimap-container');
+const minimapSidebar = document.getElementById('minimap-sidebar');
+const closeMinimapSidebarBtn = document.getElementById('close-minimap-sidebar');
 const minimapCanvas = document.getElementById('minimap-canvas');
 const minimapViewport = document.getElementById('minimap-viewport');
 let minimapEnabled = false;
@@ -2136,15 +2140,15 @@ let isMinimapDragging = false;
 
 // Get the current editor element (textarea or CodeMirror)
 function getCurrentEditor() {
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    return editorView.dom;
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    return codemirrorView.dom;
   }
   return editor;
 }
 
 // Update minimap rendering
 function updateMinimap() {
-  if (!minimapEnabled || !minimapCanvas || minimapContainer.classList.contains('hidden')) {
+  if (!minimapEnabled || !minimapCanvas || minimapSidebar.classList.contains('hidden')) {
     return;
   }
 
@@ -2154,8 +2158,8 @@ function updateMinimap() {
   const canvas = minimapCanvas;
   const ctx = canvas.getContext('2d');
 
-  // Set canvas size to match container (accounting for device pixel ratio)
-  const rect = minimapContainer.getBoundingClientRect();
+  // Set canvas size to match sidebar content area (accounting for device pixel ratio)
+  const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
@@ -2166,8 +2170,8 @@ function updateMinimap() {
 
   // Get editor content
   let content = '';
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    content = editorView.state.doc.toString();
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    content = codemirrorView.state.doc.toString();
   } else {
     content = editor.value;
   }
@@ -2207,7 +2211,7 @@ function updateMinimap() {
 
 // Update the viewport rectangle position
 function updateMinimapViewport() {
-  if (!minimapEnabled || minimapContainer.classList.contains('hidden')) {
+  if (!minimapEnabled || minimapSidebar.classList.contains('hidden')) {
     return;
   }
 
@@ -2215,7 +2219,7 @@ function updateMinimapViewport() {
   if (!currentEditor) return;
 
   const canvas = minimapCanvas;
-  const rect = minimapContainer.getBoundingClientRect();
+  const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
 
   // Get editor content and dimensions
   let content = '';
@@ -2223,11 +2227,11 @@ function updateMinimapViewport() {
   let clientHeight = 0;
   let scrollHeight = 0;
 
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    content = editorView.state.doc.toString();
-    scrollTop = editorView.scrollDOM.scrollTop;
-    clientHeight = editorView.scrollDOM.clientHeight;
-    scrollHeight = editorView.scrollDOM.scrollHeight;
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    content = codemirrorView.state.doc.toString();
+    scrollTop = codemirrorView.scrollDOM.scrollTop;
+    clientHeight = codemirrorView.scrollDOM.clientHeight;
+    scrollHeight = codemirrorView.scrollDOM.scrollHeight;
   } else {
     content = editor.value;
     scrollTop = editor.scrollTop;
@@ -2263,9 +2267,9 @@ function handleMinimapClick(e) {
   const percentage = clickY / rect.height;
 
   let scrollHeight = 0;
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    scrollHeight = editorView.scrollDOM.scrollHeight;
-    editorView.scrollDOM.scrollTop = percentage * scrollHeight;
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    scrollHeight = codemirrorView.scrollDOM.scrollHeight;
+    codemirrorView.scrollDOM.scrollTop = percentage * scrollHeight;
   } else {
     scrollHeight = editor.scrollHeight;
     editor.scrollTop = percentage * scrollHeight;
@@ -2307,16 +2311,24 @@ function toggleMinimap(enabled) {
   minimapEnabled = enabled;
 
   if (enabled) {
-    minimapContainer.classList.remove('hidden');
-    minimapContainer.classList.add('minimap-enabled');
+    minimapSidebar.classList.remove('hidden');
+    document.body.classList.add('minimap-sidebar-open');
     updateMinimap();
   } else {
-    minimapContainer.classList.add('hidden');
-    minimapContainer.classList.remove('minimap-enabled');
+    minimapSidebar.classList.add('hidden');
+    document.body.classList.remove('minimap-sidebar-open');
   }
 
   // Notify that minimap state changed
   ipcRenderer.send('minimap-toggled', enabled);
+}
+
+// Close button handler for minimap
+if (closeMinimapSidebarBtn) {
+  closeMinimapSidebarBtn.addEventListener('click', () => {
+    toggleMinimap(false);
+    ipcRenderer.send('minimap-closed');
+  });
 }
 
 // Set up minimap event listeners
@@ -2341,6 +2353,17 @@ if (minimapCanvas) {
       scheduleMinimapUpdate();
     }
   });
+}
+
+// Helper function to set up scroll listener for CodeMirror
+function setupCodeMirrorMinimapListeners() {
+  if (codemirrorView && codemirrorView.scrollDOM) {
+    codemirrorView.scrollDOM.addEventListener('scroll', () => {
+      if (minimapEnabled) {
+        updateMinimapViewport();
+      }
+    });
+  }
 }
 
 // Listen for minimap toggle from main process
@@ -2401,8 +2424,8 @@ function parseHeaders(content) {
 function updateOutline() {
   // Get current content
   let content = '';
-  if (currentMode === 'writing' && showFormatting && editorView) {
-    content = editorView.state.doc.toString();
+  if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    content = codemirrorView.state.doc.toString();
   } else {
     content = editor.value;
   }
