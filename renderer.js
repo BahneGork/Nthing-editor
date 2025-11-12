@@ -2348,3 +2348,193 @@ switchMode = function(mode) {
     }, 100);
   }
 };
+
+// ==========================================
+// Outline/TOC Feature
+// ==========================================
+
+const outlineSidebar = document.getElementById('outline-sidebar');
+const closeOutlineSidebarBtn = document.getElementById('close-outline-sidebar');
+const outlineList = document.getElementById('outline-list');
+const outlineEmpty = document.getElementById('outline-empty');
+let outlineUpdateTimeout = null;
+
+// Parse headers from markdown content
+function parseHeaders(content) {
+  const headers = [];
+  const lines = content.split('\n');
+
+  lines.forEach((line, lineIndex) => {
+    // Match markdown headers (# to ######)
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2].trim();
+
+      // Create a clean ID for the header (for jumping)
+      const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+
+      headers.push({
+        level: level,
+        text: text,
+        id: id,
+        lineIndex: lineIndex
+      });
+    }
+  });
+
+  return headers;
+}
+
+// Update the outline list
+function updateOutline() {
+  // Get current content
+  let content = '';
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+  } else {
+    content = editor.value;
+  }
+
+  // Parse headers
+  const headers = parseHeaders(content);
+
+  // Clear outline list
+  outlineList.innerHTML = '';
+
+  if (headers.length === 0) {
+    // Show empty message
+    outlineEmpty.style.display = 'block';
+    outlineList.style.display = 'none';
+  } else {
+    // Hide empty message
+    outlineEmpty.style.display = 'none';
+    outlineList.style.display = 'block';
+
+    // Create outline items
+    headers.forEach((header, index) => {
+      const item = document.createElement('div');
+      item.className = 'outline-item';
+      item.setAttribute('data-level', header.level);
+      item.setAttribute('data-line', header.lineIndex);
+      item.textContent = header.text;
+
+      // Click to jump to header
+      item.addEventListener('click', () => {
+        jumpToHeader(header.lineIndex);
+
+        // Highlight active item
+        document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+      });
+
+      outlineList.appendChild(item);
+    });
+  }
+}
+
+// Jump to a specific header line
+function jumpToHeader(lineIndex) {
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    // CodeMirror mode
+    const line = editorView.state.doc.line(lineIndex + 1);
+    editorView.dispatch({
+      selection: { anchor: line.from },
+      scrollIntoView: true
+    });
+    editorView.focus();
+  } else if (currentMode === 'reader') {
+    // Reader mode - scroll preview
+    const preview = document.getElementById('preview');
+    const headers = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    if (headers[lineIndex]) {
+      headers[lineIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } else {
+    // Regular textarea mode
+    const lines = editor.value.split('\n');
+    let position = 0;
+
+    for (let i = 0; i < lineIndex && i < lines.length; i++) {
+      position += lines[i].length + 1; // +1 for newline
+    }
+
+    editor.setSelectionRange(position, position);
+    editor.focus();
+
+    // Scroll to the line
+    const lineHeight = 18; // Approximate line height
+    const scrollTop = lineIndex * lineHeight;
+    editor.scrollTop = scrollTop - 50; // Offset from top
+  }
+}
+
+// Debounced outline update
+function scheduleOutlineUpdate() {
+  if (outlineUpdateTimeout) {
+    clearTimeout(outlineUpdateTimeout);
+  }
+  outlineUpdateTimeout = setTimeout(() => {
+    updateOutline();
+  }, 500);
+}
+
+// Toggle outline sidebar
+function toggleOutline(show) {
+  if (show) {
+    outlineSidebar.classList.remove('hidden');
+    document.body.classList.add('outline-sidebar-open');
+    updateOutline();
+  } else {
+    outlineSidebar.classList.add('hidden');
+    document.body.classList.remove('outline-sidebar-open');
+  }
+}
+
+// Close button handler
+if (closeOutlineSidebarBtn) {
+  closeOutlineSidebarBtn.addEventListener('click', () => {
+    toggleOutline(false);
+    ipcRenderer.send('outline-closed');
+  });
+}
+
+// Listen for outline toggle from main process
+ipcRenderer.on('toggle-outline', (event, show) => {
+  // If show is null, toggle based on current state
+  if (show === null || show === undefined) {
+    const isOpen = !outlineSidebar.classList.contains('hidden');
+    toggleOutline(!isOpen);
+  } else {
+    toggleOutline(show);
+  }
+});
+
+// Update outline on content change
+editor.addEventListener('input', scheduleOutlineUpdate);
+
+// Keyboard shortcut for outline (Ctrl+Shift+O)
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+    e.preventDefault();
+    const isOpen = !outlineSidebar.classList.contains('hidden');
+    toggleOutline(!isOpen);
+    ipcRenderer.send('outline-toggled', !isOpen);
+  }
+});
+
+// Update outline when switching modes (wrap original switchMode)
+switchMode = (function(originalFunc) {
+  return function(mode) {
+    originalFunc(mode);
+
+    // Update outline after mode switch
+    const isOutlineOpen = !outlineSidebar.classList.contains('hidden');
+    if (isOutlineOpen) {
+      setTimeout(() => {
+        updateOutline();
+      }, 100);
+    }
+  };
+})(switchMode);

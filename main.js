@@ -1026,6 +1026,17 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Show Outline',
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: () => {
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) {
+              // Toggle outline - renderer will tell us the new state
+              win.webContents.send('toggle-outline', null);
+            }
+          }
+        },
+        {
           label: 'Show Minimap',
           type: 'checkbox',
           checked: minimapEnabled,
