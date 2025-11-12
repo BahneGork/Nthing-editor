@@ -2471,16 +2471,23 @@ function jumpToHeader(lineIndex, headerIndex) {
       position += lines[i].length + 1; // +1 for newline
     }
 
-    editor.setSelectionRange(position, position);
-    editor.focus();
-
-    // Calculate line height and scroll to center the line
+    // Calculate scroll position BEFORE setting cursor (to avoid browser auto-scroll)
     const editorRect = editor.getBoundingClientRect();
     const editorHeight = editorRect.height;
     const lineHeight = parseInt(window.getComputedStyle(editor).lineHeight) || 18;
     const targetScrollTop = (lineIndex * lineHeight) - (editorHeight / 2);
 
+    // Set scroll first
     editor.scrollTop = Math.max(0, targetScrollTop);
+
+    // Then set cursor and focus
+    editor.setSelectionRange(position, position);
+    editor.focus();
+
+    // Force scroll position again after focus (browser might have auto-scrolled)
+    setTimeout(() => {
+      editor.scrollTop = Math.max(0, targetScrollTop);
+    }, 0);
   }
 }
 
