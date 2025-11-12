@@ -2189,7 +2189,6 @@ function updateMinimap() {
 
   // Check if rect has valid dimensions - if not, sidebar isn't ready yet
   if (rect.width === 0 || rect.height === 0) {
-    console.log('Minimap: sidebar not ready yet, skipping update');
     return;
   }
 
@@ -2212,12 +2211,7 @@ function updateMinimap() {
   const lines = content.split('\n');
   const totalLines = lines.length;
 
-  if (totalLines === 0) {
-    console.log('Minimap: no content yet, skipping update');
-    return;
-  }
-
-  console.log(`Minimap: rendering ${totalLines} lines in ${rect.width}x${rect.height} canvas`);
+  if (totalLines === 0) return;
 
   // Calculate scale - each line gets a small height
   const lineHeight = Math.max(1, rect.height / totalLines);
