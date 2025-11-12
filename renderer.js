@@ -962,6 +962,9 @@ function initializeCodeMirror() {
           updateStats();
           updateLineNumbers();
 
+          // Update outline if it's open
+          scheduleOutlineUpdate();
+
           // Mark content as changed and notify main process (debounced)
           if (!contentChangedSinceLastSave) {
             contentChangedSinceLastSave = true;
@@ -2378,7 +2381,8 @@ function parseHeaders(content) {
         level: level,
         text: text,
         id: id,
-        lineIndex: lineIndex
+        lineIndex: lineIndex,
+        headerIndex: headers.length // Index among headers (for Reader mode)
       });
     }
   });
@@ -2421,7 +2425,7 @@ function updateOutline() {
 
       // Click to jump to header
       item.addEventListener('click', () => {
-        jumpToHeader(header.lineIndex);
+        jumpToHeader(header.lineIndex, header.headerIndex);
 
         // Highlight active item
         document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
@@ -2434,7 +2438,7 @@ function updateOutline() {
 }
 
 // Jump to a specific header line
-function jumpToHeader(lineIndex) {
+function jumpToHeader(lineIndex, headerIndex) {
   if (currentMode === 'writing' && showFormatting && editorView) {
     // CodeMirror mode
     const line = editorView.state.doc.line(lineIndex + 1);
@@ -2444,12 +2448,12 @@ function jumpToHeader(lineIndex) {
     });
     editorView.focus();
   } else if (currentMode === 'reader') {
-    // Reader mode - scroll preview
+    // Reader mode - scroll preview (use headerIndex, not lineIndex)
     const preview = document.getElementById('preview');
     const headers = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
 
-    if (headers[lineIndex]) {
-      headers[lineIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (headers[headerIndex]) {
+      headers[headerIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   } else {
     // Regular textarea mode

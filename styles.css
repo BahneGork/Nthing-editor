@@ -1333,20 +1333,27 @@ body.outline-sidebar-open .status-bar {
   position: relative;
 }
 
-.editor-pane:not(.minimap-hidden) .editor-wrapper {
-  padding-right: 120px;
+/* Add margin-right to editor-wrapper when minimap is visible (minimap comes before editor-wrapper in DOM) */
+.minimap-container:not(.hidden) + .editor-wrapper {
+  margin-right: 120px;
 }
 
-/* Hide minimap in reader mode and when editor is hidden */
+/* Hide minimap in reader mode */
 .container[data-mode="reader"] .minimap-container {
   display: none;
 }
 
-.container[data-mode="writing"] .minimap-container {
-  display: none;
+/* Show minimap in editor mode when enabled */
+.container[data-mode="editor"] .minimap-container:not(.hidden) {
+  display: block;
 }
 
-/* Show minimap in writing mode with show formatting */
-.container[data-mode="writing"].show-formatting .minimap-container.minimap-enabled {
+/* Show minimap in writing mode with show formatting when enabled */
+.container[data-mode="writing"].show-formatting .minimap-container:not(.hidden) {
   display: block;
+}
+
+/* Hide minimap in writing mode without formatting */
+.container[data-mode="writing"]:not(.show-formatting) .minimap-container {
+  display: none;
 }
