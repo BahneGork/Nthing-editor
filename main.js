@@ -1738,11 +1738,14 @@ Ctrl+Shift+7 - Toggle numbered list
 Ctrl+T - Insert table
 
 VIEW:
-F9 - Toggle between Editor and Writing Focus modes
+F9 - Cycle through Editor, Writing Focus, and Reader modes
 F12 - Toggle Developer Tools
 
 BACKUPS:
-Ctrl+Shift+H - Open Note Backups sidebar`,
+Ctrl+Shift+H - Open Note Backups sidebar
+
+MODES:
+View menu has direct mode selection and default startup mode setting`,
     buttons: ['OK']
   });
 }
@@ -1760,10 +1763,11 @@ function showAboutDialog() {
 A distraction-free markdown editor where nothing else matters.
 
 Features:
-• Two editing modes (Editor & Writing Focus)
+• Three view modes (Editor, Writing Focus & Reader)
+• Configurable default startup mode
 • Live markdown preview
 • Find & Replace
-• Note backup system
+• Note backup system with visual diff
 • Real-time statistics
 • Autosave
 • And much more...

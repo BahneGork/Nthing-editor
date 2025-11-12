@@ -62,7 +62,19 @@ ipcRenderer.on('file-opened', (event, content) => { ... });
 - When "Show Formatting" is ON: uses CodeMirror 6 for advanced text editing
 - CodeMirror provides better editing features (syntax highlighting, etc.)
 
-The mode is controlled by `data-mode` attribute on `.container` div.
+**Reader Mode**:
+- Preview-only display without editor
+- Full-width rendered preview
+- No editing functionality - strictly for reading finished documents
+- Editor pane and separator hidden via CSS
+
+The mode is controlled by `data-mode` attribute on `.container` div (`data-mode="editor"`, `data-mode="writing"`, or `data-mode="reader"`).
+
+**Default Startup Mode**:
+- User-configurable setting that determines initial mode for new windows
+- Persisted in `settings.json` in userData directory
+- Sent to renderer via IPC on window load (`set-initial-mode` message)
+- Configurable via View → Default Startup Mode menu
 
 ### File Management
 
@@ -263,8 +275,13 @@ let autosaveInterval = null;     // Autosave timer
 - `autosaveInterval` - Number (minutes)
 - `editorSplitPosition` - Number (percentage)
 
+**settings.json** (in Electron userData directory):
+- `defaultStartupMode` - String ("editor", "writing", or "reader")
+- `autosave` - Object with enabled/interval/persistent settings
+- `versioning` - Object with backup system configuration
+
 **DOM data attributes**:
-- `.container[data-mode]` - Current editing mode ("editor" or "writing")
+- `.container[data-mode]` - Current editing mode ("editor", "writing", or "reader")
 
 ## Adding New Features
 
