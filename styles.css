@@ -1292,7 +1292,7 @@ body.outline-sidebar-open .status-bar {
 /* Minimap */
 .minimap-container {
   position: absolute;
-  top: 0;
+  top: 42px; /* Start below pane-header */
   right: 0;
   bottom: 0;
   width: 120px;
