@@ -15,7 +15,7 @@
  * to renderer processes via IPC (Inter-Process Communication).
  */
 
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -1110,6 +1110,13 @@ function createMenu() {
           label: 'Keyboard Shortcuts',
           click: () => {
             showKeyboardShortcuts();
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Documentation',
+          click: () => {
+            shell.openExternal('https://github.com/BahneGork/markdowneditor1');
           }
         },
         {
