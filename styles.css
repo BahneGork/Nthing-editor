@@ -517,6 +517,27 @@ body {
   border-left: none;
 }
 
+/* Reader Mode Margins */
+.container[data-mode="reader"].reader-margins-none .preview-pane {
+  padding: 20px;
+}
+
+.container[data-mode="reader"].reader-margins-narrow .preview-pane {
+  padding: 40px 10%;
+}
+
+.container[data-mode="reader"].reader-margins-medium .preview-pane {
+  padding: 40px 15%;
+}
+
+.container[data-mode="reader"].reader-margins-wide .preview-pane {
+  padding: 60px 20%;
+}
+
+.container[data-mode="reader"].reader-margins-extra-wide .preview-pane {
+  padding: 80px 25%;
+}
+
 .container[data-mode="writing"] .line-numbers {
   display: none;
 }
