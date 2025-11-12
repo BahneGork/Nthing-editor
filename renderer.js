@@ -805,6 +805,11 @@ ipcRenderer.on('toggle-mode', () => {
   toggleViewMode();
 });
 
+// Listen for initial mode setting from main process
+ipcRenderer.on('set-initial-mode', (event, mode) => {
+  switchMode(mode);
+});
+
 // Listen for focus mode toggle from menu
 ipcRenderer.on('toggle-focus-mode', (event, enabled) => {
   toggleFocusMode(enabled);

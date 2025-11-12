@@ -43,6 +43,7 @@ let recentFiles = [];            // Array of recently opened file paths
 const MAX_RECENT_FILES = 10;    // Maximum recent files to track
 let autosaveInterval = 5 * 60 * 1000; // Autosave interval (default: 5 minutes)
 let autosavePersistent = false;  // Whether autosave setting persists across sessions
+let defaultStartupMode = 'editor'; // Default mode on startup: 'editor', 'writing', or 'reader'
 
 // Backup system configuration
 let versioningEnabled = true;     // Enable/disable backup creation on save
@@ -226,6 +227,11 @@ function loadSettings() {
         autosavePersistent = settings.autosave.persistent || false;
       }
 
+      // Load startup mode setting
+      if (settings.defaultStartupMode) {
+        defaultStartupMode = settings.defaultStartupMode;
+      }
+
       // Load versioning settings
       if (settings.versioning) {
         versioningEnabled = settings.versioning.enabled !== undefined ? settings.versioning.enabled : true;
@@ -257,7 +263,8 @@ function saveSettings() {
         globalPath: versionGlobalPath,
         autoCleanup: versionAutoCleanup,
         cleanupDays: versionCleanupDays
-      }
+      },
+      defaultStartupMode: defaultStartupMode
     };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
   } catch (err) {
@@ -636,6 +643,9 @@ function createWindow(filePathToOpen = null) {
   win.webContents.on('did-finish-load', () => {
     sendAutosaveStatus(win);
 
+    // Send default startup mode
+    win.webContents.send('set-initial-mode', defaultStartupMode);
+
     // Open file if specified
     if (filePathToOpen) {
       openFileByPath(win, filePathToOpen);
@@ -938,6 +948,42 @@ function createMenu() {
             const win = BrowserWindow.getFocusedWindow();
             if (win) win.webContents.send('switch-mode', 'reader');
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'Default Startup Mode',
+          submenu: [
+            {
+              label: 'Editor Mode',
+              type: 'radio',
+              checked: defaultStartupMode === 'editor',
+              click: () => {
+                defaultStartupMode = 'editor';
+                saveSettings();
+                createMenu(); // Refresh menu to update checkmarks
+              }
+            },
+            {
+              label: 'Writing Focus Mode',
+              type: 'radio',
+              checked: defaultStartupMode === 'writing',
+              click: () => {
+                defaultStartupMode = 'writing';
+                saveSettings();
+                createMenu(); // Refresh menu to update checkmarks
+              }
+            },
+            {
+              label: 'Reader Mode',
+              type: 'radio',
+              checked: defaultStartupMode === 'reader',
+              click: () => {
+                defaultStartupMode = 'reader';
+                saveSettings();
+                createMenu(); // Refresh menu to update checkmarks
+              }
+            }
+          ]
         },
         { type: 'separator' },
         {
