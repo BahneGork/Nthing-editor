@@ -132,8 +132,9 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - ✅ Wikilinks `[[internal links]]` (Obsidian-style)
 - ✅ Hashtags `#tags` with styling
 - ✅ YAML frontmatter support
-- ✅ Dual mode: Editor (split) + Writing Focus (single pane)
-- ✅ F9 quick toggle between modes
+- ✅ Triple mode: Editor (split) + Writing Focus (single pane) + Reader (preview-only)
+- ✅ F9 quick toggle between all three modes
+- ✅ Configurable default startup mode
 - ✅ Code syntax highlighting (highlight.js)
 - ✅ Custom title bar
 - ✅ Draggable Find dialog
@@ -151,6 +152,8 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - ✅ Typewriter Mode
 - ✅ Note backup system with visual diff and restoration
 - ✅ Draggable separator for resizing editor/preview panes
+- ✅ Reader Mode (preview-only view for distraction-free reading)
+- ✅ Configurable default startup mode (choose which mode opens by default)
 
 ---
 

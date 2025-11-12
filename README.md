@@ -4,9 +4,9 @@ A markdown editor where nothing else matters. Just write.
 
 ## What it does
 
-There are two modes: Editor Mode shows your markdown source on the left with a live preview on the right. Writing Focus Mode gives you a single pane with wider margins and a serif font - good for when you just want to write without seeing the raw markdown.
+There are three view modes: Editor Mode shows your markdown source on the left with a live preview on the right. Writing Focus Mode gives you a single pane with wider margins and a serif font - good for when you just want to write without seeing the raw markdown. Reader Mode displays only the rendered preview for distraction-free reading.
 
-You can switch modes with F9. Both modes have Focus Mode (dims everything except the paragraph you're in) and Typewriter Mode (keeps the cursor in the middle of the screen).
+You can cycle through modes with F9, or select them directly from the View menu. You can also set your preferred default startup mode in View → Default Startup Mode. Editor and Writing modes have Focus Mode (dims everything except the paragraph you're in) and Typewriter Mode (keeps the cursor in the middle of the screen).
 
 The editor handles .md, .markdown, and .txt files. You can open them through the file dialog, drag them into the window, double-click them in Explorer, or pick from your recent files (Ctrl+1-9 for the last 10).
 
@@ -47,11 +47,23 @@ Complete list of features:
   - Toggle "Show Formatting" to switch between raw markdown and rendered view
   - CodeMirror 6 integration for advanced text editing when showing formatting
 
-- **Focus Mode** (both modes)
+- **Reader Mode** (preview-only)
+  - Full-width rendered preview without editor
+  - Perfect for reading finished documents
+  - Distraction-free reading experience
+  - No editing features available in this mode
+
+- **Mode Switching**:
+  - F9 cycles through all three modes
+  - View menu for direct mode selection
+  - Configurable default startup mode (View → Default Startup Mode)
+  - Preference persists across app restarts
+
+- **Focus Mode** (Editor and Writing modes)
   - Dims all paragraphs except the currently active one
   - Helps maintain concentration on current section
 
-- **Typewriter Mode** (both modes)
+- **Typewriter Mode** (Editor and Writing modes)
   - Keeps cursor vertically centered while typing
   - Reduces eye movement up/down
 
@@ -127,6 +139,7 @@ Complete list of features:
 - **Split pane position**: Saves editor/preview ratio to localStorage
 - **Recent files**: Last 10 opened files tracked
 - **Autosave preferences**: Remembered between sessions
+- **Default startup mode**: Your preferred view mode (editor/writing/reader) persists
 - **Window state**: Position and size persist via Electron
 
 ### Markdown Support
@@ -168,7 +181,7 @@ The usual stuff works (Ctrl+S to save, Ctrl+Z/Y for undo/redo, etc). Here are th
 - `Ctrl+T` - Insert table template
 - `Ctrl+Shift+7/8` - Toggle numbered/bullet lists
 - `Ctrl+Shift+H` - Open backup history
-- `F9` - Switch between Editor and Writing Focus modes
+- `F9` - Cycle through Editor, Writing Focus, and Reader modes
 - `Esc` - Close the find dialog
 
 There's also a menu bar with File, Edit, Format, View, and Help if you prefer clicking things. Help menu has info about the backup system and all the shortcuts.
@@ -179,9 +192,13 @@ There's also a menu bar with File, Edit, Format, View, and Help if you prefer cl
 
 **Writing Focus Mode** hides the preview and gives you more space. Serif font (Georgia), wider margins, bigger text. Just for writing. You can toggle "Show Formatting" if you want to see the markdown syntax, or turn it off to see rendered text.
 
-Both modes have Focus Mode (dims everything but the current paragraph) and Typewriter Mode (keeps the line you're on in the middle of the screen).
+**Reader Mode** shows only the rendered preview at full width - perfect for reading finished documents without any editing interface in the way. No editor, no controls, just your content.
+
+Editor and Writing modes have Focus Mode (dims everything but the current paragraph) and Typewriter Mode (keeps the line you're on in the middle of the screen).
 
 The editor and preview scroll together in Editor Mode - scroll either pane and the other follows.
+
+You can set your preferred startup mode in View → Default Startup Mode so new windows always open the way you like.
 
 ## What markdown works
 
