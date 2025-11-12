@@ -502,6 +502,21 @@ body {
   max-width: none;
 }
 
+/* Reader Mode - Preview Only */
+.container[data-mode="reader"] .editor-pane {
+  display: none;
+}
+
+.container[data-mode="reader"] .separator {
+  display: none;
+}
+
+.container[data-mode="reader"] .preview-pane {
+  flex: 1; /* Take full width in reader mode */
+  max-width: none;
+  border-left: none;
+}
+
 .container[data-mode="writing"] .line-numbers {
   display: none;
 }
