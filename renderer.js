@@ -2490,7 +2490,7 @@ function jumpToHeader(lineIndex, headerIndex) {
       headers[headerIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   } else {
-    // Regular textarea mode
+    // Regular textarea mode (Editor mode and Writing Focus without formatting)
     const lines = editor.value.split('\n');
     let position = 0;
 
@@ -2498,49 +2498,64 @@ function jumpToHeader(lineIndex, headerIndex) {
       position += lines[i].length + 1; // +1 for newline
     }
 
-    // Get accurate line height
-    const computedStyle = window.getComputedStyle(editor);
-    let lineHeight = parseFloat(computedStyle.lineHeight);
-
-    // If lineHeight is NaN (e.g., "normal"), calculate from font size
-    if (isNaN(lineHeight)) {
-      const fontSize = parseFloat(computedStyle.fontSize);
-      lineHeight = fontSize * 1.8; // Default line-height multiplier
+    // First, blur the editor to prevent auto-scroll on focus
+    if (document.activeElement === editor) {
+      editor.blur();
     }
 
-    // Calculate target scroll position to center the line
-    const editorHeight = editor.clientHeight;
-    const targetScrollTop = (lineIndex * lineHeight) - (editorHeight / 2) + (lineHeight / 2);
-
-    // Set cursor position WITHOUT focusing first
+    // Set cursor position while editor is blurred
     editor.setSelectionRange(position, position);
 
-    // Set scroll position BEFORE focusing
+    // Use a mirror div to get the exact pixel position of the cursor
+    const mirror = document.createElement('div');
+    const computed = window.getComputedStyle(editor);
+
+    // Copy all text styles to mirror
+    mirror.style.position = 'absolute';
+    mirror.style.visibility = 'hidden';
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.wordWrap = 'break-word';
+    mirror.style.font = computed.font;
+    mirror.style.fontSize = computed.fontSize;
+    mirror.style.fontFamily = computed.fontFamily;
+    mirror.style.lineHeight = computed.lineHeight;
+    mirror.style.padding = computed.padding;
+    mirror.style.border = computed.border;
+    mirror.style.width = editor.clientWidth + 'px';
+    mirror.style.left = '-9999px';
+    mirror.style.top = '0';
+
+    document.body.appendChild(mirror);
+
+    // Add text up to the cursor position
+    const textBeforeCursor = editor.value.substring(0, position);
+    mirror.textContent = textBeforeCursor;
+
+    // Add a span at the cursor position to measure its location
+    const cursorSpan = document.createElement('span');
+    cursorSpan.textContent = '|';
+    mirror.appendChild(cursorSpan);
+
+    // Get the cursor's position
+    const cursorTop = cursorSpan.offsetTop;
+    const lineHeight = cursorSpan.offsetHeight;
+
+    document.body.removeChild(mirror);
+
+    // Calculate scroll position to center the cursor vertically
+    const editorHeight = editor.clientHeight;
+    const targetScrollTop = cursorTop - (editorHeight / 2) + (lineHeight / 2);
+
+    // Set scroll position
     editor.scrollTop = Math.max(0, targetScrollTop);
 
     // Now focus the editor
     editor.focus();
 
-    // Force scroll position multiple times to override browser auto-scroll
-    const enforceScroll = () => {
+    // Enforce scroll position one final time after focus
+    setTimeout(() => {
       editor.scrollTop = Math.max(0, targetScrollTop);
-    };
-
-    // Try immediately after focus
-    enforceScroll();
-
-    // Try on next frame
-    requestAnimationFrame(() => {
-      enforceScroll();
-
-      // And the frame after that
-      requestAnimationFrame(() => {
-        enforceScroll();
-
-        // And one more time after a slight delay
-        setTimeout(enforceScroll, 10);
-      });
-    });
+    }, 0);
   }
 }
 
