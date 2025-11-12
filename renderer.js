@@ -2138,10 +2138,12 @@ let minimapEnabled = false;
 let minimapUpdateTimeout = null;
 let isMinimapDragging = false;
 
-// Get the current editor element (textarea or CodeMirror)
-function getCurrentEditor() {
-  if (currentMode === 'writing' && showFormatting && codemirrorView) {
-    return codemirrorView.dom;
+// Get the current scrollable element for minimap tracking
+function getCurrentScrollElement() {
+  if (currentMode === 'reader') {
+    return document.getElementById('preview');
+  } else if (currentMode === 'writing' && showFormatting && codemirrorView) {
+    return codemirrorView.scrollDOM;
   }
   return editor;
 }
@@ -2151,9 +2153,6 @@ function updateMinimap() {
   if (!minimapEnabled || !minimapCanvas || minimapSidebar.classList.contains('hidden')) {
     return;
   }
-
-  const currentEditor = getCurrentEditor();
-  if (!currentEditor) return;
 
   const canvas = minimapCanvas;
   const ctx = canvas.getContext('2d');
@@ -2215,34 +2214,17 @@ function updateMinimapViewport() {
     return;
   }
 
-  const currentEditor = getCurrentEditor();
-  if (!currentEditor) return;
+  const scrollElement = getCurrentScrollElement();
+  if (!scrollElement) return;
 
-  const canvas = minimapCanvas;
   const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
 
-  // Get editor content and dimensions
-  let content = '';
-  let scrollTop = 0;
-  let clientHeight = 0;
-  let scrollHeight = 0;
+  // Get scroll dimensions
+  const scrollTop = scrollElement.scrollTop;
+  const clientHeight = scrollElement.clientHeight;
+  const scrollHeight = scrollElement.scrollHeight;
 
-  if (currentMode === 'writing' && showFormatting && codemirrorView) {
-    content = codemirrorView.state.doc.toString();
-    scrollTop = codemirrorView.scrollDOM.scrollTop;
-    clientHeight = codemirrorView.scrollDOM.clientHeight;
-    scrollHeight = codemirrorView.scrollDOM.scrollHeight;
-  } else {
-    content = editor.value;
-    scrollTop = editor.scrollTop;
-    clientHeight = editor.clientHeight;
-    scrollHeight = editor.scrollHeight;
-  }
-
-  const lines = content.split('\n');
-  const totalLines = lines.length;
-
-  if (totalLines === 0 || scrollHeight === 0) return;
+  if (scrollHeight === 0) return;
 
   // Calculate viewport position and size in minimap space
   const scrollPercentage = scrollTop / scrollHeight;
@@ -2259,21 +2241,15 @@ function updateMinimapViewport() {
 function handleMinimapClick(e) {
   if (!minimapEnabled) return;
 
-  const currentEditor = getCurrentEditor();
-  if (!currentEditor) return;
+  const scrollElement = getCurrentScrollElement();
+  if (!scrollElement) return;
 
   const rect = minimapCanvas.getBoundingClientRect();
   const clickY = e.clientY - rect.top;
   const percentage = clickY / rect.height;
 
-  let scrollHeight = 0;
-  if (currentMode === 'writing' && showFormatting && codemirrorView) {
-    scrollHeight = codemirrorView.scrollDOM.scrollHeight;
-    codemirrorView.scrollDOM.scrollTop = percentage * scrollHeight;
-  } else {
-    scrollHeight = editor.scrollHeight;
-    editor.scrollTop = percentage * scrollHeight;
-  }
+  const scrollHeight = scrollElement.scrollHeight;
+  scrollElement.scrollTop = percentage * scrollHeight;
 
   updateMinimapViewport();
 }
@@ -2340,6 +2316,13 @@ if (minimapCanvas) {
   // Update minimap on editor scroll
   editor.addEventListener('scroll', () => {
     if (minimapEnabled) {
+      updateMinimapViewport();
+    }
+  });
+
+  // Update minimap on preview scroll (Reader mode)
+  preview.addEventListener('scroll', () => {
+    if (minimapEnabled && currentMode === 'reader') {
       updateMinimapViewport();
     }
   });
@@ -2494,23 +2477,39 @@ function jumpToHeader(lineIndex, headerIndex) {
       position += lines[i].length + 1; // +1 for newline
     }
 
-    // Calculate scroll position BEFORE setting cursor (to avoid browser auto-scroll)
-    const editorRect = editor.getBoundingClientRect();
-    const editorHeight = editorRect.height;
-    const lineHeight = parseInt(window.getComputedStyle(editor).lineHeight) || 18;
-    const targetScrollTop = (lineIndex * lineHeight) - (editorHeight / 2);
+    // Get accurate line height
+    const computedStyle = window.getComputedStyle(editor);
+    let lineHeight = parseFloat(computedStyle.lineHeight);
 
-    // Set scroll first
+    // If lineHeight is NaN (e.g., "normal"), calculate from font size
+    if (isNaN(lineHeight)) {
+      const fontSize = parseFloat(computedStyle.fontSize);
+      lineHeight = fontSize * 1.8; // Default line-height multiplier
+    }
+
+    // Calculate target scroll position to center the line
+    const editorHeight = editor.clientHeight;
+    const targetScrollTop = (lineIndex * lineHeight) - (editorHeight / 2) + (lineHeight / 2);
+
+    // Set cursor position WITHOUT focusing first
+    editor.setSelectionRange(position, position);
+
+    // Set scroll position BEFORE focusing
     editor.scrollTop = Math.max(0, targetScrollTop);
 
-    // Then set cursor and focus
-    editor.setSelectionRange(position, position);
+    // Now focus the editor
     editor.focus();
 
-    // Force scroll position again after focus (browser might have auto-scrolled)
-    setTimeout(() => {
+    // Force scroll position again after focus using requestAnimationFrame
+    // This ensures we override any browser auto-scroll behavior
+    requestAnimationFrame(() => {
       editor.scrollTop = Math.max(0, targetScrollTop);
-    }, 0);
+
+      // Double-check one more time after the frame renders
+      requestAnimationFrame(() => {
+        editor.scrollTop = Math.max(0, targetScrollTop);
+      });
+    });
   }
 }
 
