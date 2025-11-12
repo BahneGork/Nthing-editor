@@ -2112,3 +2112,239 @@ if (separator && editorPane && container) {
   // Load saved position on startup
   loadSplitPosition();
 }
+
+// ==========================================
+// Minimap Feature
+// ==========================================
+
+const minimapContainer = document.getElementById('minimap-container');
+const minimapCanvas = document.getElementById('minimap-canvas');
+const minimapViewport = document.getElementById('minimap-viewport');
+let minimapEnabled = false;
+let minimapUpdateTimeout = null;
+let isMinimapDragging = false;
+
+// Get the current editor element (textarea or CodeMirror)
+function getCurrentEditor() {
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    return editorView.dom;
+  }
+  return editor;
+}
+
+// Update minimap rendering
+function updateMinimap() {
+  if (!minimapEnabled || !minimapCanvas || minimapContainer.classList.contains('hidden')) {
+    return;
+  }
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const canvas = minimapCanvas;
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match container (accounting for device pixel ratio)
+  const rect = minimapContainer.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Clear canvas
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  // Get editor content
+  let content = '';
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+  } else {
+    content = editor.value;
+  }
+
+  const lines = content.split('\n');
+  const totalLines = lines.length;
+
+  if (totalLines === 0) return;
+
+  // Calculate scale - each line gets a small height
+  const lineHeight = Math.max(1, rect.height / totalLines);
+  const maxLineHeight = 4; // Maximum pixels per line for readability
+  const actualLineHeight = Math.min(lineHeight, maxLineHeight);
+
+  // Calculate content height in minimap space
+  const contentHeight = totalLines * actualLineHeight;
+  const scale = rect.height / Math.max(contentHeight, rect.height);
+
+  // Draw lines as small blocks
+  ctx.fillStyle = '#333';
+  ctx.font = '1px monospace';
+
+  lines.forEach((line, index) => {
+    const y = index * actualLineHeight * scale;
+    const lineLength = line.length;
+
+    if (lineLength > 0) {
+      // Draw a small rectangle for each line
+      const width = Math.min(rect.width - 4, (lineLength / 100) * rect.width);
+      ctx.fillRect(2, y, width, Math.max(1, actualLineHeight * scale * 0.8));
+    }
+  });
+
+  // Update viewport indicator
+  updateMinimapViewport();
+}
+
+// Update the viewport rectangle position
+function updateMinimapViewport() {
+  if (!minimapEnabled || minimapContainer.classList.contains('hidden')) {
+    return;
+  }
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const canvas = minimapCanvas;
+  const rect = minimapContainer.getBoundingClientRect();
+
+  // Get editor content and dimensions
+  let content = '';
+  let scrollTop = 0;
+  let clientHeight = 0;
+  let scrollHeight = 0;
+
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+    scrollTop = editorView.scrollDOM.scrollTop;
+    clientHeight = editorView.scrollDOM.clientHeight;
+    scrollHeight = editorView.scrollDOM.scrollHeight;
+  } else {
+    content = editor.value;
+    scrollTop = editor.scrollTop;
+    clientHeight = editor.clientHeight;
+    scrollHeight = editor.scrollHeight;
+  }
+
+  const lines = content.split('\n');
+  const totalLines = lines.length;
+
+  if (totalLines === 0 || scrollHeight === 0) return;
+
+  // Calculate viewport position and size in minimap space
+  const scrollPercentage = scrollTop / scrollHeight;
+  const viewportPercentage = clientHeight / scrollHeight;
+
+  const viewportTop = scrollPercentage * rect.height;
+  const viewportHeight = Math.max(20, viewportPercentage * rect.height); // Minimum 20px height
+
+  minimapViewport.style.top = `${viewportTop}px`;
+  minimapViewport.style.height = `${viewportHeight}px`;
+}
+
+// Handle minimap click to jump to location
+function handleMinimapClick(e) {
+  if (!minimapEnabled) return;
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const rect = minimapCanvas.getBoundingClientRect();
+  const clickY = e.clientY - rect.top;
+  const percentage = clickY / rect.height;
+
+  let scrollHeight = 0;
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    scrollHeight = editorView.scrollDOM.scrollHeight;
+    editorView.scrollDOM.scrollTop = percentage * scrollHeight;
+  } else {
+    scrollHeight = editor.scrollHeight;
+    editor.scrollTop = percentage * scrollHeight;
+  }
+
+  updateMinimapViewport();
+}
+
+// Handle minimap drag
+function handleMinimapDragStart(e) {
+  isMinimapDragging = true;
+  minimapCanvas.style.cursor = 'grabbing';
+  handleMinimapClick(e);
+  e.preventDefault();
+}
+
+function handleMinimapDrag(e) {
+  if (!isMinimapDragging) return;
+  handleMinimapClick(e);
+}
+
+function handleMinimapDragEnd() {
+  isMinimapDragging = false;
+  minimapCanvas.style.cursor = 'pointer';
+}
+
+// Debounced minimap update
+function scheduleMinimapUpdate() {
+  if (minimapUpdateTimeout) {
+    clearTimeout(minimapUpdateTimeout);
+  }
+  minimapUpdateTimeout = setTimeout(() => {
+    updateMinimap();
+  }, 100);
+}
+
+// Toggle minimap visibility
+function toggleMinimap(enabled) {
+  minimapEnabled = enabled;
+
+  if (enabled) {
+    minimapContainer.classList.remove('hidden');
+    minimapContainer.classList.add('minimap-enabled');
+    updateMinimap();
+  } else {
+    minimapContainer.classList.add('hidden');
+    minimapContainer.classList.remove('minimap-enabled');
+  }
+
+  // Notify that minimap state changed
+  ipcRenderer.send('minimap-toggled', enabled);
+}
+
+// Set up minimap event listeners
+if (minimapCanvas) {
+  minimapCanvas.addEventListener('mousedown', handleMinimapDragStart);
+  document.addEventListener('mousemove', handleMinimapDrag);
+  document.addEventListener('mouseup', handleMinimapDragEnd);
+
+  // Update minimap on editor scroll
+  editor.addEventListener('scroll', () => {
+    if (minimapEnabled) {
+      updateMinimapViewport();
+    }
+  });
+
+  // Update minimap on content change
+  editor.addEventListener('input', scheduleMinimapUpdate);
+
+  // Update minimap on window resize
+  window.addEventListener('resize', () => {
+    if (minimapEnabled) {
+      scheduleMinimapUpdate();
+    }
+  });
+}
+
+// Listen for minimap toggle from main process
+ipcRenderer.on('toggle-minimap', (event, enabled) => {
+  toggleMinimap(enabled);
+});
+
+// Update minimap when switching modes
+const originalSwitchMode = switchMode;
+switchMode = function(mode) {
+  originalSwitchMode(mode);
+  if (minimapEnabled) {
+    setTimeout(() => {
+      updateMinimap();
+    }, 100);
+  }
+};

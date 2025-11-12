@@ -45,6 +45,7 @@ let autosaveInterval = 5 * 60 * 1000; // Autosave interval (default: 5 minutes)
 let autosavePersistent = false;  // Whether autosave setting persists across sessions
 let defaultStartupMode = 'editor'; // Default mode on startup: 'editor', 'writing', or 'reader'
 let readerModeMargins = 'medium'; // Reader mode margin width: 'none', 'narrow', 'medium', 'wide', 'extra-wide'
+let minimapEnabled = false;      // Whether minimap is enabled
 
 // Backup system configuration
 let versioningEnabled = true;     // Enable/disable backup creation on save
@@ -238,6 +239,11 @@ function loadSettings() {
         readerModeMargins = settings.readerModeMargins;
       }
 
+      // Load minimap setting
+      if (settings.minimapEnabled !== undefined) {
+        minimapEnabled = settings.minimapEnabled;
+      }
+
       // Load versioning settings
       if (settings.versioning) {
         versioningEnabled = settings.versioning.enabled !== undefined ? settings.versioning.enabled : true;
@@ -271,7 +277,8 @@ function saveSettings() {
         cleanupDays: versionCleanupDays
       },
       defaultStartupMode: defaultStartupMode,
-      readerModeMargins: readerModeMargins
+      readerModeMargins: readerModeMargins,
+      minimapEnabled: minimapEnabled
     };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
   } catch (err) {
@@ -656,6 +663,9 @@ function createWindow(filePathToOpen = null) {
     // Send reader mode margins setting
     win.webContents.send('set-reader-margins', readerModeMargins);
 
+    // Send minimap enabled state
+    win.webContents.send('toggle-minimap', minimapEnabled);
+
     // Open file if specified
     if (filePathToOpen) {
       openFileByPath(win, filePathToOpen);
@@ -1012,6 +1022,20 @@ function createMenu() {
           click: (menuItem) => {
             const win = BrowserWindow.getFocusedWindow();
             if (win) win.webContents.send('toggle-typewriter-mode', menuItem.checked);
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Show Minimap',
+          type: 'checkbox',
+          checked: minimapEnabled,
+          click: (menuItem) => {
+            minimapEnabled = menuItem.checked;
+            saveSettings();
+            BrowserWindow.getAllWindows().forEach(win => {
+              win.webContents.send('toggle-minimap', minimapEnabled);
+            });
+            createMenu();
           }
         },
         { type: 'separator' },

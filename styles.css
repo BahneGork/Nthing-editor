@@ -1155,3 +1155,62 @@ body {
 body.version-sidebar-open .container {
   margin-right: 320px;
 }
+
+/* Minimap */
+.minimap-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 100%;
+  background: #f8f8f8;
+  border-left: 1px solid #e0e0e0;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.minimap-container.hidden {
+  display: none;
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+}
+
+.minimap-viewport {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(74, 144, 226, 0.15);
+  border: 1px solid rgba(74, 144, 226, 0.5);
+  border-left: none;
+  border-right: none;
+  pointer-events: none;
+  transition: top 0.05s ease-out, height 0.05s ease-out;
+}
+
+/* Adjust editor wrapper when minimap is visible */
+.editor-pane .editor-wrapper {
+  position: relative;
+}
+
+.editor-pane:not(.minimap-hidden) .editor-wrapper {
+  padding-right: 120px;
+}
+
+/* Hide minimap in reader mode and when editor is hidden */
+.container[data-mode="reader"] .minimap-container {
+  display: none;
+}
+
+.container[data-mode="writing"] .minimap-container {
+  display: none;
+}
+
+/* Show minimap in writing mode with show formatting */
+.container[data-mode="writing"].show-formatting .minimap-container.minimap-enabled {
+  display: block;
+}
