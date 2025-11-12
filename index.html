@@ -90,6 +90,25 @@
     </div>
   </div>
 
+  <!-- Outline Sidebar -->
+  <div id="outline-sidebar" class="outline-sidebar hidden">
+    <div class="outline-sidebar-header">
+      <div class="outline-sidebar-title">
+        <span>📑 Outline</span>
+      </div>
+      <button id="close-outline-sidebar" class="close-btn">&times;</button>
+    </div>
+    <div class="outline-sidebar-content">
+      <div class="outline-list" id="outline-list">
+        <!-- Outline items will be populated here -->
+      </div>
+      <div class="outline-empty" id="outline-empty">
+        <p>No headers found</p>
+        <p class="outline-hint">Add headings to your document to see the outline</p>
+      </div>
+    </div>
+  </div>
+
   <div class="container" data-mode="editor">
     <div class="editor-pane">
       <div class="pane-header">
@@ -121,6 +140,11 @@
         <textarea id="editor" placeholder="# Start typing markdown here..." spellcheck="false"></textarea>
         <div id="codemirror-container" class="codemirror-container hidden"></div>
         <div id="highlight-overlay" class="highlight-overlay"></div>
+      </div>
+      <!-- Minimap -->
+      <div id="minimap-container" class="minimap-container hidden">
+        <canvas id="minimap-canvas"></canvas>
+        <div id="minimap-viewport" class="minimap-viewport"></div>
       </div>
     </div>
     <div id="separator" class="separator" title="Drag to resize"></div>

@@ -1,6 +1,6 @@
 # Nice-to-Have Features
 
-This document tracks potential features for Nthing, inspired by Typora and other popular markdown editors.
+This document tracks potential features for Nthing and other popular markdown editors.
 
 ## Tier 1 - Must Have (Essential Features)
 
@@ -126,9 +126,9 @@ This document tracks potential features for Nthing, inspired by Typora and other
 
 ---
 
-## Feature Comparison with Typora
+## Nthing's Unique Features
 
-**What Nthing has that Typora doesn't:**
+**Core Features:**
 - ✅ Wikilinks `[[internal links]]` (Obsidian-style)
 - ✅ Hashtags `#tags` with styling
 - ✅ YAML frontmatter support
@@ -139,21 +139,22 @@ This document tracks potential features for Nthing, inspired by Typora and other
 - ✅ Custom title bar
 - ✅ Draggable Find dialog
 
-**What Typora has that we're missing:**
-- Export functionality (PDF, HTML, Word)
-- Outline panel for navigation
-- File tree sidebar
-- Math support
-- Diagram support
-- Themes/customization
-
-**What we've added since:**
+**Advanced Features:**
 - ✅ Focus Mode (dim other paragraphs)
 - ✅ Typewriter Mode
 - ✅ Note backup system with visual diff and restoration
 - ✅ Draggable separator for resizing editor/preview panes
-- ✅ Reader Mode (preview-only view for distraction-free reading)
-- ✅ Configurable default startup mode (choose which mode opens by default)
+- ✅ Reader Mode with configurable margins
+- ✅ Per-window autosave settings
+- ✅ Multi-window support
+
+**Still Missing:**
+- Export functionality (PDF, HTML, Word)
+- Outline panel for navigation
+- File tree sidebar
+- Math support (LaTeX/KaTeX)
+- Diagram support (Mermaid)
+- Custom themes/dark mode
 
 ---
 

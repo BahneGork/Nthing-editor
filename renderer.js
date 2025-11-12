@@ -840,7 +840,7 @@ ipcRenderer.on('toggle-typewriter-mode', (event, enabled) => {
   toggleTypewriterMode(enabled);
 });
 
-// Custom theme for Typora-style markdown rendering
+// Custom theme for Writing Focus mode
 const markdownTheme = EditorView.theme({
   ".cm-content": {
     fontFamily: "'Georgia', 'Times New Roman', serif",
@@ -2112,3 +2112,429 @@ if (separator && editorPane && container) {
   // Load saved position on startup
   loadSplitPosition();
 }
+
+// ==========================================
+// Minimap Feature
+// ==========================================
+
+const minimapContainer = document.getElementById('minimap-container');
+const minimapCanvas = document.getElementById('minimap-canvas');
+const minimapViewport = document.getElementById('minimap-viewport');
+let minimapEnabled = false;
+let minimapUpdateTimeout = null;
+let isMinimapDragging = false;
+
+// Get the current editor element (textarea or CodeMirror)
+function getCurrentEditor() {
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    return editorView.dom;
+  }
+  return editor;
+}
+
+// Update minimap rendering
+function updateMinimap() {
+  if (!minimapEnabled || !minimapCanvas || minimapContainer.classList.contains('hidden')) {
+    return;
+  }
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const canvas = minimapCanvas;
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match container (accounting for device pixel ratio)
+  const rect = minimapContainer.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Clear canvas
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  // Get editor content
+  let content = '';
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+  } else {
+    content = editor.value;
+  }
+
+  const lines = content.split('\n');
+  const totalLines = lines.length;
+
+  if (totalLines === 0) return;
+
+  // Calculate scale - each line gets a small height
+  const lineHeight = Math.max(1, rect.height / totalLines);
+  const maxLineHeight = 4; // Maximum pixels per line for readability
+  const actualLineHeight = Math.min(lineHeight, maxLineHeight);
+
+  // Calculate content height in minimap space
+  const contentHeight = totalLines * actualLineHeight;
+  const scale = rect.height / Math.max(contentHeight, rect.height);
+
+  // Draw lines as small blocks
+  ctx.fillStyle = '#333';
+  ctx.font = '1px monospace';
+
+  lines.forEach((line, index) => {
+    const y = index * actualLineHeight * scale;
+    const lineLength = line.length;
+
+    if (lineLength > 0) {
+      // Draw a small rectangle for each line
+      const width = Math.min(rect.width - 4, (lineLength / 100) * rect.width);
+      ctx.fillRect(2, y, width, Math.max(1, actualLineHeight * scale * 0.8));
+    }
+  });
+
+  // Update viewport indicator
+  updateMinimapViewport();
+}
+
+// Update the viewport rectangle position
+function updateMinimapViewport() {
+  if (!minimapEnabled || minimapContainer.classList.contains('hidden')) {
+    return;
+  }
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const canvas = minimapCanvas;
+  const rect = minimapContainer.getBoundingClientRect();
+
+  // Get editor content and dimensions
+  let content = '';
+  let scrollTop = 0;
+  let clientHeight = 0;
+  let scrollHeight = 0;
+
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+    scrollTop = editorView.scrollDOM.scrollTop;
+    clientHeight = editorView.scrollDOM.clientHeight;
+    scrollHeight = editorView.scrollDOM.scrollHeight;
+  } else {
+    content = editor.value;
+    scrollTop = editor.scrollTop;
+    clientHeight = editor.clientHeight;
+    scrollHeight = editor.scrollHeight;
+  }
+
+  const lines = content.split('\n');
+  const totalLines = lines.length;
+
+  if (totalLines === 0 || scrollHeight === 0) return;
+
+  // Calculate viewport position and size in minimap space
+  const scrollPercentage = scrollTop / scrollHeight;
+  const viewportPercentage = clientHeight / scrollHeight;
+
+  const viewportTop = scrollPercentage * rect.height;
+  const viewportHeight = Math.max(20, viewportPercentage * rect.height); // Minimum 20px height
+
+  minimapViewport.style.top = `${viewportTop}px`;
+  minimapViewport.style.height = `${viewportHeight}px`;
+}
+
+// Handle minimap click to jump to location
+function handleMinimapClick(e) {
+  if (!minimapEnabled) return;
+
+  const currentEditor = getCurrentEditor();
+  if (!currentEditor) return;
+
+  const rect = minimapCanvas.getBoundingClientRect();
+  const clickY = e.clientY - rect.top;
+  const percentage = clickY / rect.height;
+
+  let scrollHeight = 0;
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    scrollHeight = editorView.scrollDOM.scrollHeight;
+    editorView.scrollDOM.scrollTop = percentage * scrollHeight;
+  } else {
+    scrollHeight = editor.scrollHeight;
+    editor.scrollTop = percentage * scrollHeight;
+  }
+
+  updateMinimapViewport();
+}
+
+// Handle minimap drag
+function handleMinimapDragStart(e) {
+  isMinimapDragging = true;
+  minimapCanvas.style.cursor = 'grabbing';
+  handleMinimapClick(e);
+  e.preventDefault();
+}
+
+function handleMinimapDrag(e) {
+  if (!isMinimapDragging) return;
+  handleMinimapClick(e);
+}
+
+function handleMinimapDragEnd() {
+  isMinimapDragging = false;
+  minimapCanvas.style.cursor = 'pointer';
+}
+
+// Debounced minimap update
+function scheduleMinimapUpdate() {
+  if (minimapUpdateTimeout) {
+    clearTimeout(minimapUpdateTimeout);
+  }
+  minimapUpdateTimeout = setTimeout(() => {
+    updateMinimap();
+  }, 100);
+}
+
+// Toggle minimap visibility
+function toggleMinimap(enabled) {
+  minimapEnabled = enabled;
+
+  if (enabled) {
+    minimapContainer.classList.remove('hidden');
+    minimapContainer.classList.add('minimap-enabled');
+    updateMinimap();
+  } else {
+    minimapContainer.classList.add('hidden');
+    minimapContainer.classList.remove('minimap-enabled');
+  }
+
+  // Notify that minimap state changed
+  ipcRenderer.send('minimap-toggled', enabled);
+}
+
+// Set up minimap event listeners
+if (minimapCanvas) {
+  minimapCanvas.addEventListener('mousedown', handleMinimapDragStart);
+  document.addEventListener('mousemove', handleMinimapDrag);
+  document.addEventListener('mouseup', handleMinimapDragEnd);
+
+  // Update minimap on editor scroll
+  editor.addEventListener('scroll', () => {
+    if (minimapEnabled) {
+      updateMinimapViewport();
+    }
+  });
+
+  // Update minimap on content change
+  editor.addEventListener('input', scheduleMinimapUpdate);
+
+  // Update minimap on window resize
+  window.addEventListener('resize', () => {
+    if (minimapEnabled) {
+      scheduleMinimapUpdate();
+    }
+  });
+}
+
+// Listen for minimap toggle from main process
+ipcRenderer.on('toggle-minimap', (event, enabled) => {
+  toggleMinimap(enabled);
+});
+
+// Update minimap when switching modes
+const originalSwitchMode = switchMode;
+switchMode = function(mode) {
+  originalSwitchMode(mode);
+  if (minimapEnabled) {
+    setTimeout(() => {
+      updateMinimap();
+    }, 100);
+  }
+};
+
+// ==========================================
+// Outline/TOC Feature
+// ==========================================
+
+const outlineSidebar = document.getElementById('outline-sidebar');
+const closeOutlineSidebarBtn = document.getElementById('close-outline-sidebar');
+const outlineList = document.getElementById('outline-list');
+const outlineEmpty = document.getElementById('outline-empty');
+let outlineUpdateTimeout = null;
+
+// Parse headers from markdown content
+function parseHeaders(content) {
+  const headers = [];
+  const lines = content.split('\n');
+
+  lines.forEach((line, lineIndex) => {
+    // Match markdown headers (# to ######)
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2].trim();
+
+      // Create a clean ID for the header (for jumping)
+      const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+
+      headers.push({
+        level: level,
+        text: text,
+        id: id,
+        lineIndex: lineIndex
+      });
+    }
+  });
+
+  return headers;
+}
+
+// Update the outline list
+function updateOutline() {
+  // Get current content
+  let content = '';
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    content = editorView.state.doc.toString();
+  } else {
+    content = editor.value;
+  }
+
+  // Parse headers
+  const headers = parseHeaders(content);
+
+  // Clear outline list
+  outlineList.innerHTML = '';
+
+  if (headers.length === 0) {
+    // Show empty message
+    outlineEmpty.style.display = 'block';
+    outlineList.style.display = 'none';
+  } else {
+    // Hide empty message
+    outlineEmpty.style.display = 'none';
+    outlineList.style.display = 'block';
+
+    // Create outline items
+    headers.forEach((header, index) => {
+      const item = document.createElement('div');
+      item.className = 'outline-item';
+      item.setAttribute('data-level', header.level);
+      item.setAttribute('data-line', header.lineIndex);
+      item.textContent = header.text;
+
+      // Click to jump to header
+      item.addEventListener('click', () => {
+        jumpToHeader(header.lineIndex);
+
+        // Highlight active item
+        document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+      });
+
+      outlineList.appendChild(item);
+    });
+  }
+}
+
+// Jump to a specific header line
+function jumpToHeader(lineIndex) {
+  if (currentMode === 'writing' && showFormatting && editorView) {
+    // CodeMirror mode
+    const line = editorView.state.doc.line(lineIndex + 1);
+    editorView.dispatch({
+      selection: { anchor: line.from },
+      scrollIntoView: true
+    });
+    editorView.focus();
+  } else if (currentMode === 'reader') {
+    // Reader mode - scroll preview
+    const preview = document.getElementById('preview');
+    const headers = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    if (headers[lineIndex]) {
+      headers[lineIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } else {
+    // Regular textarea mode
+    const lines = editor.value.split('\n');
+    let position = 0;
+
+    for (let i = 0; i < lineIndex && i < lines.length; i++) {
+      position += lines[i].length + 1; // +1 for newline
+    }
+
+    editor.setSelectionRange(position, position);
+    editor.focus();
+
+    // Scroll to the line
+    const lineHeight = 18; // Approximate line height
+    const scrollTop = lineIndex * lineHeight;
+    editor.scrollTop = scrollTop - 50; // Offset from top
+  }
+}
+
+// Debounced outline update
+function scheduleOutlineUpdate() {
+  if (outlineUpdateTimeout) {
+    clearTimeout(outlineUpdateTimeout);
+  }
+  outlineUpdateTimeout = setTimeout(() => {
+    updateOutline();
+  }, 500);
+}
+
+// Toggle outline sidebar
+function toggleOutline(show) {
+  if (show) {
+    outlineSidebar.classList.remove('hidden');
+    document.body.classList.add('outline-sidebar-open');
+    updateOutline();
+  } else {
+    outlineSidebar.classList.add('hidden');
+    document.body.classList.remove('outline-sidebar-open');
+  }
+}
+
+// Close button handler
+if (closeOutlineSidebarBtn) {
+  closeOutlineSidebarBtn.addEventListener('click', () => {
+    toggleOutline(false);
+    ipcRenderer.send('outline-closed');
+  });
+}
+
+// Listen for outline toggle from main process
+ipcRenderer.on('toggle-outline', (event, show) => {
+  // If show is null, toggle based on current state
+  if (show === null || show === undefined) {
+    const isOpen = !outlineSidebar.classList.contains('hidden');
+    toggleOutline(!isOpen);
+  } else {
+    toggleOutline(show);
+  }
+});
+
+// Update outline on content change
+editor.addEventListener('input', scheduleOutlineUpdate);
+
+// Keyboard shortcut for outline (Ctrl+Shift+O)
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+    e.preventDefault();
+    const isOpen = !outlineSidebar.classList.contains('hidden');
+    toggleOutline(!isOpen);
+    ipcRenderer.send('outline-toggled', !isOpen);
+  }
+});
+
+// Update outline when switching modes (wrap original switchMode)
+switchMode = (function(originalFunc) {
+  return function(mode) {
+    originalFunc(mode);
+
+    // Update outline after mode switch
+    const isOutlineOpen = !outlineSidebar.classList.contains('hidden');
+    if (isOutlineOpen) {
+      setTimeout(() => {
+        updateOutline();
+      }, 100);
+    }
+  };
+})(switchMode);
