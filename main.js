@@ -1116,7 +1116,7 @@ function createMenu() {
         {
           label: 'Documentation',
           click: () => {
-            shell.openExternal('https://github.com/BahneGork/markdowneditor1');
+            shell.openExternal('https://github.com/BahneGork/Nthing-editor');
           }
         },
         {
