@@ -2166,6 +2166,13 @@ function updateMinimap() {
 
   // Set canvas size to match sidebar content area (accounting for device pixel ratio)
   const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
+
+  // Check if rect has valid dimensions - if not, sidebar isn't ready yet
+  if (rect.width === 0 || rect.height === 0) {
+    console.log('Minimap: sidebar not ready yet, skipping update');
+    return;
+  }
+
   const dpr = window.devicePixelRatio || 1;
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
@@ -2185,7 +2192,12 @@ function updateMinimap() {
   const lines = content.split('\n');
   const totalLines = lines.length;
 
-  if (totalLines === 0) return;
+  if (totalLines === 0) {
+    console.log('Minimap: no content yet, skipping update');
+    return;
+  }
+
+  console.log(`Minimap: rendering ${totalLines} lines in ${rect.width}x${rect.height} canvas`);
 
   // Calculate scale - each line gets a small height
   const lineHeight = Math.max(1, rect.height / totalLines);
@@ -2300,16 +2312,14 @@ function toggleMinimap(enabled) {
     // Update immediately
     updateMinimap();
 
-    // Update again after a delay to ensure canvas is fully ready
-    setTimeout(() => {
-      updateMinimap();
-    }, 100);
+    // Multiple retries to ensure canvas renders in all scenarios
+    setTimeout(() => updateMinimap(), 100);
+    setTimeout(() => updateMinimap(), 300);
+    setTimeout(() => updateMinimap(), 600);
 
-    // If we're in Reader mode, need an extra update after preview is fully rendered
+    // Extra long delay for Reader mode startup scenario
     if (currentMode === 'reader') {
-      setTimeout(() => {
-        updateMinimap();
-      }, 250);
+      setTimeout(() => updateMinimap(), 1000);
     }
   } else {
     minimapSidebar.classList.add('hidden');
