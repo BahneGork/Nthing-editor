@@ -931,6 +931,14 @@ function createMenu() {
             if (win) win.webContents.send('switch-mode', 'writing');
           }
         },
+        {
+          label: 'Reader Mode',
+          type: 'radio',
+          click: () => {
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('switch-mode', 'reader');
+          }
+        },
         { type: 'separator' },
         {
           label: 'Focus Mode',

@@ -149,7 +149,7 @@ const codemirrorContainer = document.getElementById('codemirror-container');
 const autosaveStatus = document.getElementById('autosave-status');
 
 let currentFilePath = null;
-let currentMode = 'editor'; // 'editor' or 'writing'
+let currentMode = 'editor'; // 'editor', 'writing', or 'reader'
 let syncScrollEnabled = true; // Scroll sync state
 let showFormatting = false; // Formatting display state
 let showPreview = true; // Preview visibility state
@@ -648,6 +648,23 @@ function switchMode(mode) {
     if (showFormatting) {
       toggleFormatting(true);
     }
+  } else if (mode === 'reader') {
+    paneTitle.textContent = 'Reader';
+    // Disable scroll sync in reader mode (no editor to sync)
+    preview.removeEventListener('scroll', handlePreviewScroll);
+    // Disable formatting when entering reader mode
+    if (showFormatting) {
+      toggleFormatting(false);
+      showFormattingToggle.checked = false;
+    }
+    // Disable focus mode and typewriter mode in reader mode
+    if (focusModeEnabled) {
+      toggleFocusMode(false);
+    }
+    if (typewriterModeEnabled) {
+      toggleTypewriterMode(false);
+    }
+    codemirrorContainer.classList.remove('focus-mode-enabled');
   } else {
     paneTitle.textContent = 'Editor';
     updateLineNumbers();
@@ -669,9 +686,16 @@ function switchMode(mode) {
   }
 }
 
-// Toggle between Editor and Writing Focus modes
+// Toggle between Editor, Writing Focus, and Reader modes
 function toggleViewMode() {
-  const newMode = currentMode === 'editor' ? 'writing' : 'editor';
+  let newMode;
+  if (currentMode === 'editor') {
+    newMode = 'writing';
+  } else if (currentMode === 'writing') {
+    newMode = 'reader';
+  } else {
+    newMode = 'editor';
+  }
   switchMode(newMode);
 }
 
