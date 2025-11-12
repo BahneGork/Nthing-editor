@@ -840,7 +840,7 @@ ipcRenderer.on('toggle-typewriter-mode', (event, enabled) => {
   toggleTypewriterMode(enabled);
 });
 
-// Custom theme for Typora-style markdown rendering
+// Custom theme for Writing Focus mode
 const markdownTheme = EditorView.theme({
   ".cm-content": {
     fontFamily: "'Georgia', 'Times New Roman', serif",
