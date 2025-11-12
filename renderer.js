@@ -676,6 +676,13 @@ function switchMode(mode) {
       toggleTypewriterMode(false);
     }
     codemirrorContainer.classList.remove('focus-mode-enabled');
+
+    // Update minimap content when entering Reader mode
+    if (minimapEnabled) {
+      setTimeout(() => {
+        updateMinimap();
+      }, 50);
+    }
   } else {
     paneTitle.textContent = 'Editor';
     updateLineNumbers();
@@ -2289,7 +2296,14 @@ function toggleMinimap(enabled) {
   if (enabled) {
     minimapSidebar.classList.remove('hidden');
     document.body.classList.add('minimap-sidebar-open');
+
+    // Update immediately
     updateMinimap();
+
+    // Update again after a delay to ensure canvas is fully ready
+    setTimeout(() => {
+      updateMinimap();
+    }, 100);
   } else {
     minimapSidebar.classList.add('hidden');
     document.body.classList.remove('minimap-sidebar-open');
@@ -2500,14 +2514,24 @@ function jumpToHeader(lineIndex, headerIndex) {
     // Now focus the editor
     editor.focus();
 
-    // Force scroll position again after focus using requestAnimationFrame
-    // This ensures we override any browser auto-scroll behavior
-    requestAnimationFrame(() => {
+    // Force scroll position multiple times to override browser auto-scroll
+    const enforceScroll = () => {
       editor.scrollTop = Math.max(0, targetScrollTop);
+    };
 
-      // Double-check one more time after the frame renders
+    // Try immediately after focus
+    enforceScroll();
+
+    // Try on next frame
+    requestAnimationFrame(() => {
+      enforceScroll();
+
+      // And the frame after that
       requestAnimationFrame(() => {
-        editor.scrollTop = Math.max(0, targetScrollTop);
+        enforceScroll();
+
+        // And one more time after a slight delay
+        setTimeout(enforceScroll, 10);
       });
     });
   }
