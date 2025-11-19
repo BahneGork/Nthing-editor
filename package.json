@@ -59,6 +59,13 @@
           "description": "Markdown Document",
           "role": "Editor",
           "icon": "Nthing.ico"
+        },
+        {
+          "ext": "html",
+          "name": "HTML File",
+          "description": "HTML Document",
+          "role": "Viewer",
+          "icon": "Nthing.ico"
         }
       ]
     },

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nthing HTML Viewer Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+        }
+        .box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎉 HTML Viewer Test</h1>
+
+    <div class="box success">
+        <h2>✅ Success!</h2>
+        <p>If you can see this styled HTML page in Nthing's preview pane, the HTML viewer is working correctly!</p>
+    </div>
+
+    <div class="box">
+        <h3>Features Being Tested:</h3>
+        <ul>
+            <li>✓ HTML rendering in iframe</li>
+            <li>✓ CSS styling (gradients, colors, layout)</li>
+            <li>✓ Automatic Reader mode switching</li>
+            <li>✓ Responsive design</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <h3>Test Actions:</h3>
+        <ol>
+            <li>Open this file in Nthing</li>
+            <li>Should automatically switch to Reader mode</li>
+            <li>Preview pane should show this rendered HTML</li>
+            <li>Press F9 to cycle through modes and view the source</li>
+        </ol>
+    </div>
+</body>
+</html>

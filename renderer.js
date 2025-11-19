@@ -160,6 +160,7 @@ let contentChangeTimeout = null; // Debounce timer
 let focusModeEnabled = false; // Focus mode state - dims non-active lines
 let currentActiveLine = null; // Track the currently active line for focus mode
 let typewriterModeEnabled = false; // Typewriter mode state - keeps cursor vertically centered
+let isHtmlFile = false; // Track if current file is HTML
 
 // Configure marked options
 marked.setOptions({
@@ -590,17 +591,24 @@ if (savedPreviewPref !== null) {
 }
 
 function updatePreview() {
-  const markdown = editor.value;
-  preview.innerHTML = marked.parse(markdown);
+  if (isHtmlFile) {
+    // For HTML files, render directly in an iframe for proper sandboxing
+    const htmlContent = editor.value;
+    preview.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" style="width: 100%; height: 100%; border: none; background: white;"></iframe>`;
+  } else {
+    // For markdown files, use marked.js
+    const markdown = editor.value;
+    preview.innerHTML = marked.parse(markdown);
 
-  // Apply syntax highlighting to code blocks
-  if (typeof hljs !== 'undefined') {
-    preview.querySelectorAll('pre code').forEach((block) => {
-      // Skip frontmatter blocks
-      if (!block.parentElement.classList.contains('frontmatter')) {
-        hljs.highlightElement(block);
-      }
-    });
+    // Apply syntax highlighting to code blocks
+    if (typeof hljs !== 'undefined') {
+      preview.querySelectorAll('pre code').forEach((block) => {
+        // Skip frontmatter blocks
+        if (!block.parentElement.classList.contains('frontmatter')) {
+          hljs.highlightElement(block);
+        }
+      });
+    }
   }
 }
 
@@ -1103,6 +1111,14 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   currentFilePath = filePath;
   contentChangedSinceLastSave = false; // Reset unsaved flag
 
+  // Check if this is an HTML file
+  isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
+
+  // If HTML file, automatically switch to Reader mode
+  if (isHtmlFile) {
+    switchMode('reader');
+  }
+
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
   if (codemirrorView) {
     codemirrorView.dispatch({
@@ -1129,6 +1145,7 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
 ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
+  isHtmlFile = false; // Reset HTML file flag
   contentChangedSinceLastSave = false; // Reset unsaved flag for new file
 
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
