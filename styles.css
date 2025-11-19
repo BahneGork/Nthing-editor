@@ -1363,3 +1363,15 @@ body.minimap-sidebar-open .container {
 body.minimap-sidebar-open .status-bar {
   margin-right: 150px;
 }
+
+/* HTML Viewer Styles - Remove padding for full HTML display */
+.container.html-viewer #preview {
+  padding: 0;
+}
+
+.container.html-viewer #preview iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}

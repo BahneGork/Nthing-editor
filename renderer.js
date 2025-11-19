@@ -1114,9 +1114,12 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   // Check if this is an HTML file
   isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
 
-  // If HTML file, automatically switch to Reader mode
+  // If HTML file, automatically switch to Reader mode and add html-viewer class
   if (isHtmlFile) {
     switchMode('reader');
+    container.classList.add('html-viewer');
+  } else {
+    container.classList.remove('html-viewer');
   }
 
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
@@ -1146,6 +1149,7 @@ ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
   isHtmlFile = false; // Reset HTML file flag
+  container.classList.remove('html-viewer'); // Remove HTML viewer styling
   contentChangedSinceLastSave = false; // Reset unsaved flag for new file
 
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
