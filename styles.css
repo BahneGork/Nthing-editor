@@ -1364,9 +1364,13 @@ body.minimap-sidebar-open .status-bar {
   margin-right: 150px;
 }
 
-/* HTML Viewer Styles - Remove padding for full HTML display */
+/* HTML Viewer Styles - Remove all padding/margins for full HTML display */
 .container.html-viewer #preview {
-  padding: 0;
+  padding: 0 !important;
+}
+
+.container.html-viewer .preview-pane {
+  padding: 0 !important;
 }
 
 .container.html-viewer #preview iframe {
