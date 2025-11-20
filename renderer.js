@@ -1111,6 +1111,31 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
   currentFilePath = filePath;
   contentChangedSinceLastSave = false; // Reset unsaved flag
 
+  // Update file tree highlighting if workspace is open
+  if (workspacePath && fileTreeList) {
+    refreshFileTreeDisplay();
+
+    // Auto-expand parent folders to show current file
+    if (currentFilePath) {
+      const path = require('path');
+      let dir = path.dirname(currentFilePath);
+      while (dir !== workspacePath && dir !== path.dirname(dir)) {
+        if (!expandedFolders.has(dir)) {
+          expandedFolders.add(dir);
+        }
+        dir = path.dirname(dir);
+      }
+
+      // Save and refresh
+      try {
+        localStorage.setItem('fileTree.expandedFolders', JSON.stringify([...expandedFolders]));
+        refreshFileTreeDisplay();
+      } catch (err) {
+        console.error('Error saving expanded folders:', err);
+      }
+    }
+  }
+
   // Check if this is an HTML file
   isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
 
@@ -2842,32 +2867,6 @@ ipcRenderer.on('workspace-opened', (event, data) => {
   // Auto-open sidebar if it's not already open
   if (fileTreeSidebar.classList.contains('hidden')) {
     toggleFileTree(true);
-  }
-});
-
-// Listen for file opened to update current file highlighting
-ipcRenderer.on('file-opened', (event, data) => {
-  currentFilePath = data.filePath;
-  refreshFileTreeDisplay();
-
-  // Auto-expand parent folders to show current file
-  if (currentFilePath && workspacePath) {
-    const path = require('path');
-    let dir = path.dirname(currentFilePath);
-    while (dir !== workspacePath && dir !== path.dirname(dir)) {
-      if (!expandedFolders.has(dir)) {
-        expandedFolders.add(dir);
-      }
-      dir = path.dirname(dir);
-    }
-
-    // Save and refresh
-    try {
-      localStorage.setItem('fileTree.expandedFolders', JSON.stringify([...expandedFolders]));
-    } catch (err) {
-      console.error('Error saving expanded folders:', err);
-    }
-    refreshFileTreeDisplay();
   }
 });
 
