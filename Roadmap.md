@@ -2,16 +2,25 @@
 
 Things I'm thinking about adding:
 
+## Recently Completed
+
+- ✅ **Outline/TOC sidebar** - Implemented in v1.11.0 (Ctrl+Shift+O)
+- ✅ **File tree sidebar** - Implemented in v1.12.0 (Ctrl+Shift+E)
+- ✅ **Multiple windows** - Implemented in v1.12.0 (Ctrl+Shift+N)
+- ✅ **HTML file support** - Implemented in v1.12.0
+
 ## Short term (probably next)
 
 - **Export to PDF/HTML** - should be straightforward with Electron's print API
-- **Outline/TOC sidebar** - parse headers and make them clickable
 - **Interactive task lists** - `- [ ]` checkboxes that actually work in the preview
+- **Dark theme** - people keep asking about this
 
 ## Medium term (would be nice)
 
-- **Dark theme** - people keep asking about this
-- **File tree sidebar** - for working with multiple markdown files in a folder
+- **File tree enhancements**:
+  - Search/filter files in tree
+  - Real-time file system watching with chokidar
+  - Right-click context menu (reveal in explorer, copy path, etc.)
 - **Strikethrough support** - `~~text~~` rendering
 
 ## Long term (maybe)

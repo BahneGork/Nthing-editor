@@ -8,7 +8,7 @@ There are three view modes: Editor Mode shows your markdown source on the left w
 
 You can cycle through modes with F9, or select them directly from the View menu. You can also set your preferred default startup mode in View → Default Startup Mode. Editor and Writing modes have Focus Mode (dims everything except the paragraph you're in) and Typewriter Mode (keeps the cursor in the middle of the screen).
 
-The editor handles .md, .markdown, and .txt files. You can open them through the file dialog, drag them into the window, double-click them in Explorer, or pick from your recent files (Ctrl+1-9 for the last 10).
+The editor handles .md, .markdown, .txt, and .html files. You can open them through the file dialog, drag them into the window, double-click them in Explorer, navigate through the file tree sidebar, or pick from your recent files (Ctrl+1-9 for the last 10). Open entire workspace folders with Ctrl+K Ctrl+O to browse all your markdown files in the file tree.
 
 Autosave works in intervals (1, 5, 15, or 30 minutes) if you want it. Status bar shows word/character/line counts.
 
@@ -68,13 +68,15 @@ Complete list of features:
   - Reduces eye movement up/down
 
 ### File Management
-- **Supported formats**: .md, .markdown, .txt
+- **Supported formats**: .md, .markdown, .txt, .html
 - **Multiple open methods**:
   - File dialog (Ctrl+O)
+  - Workspace folder (Ctrl+K Ctrl+O) with file tree navigation
   - Drag & drop from Windows Explorer
   - Double-click files in Explorer (registered file associations)
   - Command line arguments
   - Recent files menu (Ctrl+1-9 for last 10 files)
+  - New window (Ctrl+Shift+N)
 - **Autosave**:
   - Configurable intervals: 1, 5, 15, or 30 minutes
   - Enable for current session or permanently
@@ -131,6 +133,22 @@ Complete list of features:
   - Character count (including spaces)
   - Line count
   - Autosave indicator
+- **File tree sidebar** (Ctrl+Shift+E):
+  - Workspace folder navigation
+  - Hierarchical folder/file structure with expand/collapse
+  - Double-click files to open
+  - Current file highlighted automatically
+  - Auto-expands parent folders to reveal current file
+  - Persistent expanded folder state (saved to localStorage)
+  - Smart filtering: only shows .md, .markdown, .txt, .html files
+  - Ignores system folders (node_modules, .git, .nthing-history)
+  - Sorted alphabetically: folders first, then files
+- **Outline sidebar** (Ctrl+Shift+O):
+  - Document structure overview
+  - Clickable headers (H1-H6) for quick navigation
+  - Auto-updates as you type
+  - Hierarchical indentation showing header levels
+  - Active section highlighting
 - **Keyboard shortcuts** for all major operations (see below)
 - **Collapsible backup sidebar** (Ctrl+Shift+H)
 - **Minimal, distraction-free design**
@@ -157,7 +175,7 @@ Renders standard markdown plus:
 
 ## Installation
 
-Download `Nthing Setup 1.9.5.exe` from releases and run it. The installer will set up file associations for .md and .markdown files so you can double-click them to open in Nthing.
+Download `Nthing Setup 1.12.0.exe` from releases and run it. The installer will set up file associations for .md and .markdown files so you can double-click them to open in Nthing.
 
 Windows Defender might complain because the app isn't code-signed (certificates cost $100-400/year). It's a false positive - see the section below if you need to add an exclusion.
 
@@ -176,10 +194,15 @@ You'll need Node.js 14 or higher.
 
 The usual stuff works (Ctrl+S to save, Ctrl+Z/Y for undo/redo, etc). Here are the less obvious ones:
 
+- `Ctrl+N` - New file
+- `Ctrl+Shift+N` - New window
 - `Ctrl+1-9` - Open recent files (1 is most recent)
+- `Ctrl+K Ctrl+O` - Open workspace folder
 - `Ctrl+F` / `Ctrl+H` - Find and Find & Replace
 - `Ctrl+T` - Insert table template
 - `Ctrl+Shift+7/8` - Toggle numbered/bullet lists
+- `Ctrl+Shift+E` - Toggle file tree sidebar
+- `Ctrl+Shift+O` - Toggle outline sidebar
 - `Ctrl+Shift+H` - Open backup history
 - `F9` - Cycle through Editor, Writing Focus, and Reader modes
 - `Esc` - Close the find dialog
@@ -220,7 +243,7 @@ Backups go in `.nthing-history/[filename]/` folders next to your files.
 
 ## Building it yourself
 
-Run `npm run build` to create a Windows installer. It'll show up in `dist/Nthing Setup 1.9.5.exe`. There's also `npm run build:portable` if you want a standalone exe.
+Run `npm run build` to create a Windows installer. It'll show up in `dist/Nthing Setup 1.12.0.exe`. There's also `npm run build:portable` if you want a standalone exe.
 
 The project uses electron-builder. Config is in package.json if you want to tweak it.
 
