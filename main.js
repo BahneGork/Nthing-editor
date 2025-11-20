@@ -760,6 +760,15 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Open Workspace...',
+          accelerator: 'CmdOrCtrl+K CmdOrCtrl+O',
+          click: () => {
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) openWorkspace(win);
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',
           click: () => {
@@ -1040,6 +1049,16 @@ function createMenu() {
             if (win) {
               // Toggle outline - renderer will tell us the new state
               win.webContents.send('toggle-outline', null);
+            }
+          }
+        },
+        {
+          label: 'Show File Tree',
+          accelerator: 'CmdOrCtrl+Shift+E',
+          click: () => {
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) {
+              win.webContents.send('toggle-file-tree', null);
             }
           }
         },
@@ -1383,6 +1402,109 @@ function saveFileAs(win) {
   });
 }
 
+// ==========================================
+// Workspace Management
+// ==========================================
+
+// Ignored folders for file tree
+const ignoredFolders = [
+  'node_modules',
+  '.git',
+  '.nthing-history',
+  '.vscode',
+  '.idea',
+  'dist',
+  'build',
+  '__pycache__',
+  '.next',
+  '.cache'
+];
+
+// Accepted file extensions
+const acceptedExtensions = ['.md', '.markdown', '.txt', '.html'];
+
+// Check if file should be included
+function isAcceptedFile(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  return acceptedExtensions.includes(ext);
+}
+
+// Build file tree recursively
+function buildFileTree(dirPath, depth = 0, maxDepth = 10) {
+  if (depth > maxDepth) return null;
+
+  try {
+    const stats = fs.statSync(dirPath);
+    const name = path.basename(dirPath);
+
+    if (stats.isDirectory()) {
+      // Skip ignored folders
+      if (ignoredFolders.includes(name)) return null;
+
+      const children = [];
+      const items = fs.readdirSync(dirPath);
+
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const child = buildFileTree(itemPath, depth + 1, maxDepth);
+        if (child) {
+          children.push(child);
+        }
+      }
+
+      // Sort: folders first, then files, alphabetically within each group
+      children.sort((a, b) => {
+        if (a.type === b.type) {
+          return a.name.localeCompare(b.name);
+        }
+        return a.type === 'folder' ? -1 : 1;
+      });
+
+      return {
+        type: 'folder',
+        name: name,
+        path: dirPath,
+        children: children
+      };
+    } else {
+      // Only include accepted file types
+      if (!isAcceptedFile(name)) return null;
+
+      return {
+        type: 'file',
+        name: name,
+        path: dirPath
+      };
+    }
+  } catch (err) {
+    console.error('Error building file tree:', err);
+    return null;
+  }
+}
+
+// Open workspace folder
+function openWorkspace(win) {
+  dialog.showOpenDialog(win, {
+    properties: ['openDirectory'],
+    title: 'Select Workspace Folder'
+  }).then(result => {
+    if (!result.canceled && result.filePaths.length > 0) {
+      const workspacePath = result.filePaths[0];
+
+      // Build file tree
+      const fileTree = buildFileTree(workspacePath);
+
+      // Send to renderer
+      win.webContents.send('workspace-opened', {
+        workspacePath: workspacePath,
+        fileTree: fileTree ? fileTree.children : []
+      });
+    }
+  }).catch(err => {
+    console.error('Error opening workspace:', err);
+  });
+}
+
 // Handle save content from renderer
 ipcMain.on('save-content', (event, content) => {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -1674,6 +1796,17 @@ ipcMain.on('open-dropped-file', (event, filePath) => {
   } else {
     openFileByPath(win, filePath);
   }
+});
+
+// File tree IPC handlers
+ipcMain.on('open-workspace', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) openWorkspace(win);
+});
+
+ipcMain.on('open-file-from-tree', (event, filePath) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) openFileByPath(win, filePath);
 });
 
 function saveImage(win, event, base64Data, mimeType, originalName) {

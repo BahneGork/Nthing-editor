@@ -2672,3 +2672,220 @@ switchMode = (function(originalFunc) {
     }
   };
 })(switchMode);
+
+// ==========================================
+// File Tree Navigator
+// ==========================================
+
+const fileTreeSidebar = document.getElementById('file-tree-sidebar');
+const closeFileTreeSidebarBtn = document.getElementById('close-file-tree-sidebar');
+const fileTreeList = document.getElementById('file-tree-list');
+const fileTreeEmpty = document.getElementById('file-tree-empty');
+const openWorkspaceBtn = document.getElementById('open-workspace-btn');
+
+let workspacePath = null;
+let fileTree = [];
+let expandedFolders = new Set();
+let currentFilePath = null;
+
+// Load expanded folders from localStorage
+try {
+  const saved = localStorage.getItem('fileTree.expandedFolders');
+  if (saved) {
+    expandedFolders = new Set(JSON.parse(saved));
+  }
+} catch (err) {
+  console.error('Error loading expanded folders:', err);
+}
+
+// Toggle file tree sidebar
+function toggleFileTree(show) {
+  if (show) {
+    fileTreeSidebar.classList.remove('hidden');
+    document.body.classList.add('file-tree-sidebar-open');
+  } else {
+    fileTreeSidebar.classList.add('hidden');
+    document.body.classList.remove('file-tree-sidebar-open');
+  }
+}
+
+// Close button handler
+if (closeFileTreeSidebarBtn) {
+  closeFileTreeSidebarBtn.addEventListener('click', () => {
+    toggleFileTree(false);
+  });
+}
+
+// Open workspace button handler
+if (openWorkspaceBtn) {
+  openWorkspaceBtn.addEventListener('click', () => {
+    ipcRenderer.send('open-workspace');
+  });
+}
+
+// Render file tree
+function renderFileTree(tree, parentElement, level = 0) {
+  if (!tree || tree.length === 0) {
+    fileTreeList.style.display = 'none';
+    fileTreeEmpty.style.display = 'block';
+    return;
+  }
+
+  fileTreeList.style.display = 'block';
+  fileTreeEmpty.style.display = 'none';
+
+  tree.forEach(item => {
+    if (item.type === 'folder') {
+      // Create folder item
+      const folderDiv = document.createElement('div');
+      folderDiv.className = 'file-tree-item';
+      folderDiv.setAttribute('data-type', 'folder');
+      folderDiv.setAttribute('data-path', item.path);
+      folderDiv.style.paddingLeft = `${12 + level * 16}px`;
+
+      const isExpanded = expandedFolders.has(item.path);
+
+      const icon = document.createElement('span');
+      icon.className = 'file-tree-icon' + (isExpanded ? ' expanded' : '');
+      icon.textContent = '▶';
+      folderDiv.appendChild(icon);
+
+      const name = document.createElement('span');
+      name.textContent = ` 📁 ${item.name}`;
+      folderDiv.appendChild(name);
+
+      // Click to expand/collapse
+      folderDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFolder(item.path);
+      });
+
+      parentElement.appendChild(folderDiv);
+
+      // Render children if expanded
+      if (isExpanded && item.children && item.children.length > 0) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'file-tree-children expanded';
+        renderFileTree(item.children, childrenDiv, level + 1);
+        parentElement.appendChild(childrenDiv);
+      }
+    } else {
+      // Create file item
+      const fileDiv = document.createElement('div');
+      fileDiv.className = 'file-tree-item';
+      fileDiv.setAttribute('data-type', 'file');
+      fileDiv.setAttribute('data-path', item.path);
+      fileDiv.style.paddingLeft = `${12 + level * 16}px`;
+
+      const icon = document.createElement('span');
+      icon.className = 'file-tree-icon';
+      icon.textContent = '📄';
+      fileDiv.appendChild(icon);
+
+      const name = document.createElement('span');
+      name.textContent = ` ${item.name}`;
+      fileDiv.appendChild(name);
+
+      // Highlight current file
+      if (currentFilePath && item.path === currentFilePath) {
+        fileDiv.classList.add('current');
+      }
+
+      // Double-click to open
+      let lastClickTime = 0;
+      fileDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const now = Date.now();
+        if (now - lastClickTime < 300) {
+          // Double click - open file
+          ipcRenderer.send('open-file-from-tree', item.path);
+        }
+        lastClickTime = now;
+      });
+
+      parentElement.appendChild(fileDiv);
+    }
+  });
+}
+
+// Toggle folder expand/collapse
+function toggleFolder(folderPath) {
+  if (expandedFolders.has(folderPath)) {
+    expandedFolders.delete(folderPath);
+  } else {
+    expandedFolders.add(folderPath);
+  }
+
+  // Save to localStorage
+  try {
+    localStorage.setItem('fileTree.expandedFolders', JSON.stringify([...expandedFolders]));
+  } catch (err) {
+    console.error('Error saving expanded folders:', err);
+  }
+
+  // Re-render tree
+  refreshFileTreeDisplay();
+}
+
+// Refresh file tree display
+function refreshFileTreeDisplay() {
+  fileTreeList.innerHTML = '';
+  renderFileTree(fileTree, fileTreeList);
+}
+
+// Listen for workspace opened from main process
+ipcRenderer.on('workspace-opened', (event, data) => {
+  workspacePath = data.workspacePath;
+  fileTree = data.fileTree;
+  refreshFileTreeDisplay();
+
+  // Auto-open sidebar if it's not already open
+  if (fileTreeSidebar.classList.contains('hidden')) {
+    toggleFileTree(true);
+  }
+});
+
+// Listen for file opened to update current file highlighting
+ipcRenderer.on('file-opened', (event, data) => {
+  currentFilePath = data.filePath;
+  refreshFileTreeDisplay();
+
+  // Auto-expand parent folders to show current file
+  if (currentFilePath && workspacePath) {
+    const path = require('path');
+    let dir = path.dirname(currentFilePath);
+    while (dir !== workspacePath && dir !== path.dirname(dir)) {
+      if (!expandedFolders.has(dir)) {
+        expandedFolders.add(dir);
+      }
+      dir = path.dirname(dir);
+    }
+
+    // Save and refresh
+    try {
+      localStorage.setItem('fileTree.expandedFolders', JSON.stringify([...expandedFolders]));
+    } catch (err) {
+      console.error('Error saving expanded folders:', err);
+    }
+    refreshFileTreeDisplay();
+  }
+});
+
+// Listen for toggle from main process
+ipcRenderer.on('toggle-file-tree', (event, show) => {
+  if (show === null || show === undefined) {
+    const isOpen = !fileTreeSidebar.classList.contains('hidden');
+    toggleFileTree(!isOpen);
+  } else {
+    toggleFileTree(show);
+  }
+});
+
+// Keyboard shortcut for file tree (Ctrl+Shift+E)
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+    e.preventDefault();
+    const isOpen = !fileTreeSidebar.classList.contains('hidden');
+    toggleFileTree(!isOpen);
+  }
+});
