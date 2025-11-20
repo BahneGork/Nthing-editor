@@ -14,6 +14,8 @@ Things I'm thinking about adding:
 - **Export to PDF/HTML** - should be straightforward with Electron's print API
 - **Interactive task lists** - `- [ ]` checkboxes that actually work in the preview
 - **Dark theme** - people keep asking about this
+- **Smart formatting wrapping** - typing `**` around selected text should wrap it instead of replacing it
+- **Move lines with keyboard** - Ctrl+Arrow Up/Down to move selected lines (like VS Code)
 
 ## Medium term (would be nice)
 
@@ -21,6 +23,8 @@ Things I'm thinking about adding:
   - Search/filter files in tree
   - Real-time file system watching with chokidar
   - Right-click context menu (reveal in explorer, copy path, etc.)
+- **Left sidebar organization** - Outline and file tree as tabs and/or stacked (user setting decides which layout)
+- **Right sidebar organization** - Minimap and backups as tabs and/or stacked (user setting decides which layout)
 - **Strikethrough support** - `~~text~~` rendering
 
 ## Long term (maybe)

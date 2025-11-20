@@ -23,9 +23,10 @@ This should be straightforward since Electron provides native printing capabilit
 
 ---
 
-## Issue 2: Outline/TOC Sidebar
+## Issue 2: Outline/TOC Sidebar ✅ COMPLETED
 
 **Labels:** `enhancement`, `short-term`
+**Status:** Completed in v1.11.0
 
 **Description:**
 Add a collapsible sidebar that displays an outline/table of contents parsed from markdown headers (H1-H6).
@@ -79,9 +80,10 @@ Should include:
 
 ---
 
-## Issue 5: File Tree Sidebar
+## Issue 5: File Tree Sidebar ✅ COMPLETED
 
 **Labels:** `enhancement`, `medium-term`
+**Status:** Completed in v1.12.0
 
 **Description:**
 Add a file tree sidebar for working with multiple markdown files in a folder.
@@ -170,3 +172,116 @@ This will likely require integrating pandoc or similar conversion tool.
 - Images are embedded
 - Tables render correctly
 - Headings use Word heading styles
+
+---
+
+## Issue 10: Smart Formatting Wrapping
+
+**Labels:** `enhancement`, `short-term`
+
+**Description:**
+When text is selected and the user types formatting characters like `**`, `*`, `_`, `~~`, or `` ` ``, the selection should be wrapped with those characters instead of being replaced.
+
+This is standard behavior in modern editors and makes formatting much faster.
+
+**Example:**
+- User selects "hello world"
+- User types `**`
+- Result: `**hello world**` (instead of replacing the selection)
+
+**Acceptance Criteria:**
+- Typing `**` wraps selection with bold syntax
+- Typing `*` or `_` wraps selection with italic syntax
+- Typing `~~` wraps selection with strikethrough syntax
+- Typing `` ` `` wraps selection with inline code syntax
+- Works in both Editor Mode and Writing Focus Mode (with formatting shown)
+
+---
+
+## Issue 11: Move Lines with Keyboard
+
+**Labels:** `enhancement`, `short-term`
+
+**Description:**
+Add keyboard shortcuts to move selected lines up or down, similar to VS Code and other modern editors.
+
+**Shortcuts:**
+- `Ctrl+Arrow Up` - Move current line or selection up
+- `Ctrl+Arrow Down` - Move current line or selection down
+
+**Acceptance Criteria:**
+- Ctrl+Arrow Up moves line(s) up one position
+- Ctrl+Arrow Down moves line(s) down one position
+- Works with single line (cursor anywhere on line)
+- Works with multiple selected lines
+- Maintains selection after move
+- Works in both Editor Mode and Writing Focus Mode
+
+---
+
+## Issue 12: File Tree Enhancements
+
+**Labels:** `enhancement`, `medium-term`
+
+**Description:**
+Enhance the existing file tree sidebar with additional functionality to improve file management workflow.
+
+**Features:**
+1. **Search/Filter** - Search box at top of file tree to filter visible files
+2. **Real-time file system watching** - Automatically detect when files are added/removed/renamed (using chokidar)
+3. **Right-click context menu**:
+   - Reveal in Explorer
+   - Copy file path
+   - Copy relative path
+   - Rename file
+   - Delete file (with confirmation)
+
+**Acceptance Criteria:**
+- Search box filters files in real-time
+- File tree updates automatically when files change on disk
+- Right-click shows context menu with all options
+- "Reveal in Explorer" opens file location
+- Copy commands copy to clipboard
+- Rename and delete operations work safely
+
+---
+
+## Issue 13: Left Sidebar Organization
+
+**Labels:** `enhancement`, `medium-term`
+
+**Description:**
+Currently, the file tree and outline sidebars occupy the same left-side space and overlap when both are toggled on. Improve this with better organization.
+
+**Proposed Solutions (user setting decides):**
+1. **Tabbed interface** - File tree and outline as tabs (like VS Code)
+2. **Stacked interface** - One above the other in the same sidebar
+3. **Auto-exclusive** - Opening one automatically closes the other (document this clearly)
+
+**Acceptance Criteria:**
+- User can choose preferred layout in settings
+- No overlapping sidebars
+- Smooth transitions when switching
+- Layout preference persists across sessions
+- Clear visual indication of which sidebar is active
+
+---
+
+## Issue 14: Right Sidebar Organization
+
+**Labels:** `enhancement`, `medium-term`
+
+**Description:**
+Currently, the minimap and backup history sidebars occupy the same right-side space and overlap when both are toggled on. Apply the same organizational improvements as the left sidebar.
+
+**Proposed Solutions (user setting decides):**
+1. **Tabbed interface** - Minimap and backups as tabs
+2. **Stacked interface** - One above the other in the same sidebar
+3. **Auto-exclusive** - Opening one automatically closes the other (document this clearly)
+
+**Acceptance Criteria:**
+- User can choose preferred layout in settings
+- No overlapping sidebars
+- Smooth transitions when switching
+- Layout preference persists across sessions
+- Clear visual indication of which sidebar is active
