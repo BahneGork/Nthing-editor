@@ -2711,7 +2711,6 @@ const openWorkspaceBtn = document.getElementById('open-workspace-btn');
 let workspacePath = null;
 let fileTree = [];
 let expandedFolders = new Set();
-let currentFilePath = null;
 
 // Load expanded folders from localStorage
 try {
