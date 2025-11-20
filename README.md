@@ -2,13 +2,32 @@
 
 A markdown editor where nothing else matters. Just write.
 
+<p align="center">
+  <img src=".github/screenshots/hero-image.png" alt="Nthing markdown editor interface" width="800">
+</p>
+
 ## What it does
 
 There are three view modes: Editor Mode shows your markdown source on the left with a live preview on the right. Writing Focus Mode gives you a single pane with wider margins and a serif font - good for when you just want to write without seeing the raw markdown. Reader Mode displays only the rendered preview for distraction-free reading.
 
+### Editor Mode
+![Editor Mode - split pane with live preview](.github/screenshots/editor-mode.png)
+
+### Writing Focus Mode
+![Writing Focus Mode - distraction-free writing](.github/screenshots/writing-mode.png)
+
+### Reader Mode
+![Reader Mode - preview only](.github/screenshots/reader-mode.png)
+
 You can cycle through modes with F9, or select them directly from the View menu. You can also set your preferred default startup mode in View → Default Startup Mode. Editor and Writing modes have Focus Mode (dims everything except the paragraph you're in) and Typewriter Mode (keeps the cursor in the middle of the screen).
 
 The editor handles .md, .markdown, .txt, and .html files. You can open them through the file dialog, drag them into the window, double-click them in Explorer, navigate through the file tree sidebar, or pick from your recent files (Ctrl+1-9 for the last 10). Open entire workspace folders with Ctrl+K Ctrl+O to browse all your markdown files in the file tree.
+
+![File tree sidebar for workspace navigation](.github/screenshots/file-tree-sidebar.png)
+
+The outline sidebar (Ctrl+Shift+O) shows your document structure with clickable headers for quick navigation:
+
+![Outline sidebar showing document structure](.github/screenshots/outline-sidebar.png)
 
 Autosave works in intervals (1, 5, 15, or 30 minutes) if you want it. Status bar shows word/character/line counts.
 
@@ -17,6 +36,8 @@ Autosave works in intervals (1, 5, 15, or 30 minutes) if you want it. Status bar
 Every time you save, Nthing creates a backup in a `.nthing-history/` folder next to your file. It keeps up to 10 versions and uses MD5 hashing so it won't save duplicates.
 
 Press Ctrl+Shift+H to see your backup history. Click the eye icon next to any backup to compare it with your current file. The comparison window shows what changed - red means you'll lose that line if you restore, green means you'll get it back.
+
+![Backup comparison window with interactive restoration](.github/screenshots/backup-comparison.png)
 
 You can either restore the entire backup or just pick specific lines. Click the arrows next to green lines to select them, then hit "Finalize Restoration" when you're ready.
 
