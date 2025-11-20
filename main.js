@@ -740,6 +740,13 @@ function createMenu() {
           }
         },
         {
+          label: 'New Window',
+          accelerator: 'CmdOrCtrl+Shift+N',
+          click: () => {
+            createWindow();
+          }
+        },
+        {
           label: 'Open',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
@@ -1731,7 +1738,7 @@ if (process.platform === 'win32' || process.platform === 'linux') {
     const potentialFile = process.argv[process.argv.length - 1];
     // Check if it's a file path (not a flag or app path)
     if (potentialFile && !potentialFile.startsWith('-') && potentialFile !== '.' &&
-        (potentialFile.endsWith('.md') || potentialFile.endsWith('.markdown') || potentialFile.endsWith('.txt'))) {
+        (potentialFile.endsWith('.md') || potentialFile.endsWith('.markdown') || potentialFile.endsWith('.txt') || potentialFile.endsWith('.html'))) {
       filePathToOpen = potentialFile;
     }
   }
@@ -1748,7 +1755,7 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // When user double-clicks another .md file, open it in a NEW window
     const filePath = commandLine[commandLine.length - 1];
-    if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt'))) {
+    if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt') || filePath.endsWith('.html'))) {
       // Open the new file in a new window
       createWindow(filePath);
     } else {
@@ -1839,6 +1846,7 @@ function showKeyboardShortcuts() {
     message: 'Nthing Keyboard Shortcuts',
     detail: `FILE:
 Ctrl+N - New file
+Ctrl+Shift+N - New window
 Ctrl+O - Open file
 Ctrl+1-9 - Open recent file (1 = most recent)
 Ctrl+S - Save file
