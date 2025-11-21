@@ -3,7 +3,7 @@
 Last Updated: 2025-11-21
 
 ## Project Overview
-Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.12.2 (feature/docx-viewer branch)
+Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.13.0
 
 ## GitHub Repository
 https://github.com/BahneGork/Nthing-editor
@@ -58,7 +58,7 @@ https://github.com/BahneGork/Nthing-editor
 
 ## Current Project State
 
-### Completed Features (v1.12.2)
+### Completed Features (v1.13.0)
 - ✅ Three view modes: Editor, Writing Focus, Reader
 - ✅ File tree sidebar (Ctrl+Shift+E)
 - ✅ Outline/TOC sidebar (Ctrl+Shift+O)
@@ -70,7 +70,7 @@ https://github.com/BahneGork/Nthing-editor
 - ✅ Recent files (Ctrl+1-9)
 - ✅ Workspace folder support
 - ✅ HTML file support
-- ✅ **Word document (.docx) viewer** - New in v1.12.2
+- ✅ **Word document (.docx) viewer** - New in v1.13.0
 - ✅ Resizable editor/preview panes
 - ✅ File tree tooltips for long filenames
 
@@ -202,7 +202,8 @@ The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's
 - Fixed outline and minimap to work with .docx content
 - Added file tree tooltips for long filenames
 - Multiple bug fixes (duplicate variables, missing UI elements)
-- Bumped version to 1.12.2
+- Merged feature/docx-viewer branch into main
+- Bumped version to 1.13.0
 
 ### 2025-11-20
 - Added screenshots to README
