@@ -36,9 +36,7 @@
   "build": {
     "appId": "com.nthing.app",
     "productName": "Nthing",
-    "asarUnpack": [
-      "node_modules/mammoth/**/*"
-    ],
+    "asar": false,
     "win": {
       "target": [
         {
