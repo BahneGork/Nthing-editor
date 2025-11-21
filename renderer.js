@@ -1169,9 +1169,8 @@ ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
   isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
   isDocxFile = isDocx || (filePath && filePath.toLowerCase().endsWith('.docx'));
 
-  // If .docx file, automatically switch to Reader mode and add docx-viewer class
+  // Check if this is a .docx or HTML file and add appropriate class
   if (isDocxFile) {
-    switchMode('reader');
     container.classList.add('docx-viewer');
     container.classList.remove('html-viewer');
     // Update pane title to show read-only status
@@ -1180,10 +1179,13 @@ ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
       paneTitle.textContent = 'Read-Only: Word Document';
     }
   } else if (isHtmlFile) {
-    // If HTML file, automatically switch to Reader mode and add html-viewer class
-    switchMode('reader');
     container.classList.add('html-viewer');
     container.classList.remove('docx-viewer');
+    // Update pane title
+    const paneTitle = document.querySelector('.preview-pane .pane-header .title');
+    if (paneTitle) {
+      paneTitle.textContent = 'HTML Preview';
+    }
   } else {
     container.classList.remove('html-viewer');
     container.classList.remove('docx-viewer');
