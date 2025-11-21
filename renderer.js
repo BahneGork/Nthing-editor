@@ -2297,25 +2297,51 @@ function updateMinimap() {
     return;
   }
 
-  // Don't render minimap for .docx files (base64 data isn't useful to visualize)
+  // For .docx files, visualize the preview HTML content instead of base64 data
   if (isDocxFile) {
     const canvas = minimapCanvas;
     const ctx = canvas.getContext('2d');
     const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, rect.width, rect.height);
 
-      // Show message that minimap isn't available for .docx
-      ctx.fillStyle = '#666';
-      ctx.font = '12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Not available for', rect.width / 2, rect.height / 2 - 10);
-      ctx.fillText('.docx files', rect.width / 2, rect.height / 2 + 10);
+    if (rect.width === 0 || rect.height === 0) {
+      return;
     }
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    // Extract text content from preview HTML
+    const previewText = preview.textContent || '';
+    const lines = previewText.split('\n').filter(line => line.trim().length > 0);
+    const totalLines = lines.length;
+
+    if (totalLines === 0) return;
+
+    // Calculate scale
+    const lineHeight = Math.max(1, rect.height / totalLines);
+    const maxLineHeight = 4;
+    const actualLineHeight = Math.min(lineHeight, maxLineHeight);
+    const contentHeight = totalLines * actualLineHeight;
+    const scale = rect.height / Math.max(contentHeight, rect.height);
+
+    // Draw lines as small blocks
+    ctx.fillStyle = '#333';
+
+    lines.forEach((line, index) => {
+      const y = index * actualLineHeight * scale;
+      const lineLength = line.trim().length;
+
+      if (lineLength > 0) {
+        const width = Math.min(rect.width - 4, (lineLength / 100) * rect.width);
+        ctx.fillRect(2, y, width, Math.max(1, actualLineHeight * scale * 0.8));
+      }
+    });
+
+    // Update viewport indicator
+    updateMinimapViewport();
     return;
   }
 
