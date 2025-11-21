@@ -1285,6 +1285,8 @@ function showOpenDialog(win) {
     properties: ['openFile'],
     filters: [
       { name: 'Markdown Files', extensions: ['md', 'markdown', 'txt'] },
+      { name: 'HTML Files', extensions: ['html'] },
+      { name: 'Word Documents', extensions: ['docx'] },
       { name: 'All Files', extensions: ['*'] }
     ]
   }).then(result => {
@@ -1357,12 +1359,25 @@ function openFileByPath(win, filePath) {
   if (!state) return;
 
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const ext = path.extname(filePath).toLowerCase();
+    let content;
+    let isDocx = false;
+
+    if (ext === '.docx') {
+      // Read .docx as binary buffer and convert to base64
+      const buffer = fs.readFileSync(filePath);
+      content = buffer.toString('base64');
+      isDocx = true;
+    } else {
+      // Read text files normally
+      content = fs.readFileSync(filePath, 'utf-8');
+    }
+
     state.currentFilePath = filePath;
     state.lastSaveTime = null; // Reset save time when opening file
     state.hasUnsavedChanges = false; // Reset unsaved changes flag
     addToRecentFiles(filePath);
-    win.webContents.send('file-opened', { content, filePath });
+    win.webContents.send('file-opened', { content, filePath, isDocx });
     updateWindowTitle(win, false); // File just opened, not unsaved
   } catch (err) {
     dialog.showMessageBox(win, {
@@ -1421,7 +1436,7 @@ const ignoredFolders = [
 ];
 
 // Accepted file extensions
-const acceptedExtensions = ['.md', '.markdown', '.txt', '.html'];
+const acceptedExtensions = ['.md', '.markdown', '.txt', '.html', '.docx'];
 
 // Check if file should be included
 function isAcceptedFile(filename) {

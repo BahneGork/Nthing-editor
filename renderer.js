@@ -20,6 +20,7 @@
 
 const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
+const mammoth = require('mammoth');
 
 // ==========================================
 // DOM Element References
@@ -161,6 +162,7 @@ let focusModeEnabled = false; // Focus mode state - dims non-active lines
 let currentActiveLine = null; // Track the currently active line for focus mode
 let typewriterModeEnabled = false; // Typewriter mode state - keeps cursor vertically centered
 let isHtmlFile = false; // Track if current file is HTML
+let isDocxFile = false; // Track if current file is .docx
 
 // Configure marked options
 marked.setOptions({
@@ -591,7 +593,42 @@ if (savedPreviewPref !== null) {
 }
 
 function updatePreview() {
-  if (isHtmlFile) {
+  if (isDocxFile) {
+    // For .docx files, convert using mammoth.js
+    try {
+      // Show loading indicator
+      preview.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Loading document...</div>';
+
+      // Convert base64 back to buffer
+      const base64Data = editor.value;
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      // Convert .docx to HTML
+      mammoth.convertToHtml({ buffer: buffer })
+        .then(result => {
+          preview.innerHTML = result.value;
+
+          // Log warnings if any
+          if (result.messages.length > 0) {
+            console.warn('Mammoth conversion warnings:', result.messages);
+          }
+        })
+        .catch(err => {
+          preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
+            <h3>Error Loading Document</h3>
+            <p>${err.message}</p>
+            <p style="font-size: 0.9em; color: #666;">The file may be corrupted, password-protected, or in an unsupported format.</p>
+          </div>`;
+          console.error('Failed to convert .docx:', err);
+        });
+    } catch (err) {
+      preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
+        <h3>Error Processing Document</h3>
+        <p>${err.message}</p>
+      </div>`;
+      console.error('Failed to process .docx:', err);
+    }
+  } else if (isHtmlFile) {
     // For HTML files, render directly in an iframe for proper sandboxing
     const htmlContent = editor.value;
     preview.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" style="width: 100%; height: 100%; border: none; background: white;"></iframe>`;
@@ -1106,7 +1143,7 @@ if (savedFormattingPref !== null) {
 }
 
 // Listen for file opened
-ipcRenderer.on('file-opened', (event, { content, filePath }) => {
+ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
   editor.value = content;
   currentFilePath = filePath;
   contentChangedSinceLastSave = false; // Reset unsaved flag
@@ -1136,15 +1173,33 @@ ipcRenderer.on('file-opened', (event, { content, filePath }) => {
     }
   }
 
-  // Check if this is an HTML file
+  // Check if this is an HTML file or .docx file
   isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
+  isDocxFile = isDocx || (filePath && filePath.toLowerCase().endsWith('.docx'));
 
-  // If HTML file, automatically switch to Reader mode and add html-viewer class
-  if (isHtmlFile) {
+  // If .docx file, automatically switch to Reader mode and add docx-viewer class
+  if (isDocxFile) {
+    switchMode('reader');
+    container.classList.add('docx-viewer');
+    container.classList.remove('html-viewer');
+    // Update pane title to show read-only status
+    const paneTitle = document.querySelector('.preview-pane .pane-header .title');
+    if (paneTitle) {
+      paneTitle.textContent = 'Read-Only: Word Document';
+    }
+  } else if (isHtmlFile) {
+    // If HTML file, automatically switch to Reader mode and add html-viewer class
     switchMode('reader');
     container.classList.add('html-viewer');
+    container.classList.remove('docx-viewer');
   } else {
     container.classList.remove('html-viewer');
+    container.classList.remove('docx-viewer');
+    // Reset pane title to default
+    const paneTitle = document.querySelector('.preview-pane .pane-header .title');
+    if (paneTitle) {
+      paneTitle.textContent = 'Preview';
+    }
   }
 
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)
@@ -1174,7 +1229,14 @@ ipcRenderer.on('new-file', () => {
   editor.value = '';
   currentFilePath = null;
   isHtmlFile = false; // Reset HTML file flag
+  isDocxFile = false; // Reset .docx file flag
   container.classList.remove('html-viewer'); // Remove HTML viewer styling
+  container.classList.remove('docx-viewer'); // Remove .docx viewer styling
+  // Reset pane title to default
+  const paneTitle = document.querySelector('.preview-pane .pane-header .title');
+  if (paneTitle) {
+    paneTitle.textContent = 'Preview';
+  }
   contentChangedSinceLastSave = false; // Reset unsaved flag for new file
 
   // CRITICAL: Update CodeMirror view if active (Show Formatting enabled)

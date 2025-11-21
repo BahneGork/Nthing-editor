@@ -26,6 +26,7 @@
     "@codemirror/lang-markdown": "^6.2.4",
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.23.0",
+    "mammoth": "^1.6.0",
     "marked": "^11.0.0"
   },
   "devDependencies": {
@@ -64,6 +65,13 @@
           "ext": "html",
           "name": "HTML File",
           "description": "HTML Document",
+          "role": "Viewer",
+          "icon": "Nthing.ico"
+        },
+        {
+          "ext": "docx",
+          "name": "Word Document",
+          "description": "Microsoft Word Document",
           "role": "Viewer",
           "icon": "Nthing.ico"
         }
