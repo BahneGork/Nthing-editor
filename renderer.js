@@ -2319,16 +2319,6 @@ function updateMinimap() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Extract text from each block-level element in the preview (avoid divs to prevent nesting issues)
-    const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li');
-    const lines = Array.from(blockElements)
-      .map(el => el.textContent.trim())
-      .filter(text => text.length > 0);
-
-    const totalLines = lines.length;
-
-    if (totalLines === 0) return;
-
     // Get the preview scroll height to scale properly
     const previewScrollHeight = preview.scrollHeight;
     const scale = rect.height / previewScrollHeight;
@@ -2337,6 +2327,8 @@ function updateMinimap() {
     ctx.fillStyle = '#333';
 
     const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li');
+    if (blockElements.length === 0) return;
+
     Array.from(blockElements).forEach((element) => {
       const text = element.textContent.trim();
       if (text.length === 0) return;
