@@ -593,8 +593,33 @@ if (savedPreviewPref !== null) {
 
 function updatePreview() {
   if (isDocxFile) {
-    // For .docx files, display the HTML that was converted by main process
-    preview.innerHTML = editor.value;
+    // For .docx files, convert using mammoth.js browser build
+    const base64Data = editor.value;
+
+    // Convert base64 to ArrayBuffer for mammoth
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Convert .docx to HTML using mammoth browser API
+    mammoth.convertToHtml({ arrayBuffer: bytes.buffer })
+      .then(result => {
+        preview.innerHTML = result.value;
+
+        // Log warnings if any
+        if (result.messages.length > 0) {
+          console.warn('Mammoth conversion warnings:', result.messages);
+        }
+      })
+      .catch(err => {
+        preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
+          <h3>Error Loading Document</h3>
+          <p>${err.message}</p>
+        </div>`;
+        console.error('Failed to convert .docx:', err);
+      });
   } else if (isHtmlFile) {
     // For HTML files, render directly in an iframe for proper sandboxing
     const htmlContent = editor.value;

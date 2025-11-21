@@ -18,7 +18,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const mammoth = require('mammoth');
 
 // ==========================================
 // Global State
@@ -1359,66 +1358,34 @@ function openFileByPath(win, filePath) {
   const state = getWindowState(win);
   if (!state) return;
 
-  const ext = path.extname(filePath).toLowerCase();
+  try {
+    const ext = path.extname(filePath).toLowerCase();
+    let content;
+    let isDocx = false;
 
-  if (ext === '.docx') {
-    // Handle .docx files: convert to HTML in main process
-    try {
+    if (ext === '.docx') {
+      // Read .docx as binary buffer and convert to base64
       const buffer = fs.readFileSync(filePath);
-
-      mammoth.convertToHtml({ buffer: buffer })
-        .then(result => {
-          // Send the converted HTML to renderer
-          state.currentFilePath = filePath;
-          state.lastSaveTime = null;
-          state.hasUnsavedChanges = false;
-          addToRecentFiles(filePath);
-          win.webContents.send('file-opened', {
-            content: result.value,
-            filePath,
-            isDocx: true
-          });
-          updateWindowTitle(win, false);
-
-          // Log any conversion warnings
-          if (result.messages.length > 0) {
-            console.warn('Mammoth conversion warnings:', result.messages);
-          }
-        })
-        .catch(err => {
-          dialog.showMessageBox(win, {
-            type: 'error',
-            title: 'Error Converting Document',
-            message: `Could not convert .docx file: ${err.message}`,
-            buttons: ['OK']
-          });
-        });
-    } catch (err) {
-      dialog.showMessageBox(win, {
-        type: 'error',
-        title: 'Error Opening File',
-        message: `Could not open file: ${err.message}`,
-        buttons: ['OK']
-      });
+      content = buffer.toString('base64');
+      isDocx = true;
+    } else {
+      // Read text files normally
+      content = fs.readFileSync(filePath, 'utf-8');
     }
-  } else {
-    // Handle text files (markdown, html, txt)
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      state.currentFilePath = filePath;
-      state.lastSaveTime = null;
-      state.hasUnsavedChanges = false;
-      addToRecentFiles(filePath);
-      win.webContents.send('file-opened', { content, filePath, isDocx: false });
-      updateWindowTitle(win, false);
-    } catch (err) {
-      dialog.showMessageBox(win, {
-        type: 'error',
-        title: 'Error Opening File',
-        message: `Could not open file: ${err.message}`,
-        buttons: ['OK']
-      });
-    }
+
+    state.currentFilePath = filePath;
+    state.lastSaveTime = null;
+    state.hasUnsavedChanges = false;
+    addToRecentFiles(filePath);
+    win.webContents.send('file-opened', { content, filePath, isDocx });
+    updateWindowTitle(win, false);
+  } catch (err) {
+    dialog.showMessageBox(win, {
+      type: 'error',
+      title: 'Error Opening File',
+      message: `Could not open file: ${err.message}`,
+      buttons: ['OK']
+    });
   }
 }
 
