@@ -1,9 +1,9 @@
 # Nthing Editor - Project Memory
 
-Last Updated: 2025-11-20
+Last Updated: 2025-11-21
 
 ## Project Overview
-Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.12.0
+Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.12.2 (feature/docx-viewer branch)
 
 ## GitHub Repository
 https://github.com/BahneGork/Nthing-editor
@@ -14,42 +14,51 @@ https://github.com/BahneGork/Nthing-editor
 - Expires: December 20, 2025
 - Token value: (stored in ~/.github_token file, not in version control)
 
-## Recent Session Work (2025-11-20)
+## Recent Session Work (2025-11-21)
 
 ### Completed
-1. ✅ Added screenshots to README
-   - Created `.github/screenshots/` directory
-   - Added 7 screenshots: hero-image, editor-mode, writing-mode, reader-mode, backup-comparison, file-tree-sidebar, outline-sidebar
-   - Created SCREENSHOTS-GUIDE.md for future reference
-   - Committed and pushed to GitHub
+1. ✅ Implemented .docx File Viewer Support
+   - Added mammoth.browser.min.js (standalone browser build) to project root
+   - Modified renderer.js to convert .docx files to HTML using mammoth
+   - Files are read as base64 in main process, converted to HTML in renderer
+   - Auto-switches to reader mode when opening .docx files
+   - Added .docx file associations for Windows double-click opening
 
-2. ✅ Updated Roadmap and Bug Tracking
-   - Marked completed bugs as fixed (file mixing bug, draggable separator)
-   - Added sidebar organization features to roadmap
-   - Updated GITHUB_ISSUES.md with new issue templates
+2. ✅ Fixed Multiple UI and Functionality Issues
+   - Fixed missing .title span in preview pane header (index.html:166)
+   - Fixed reader mode startup issue (prevented reader as default mode)
+   - Fixed file association command line argument parsing
+   - Fixed duplicate variable declaration causing menu unresponsiveness
+   - Fixed outline parsing to work with .docx HTML content
+   - Fixed minimap to visualize .docx content using element positions
 
-3. ✅ GitHub Issues Management
-   - Compared roadmap with existing GitHub issues
-   - Created 5 new issues:
-     - #15: Smart Formatting Wrapping
-     - #16: Move Lines with Keyboard
-     - #18: File Tree Enhancements
-     - #19: Left Sidebar Organization
-     - #20: Right Sidebar Organization
-   - All roadmap items now have corresponding GitHub issues
+3. ✅ Enhanced File Tree
+   - Added tooltips showing full file paths on hover
+   - Improves usability for long filenames that get truncated
+
+### Technical Decisions Made
+- **Mammoth Integration**: Used browser build (mammoth.browser.min.js) instead of npm package
+  - Node modules can be problematic in packaged Electron apps
+  - Browser build loaded via script tag is more reliable
+- **Base64 Transfer**: .docx files read as binary buffer in main process, sent as base64 to renderer
+- **Reader Mode Auto-Switch**: .docx files automatically switch to reader mode to hide base64 data
+- **Startup Mode**: Never allow reader mode as default startup (hides all controls when no file open)
 
 ### Files Modified This Session
-- `README.md` - Added screenshot references
-- `Roadmap.md` - Added sidebar organization and keyboard shortcuts
-- `Bugs and features.md` - Marked fixed issues
-- `GITHUB_ISSUES.md` - Added new issue templates
-- `.github/SCREENSHOTS-GUIDE.md` - Created screenshot guide
-- `.github/screenshots/` - Added 7 screenshot files
+- `index.html` - Added .title span wrapper, added mammoth.browser.min.js script tag
+- `main.js` - Fixed startup mode logic, added .docx to file associations
+- `renderer.js` - Mammoth integration, outline/minimap updates for .docx
+- `package.json` - Removed mammoth npm dependency, added .docx file association
+- `mammoth.browser.min.js` - Added standalone browser library (621KB)
 - `PROJECT_MEMORY.md` - This file
+
+### Known Issues from This Session
+- Minimap visualization for .docx files works but user is "not satisfied" with density/accuracy
+- Functional but could be improved in future iterations
 
 ## Current Project State
 
-### Completed Features (v1.12.0)
+### Completed Features (v1.12.2)
 - ✅ Three view modes: Editor, Writing Focus, Reader
 - ✅ File tree sidebar (Ctrl+Shift+E)
 - ✅ Outline/TOC sidebar (Ctrl+Shift+O)
@@ -61,7 +70,9 @@ https://github.com/BahneGork/Nthing-editor
 - ✅ Recent files (Ctrl+1-9)
 - ✅ Workspace folder support
 - ✅ HTML file support
+- ✅ **Word document (.docx) viewer** - New in v1.12.2
 - ✅ Resizable editor/preview panes
+- ✅ File tree tooltips for long filenames
 
 ### Open GitHub Issues (11 total)
 
@@ -98,6 +109,7 @@ https://github.com/BahneGork/Nthing-editor
 - marked.js (markdown parsing)
 - CodeMirror 6 (text editor in Writing Focus mode)
 - highlight.js (code syntax highlighting)
+- mammoth.browser.min.js (Word document conversion - standalone browser build)
 - Node.js crypto module (MD5 for backup deduplication)
 
 ## Important Files
@@ -156,7 +168,8 @@ npm run build:portable # Create portable exe
 - Some modules need `asarUnpack` configuration to work in packaged apps
 - Test in built exe, not just development mode
 - Add to `asarUnpack` in package.json if module has runtime file access needs
-- Current unpacked modules: mammoth (for .docx conversion)
+- **Lesson learned**: Browser builds (loaded via script tag) are more reliable than npm packages for complex modules
+- Example: mammoth.browser.min.js works perfectly; npm mammoth package had packaging issues
 
 ## Windows Defender False Positive
 The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's unsigned. This is expected for unsigned Electron apps. Code signing certificates cost $100-400/year.
@@ -181,6 +194,15 @@ The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's
 ---
 
 ## Session History
+
+### 2025-11-21
+- Implemented .docx file viewer using mammoth.browser.min.js
+- Fixed reader mode startup issue
+- Added .docx file associations for Windows
+- Fixed outline and minimap to work with .docx content
+- Added file tree tooltips for long filenames
+- Multiple bug fixes (duplicate variables, missing UI elements)
+- Bumped version to 1.12.2
 
 ### 2025-11-20
 - Added screenshots to README
