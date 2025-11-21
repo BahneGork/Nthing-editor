@@ -594,6 +594,15 @@ if (savedPreviewPref !== null) {
 function updatePreview() {
   if (isDocxFile) {
     // For .docx files, convert using mammoth.js browser build
+    if (typeof mammoth === 'undefined') {
+      preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
+        <h3>Error: Mammoth.js Not Loaded</h3>
+        <p>The .docx converter library failed to load. Please restart the application.</p>
+      </div>`;
+      console.error('Mammoth.js library not found');
+      return;
+    }
+
     const base64Data = editor.value;
 
     // Convert base64 to ArrayBuffer for mammoth
@@ -862,7 +871,10 @@ ipcRenderer.on('toggle-mode', () => {
 
 // Listen for initial mode setting from main process
 ipcRenderer.on('set-initial-mode', (event, mode) => {
-  switchMode(mode);
+  // Validate mode is one of the allowed values
+  const validModes = ['editor', 'writing', 'reader'];
+  const safeMode = validModes.includes(mode) ? mode : 'editor';
+  switchMode(safeMode);
 });
 
 // Listen for reader mode margins setting from main process
