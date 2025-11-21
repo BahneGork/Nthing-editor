@@ -1890,7 +1890,7 @@ if (process.platform === 'win32' || process.platform === 'linux') {
     const potentialFile = process.argv[process.argv.length - 1];
     // Check if it's a file path (not a flag or app path)
     if (potentialFile && !potentialFile.startsWith('-') && potentialFile !== '.' &&
-        (potentialFile.endsWith('.md') || potentialFile.endsWith('.markdown') || potentialFile.endsWith('.txt') || potentialFile.endsWith('.html'))) {
+        (potentialFile.endsWith('.md') || potentialFile.endsWith('.markdown') || potentialFile.endsWith('.txt') || potentialFile.endsWith('.html') || potentialFile.endsWith('.docx'))) {
       filePathToOpen = potentialFile;
     }
   }
@@ -1905,9 +1905,9 @@ if (!gotTheLock) {
 } else {
   // This is the first instance - listen for second instance events
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // When user double-clicks another .md file, open it in a NEW window
+    // When user double-clicks another file, open it in a NEW window
     const filePath = commandLine[commandLine.length - 1];
-    if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt') || filePath.endsWith('.html'))) {
+    if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown') || filePath.endsWith('.txt') || filePath.endsWith('.html') || filePath.endsWith('.docx'))) {
       // Open the new file in a new window
       createWindow(filePath);
     } else {
