@@ -2319,8 +2319,8 @@ function updateMinimap() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Extract text from each block-level element in the preview
-    const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, div');
+    // Extract text from each block-level element in the preview (avoid divs to prevent nesting issues)
+    const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li');
     const lines = Array.from(blockElements)
       .map(el => el.textContent.trim())
       .filter(text => text.length > 0);
@@ -2329,23 +2329,22 @@ function updateMinimap() {
 
     if (totalLines === 0) return;
 
-    // Calculate scale
-    const lineHeight = Math.max(1, rect.height / totalLines);
-    const maxLineHeight = 4;
-    const actualLineHeight = Math.min(lineHeight, maxLineHeight);
-    const contentHeight = totalLines * actualLineHeight;
-    const scale = rect.height / Math.max(contentHeight, rect.height);
+    // Calculate how much vertical space each line should occupy
+    const lineSpacing = rect.height / totalLines;
+    const lineHeight = Math.min(lineSpacing, 3); // Cap at 3px tall
 
     // Draw lines as small blocks
     ctx.fillStyle = '#333';
 
     lines.forEach((line, index) => {
-      const y = index * actualLineHeight * scale;
+      // Evenly distribute lines across the full height
+      const y = (index / totalLines) * rect.height;
       const lineLength = line.length;
 
       if (lineLength > 0) {
-        const width = Math.min(rect.width - 4, (lineLength / 100) * rect.width);
-        ctx.fillRect(2, y, width, Math.max(1, actualLineHeight * scale * 0.8));
+        // Width based on line length
+        const width = Math.min(rect.width - 4, (lineLength / 80) * rect.width);
+        ctx.fillRect(2, y, width, lineHeight);
       }
     });
 
