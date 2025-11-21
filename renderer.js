@@ -2297,6 +2297,28 @@ function updateMinimap() {
     return;
   }
 
+  // Don't render minimap for .docx files (base64 data isn't useful to visualize)
+  if (isDocxFile) {
+    const canvas = minimapCanvas;
+    const ctx = canvas.getContext('2d');
+    const rect = document.querySelector('.minimap-sidebar-content').getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      // Show message that minimap isn't available for .docx
+      ctx.fillStyle = '#666';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Not available for', rect.width / 2, rect.height / 2 - 10);
+      ctx.fillText('.docx files', rect.width / 2, rect.height / 2 + 10);
+    }
+    return;
+  }
+
   const canvas = minimapCanvas;
   const ctx = canvas.getContext('2d');
 
@@ -2566,16 +2588,28 @@ function parseHeaders(content) {
 
 // Update the outline list
 function updateOutline() {
-  // Get current content
-  let content = '';
-  if (currentMode === 'writing' && showFormatting && codemirrorView) {
-    content = codemirrorView.state.doc.toString();
-  } else {
-    content = editor.value;
-  }
+  let headers = [];
 
-  // Parse headers
-  const headers = parseHeaders(content);
+  // For .docx files, parse headers from HTML preview instead of editor content
+  if (isDocxFile) {
+    const previewHeaders = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    headers = Array.from(previewHeaders).map((heading, index) => ({
+      level: parseInt(heading.tagName.substring(1)), // h1 -> 1, h2 -> 2, etc.
+      text: heading.textContent.trim(),
+      lineIndex: 0, // Not applicable for .docx
+      headerIndex: index
+    }));
+  } else {
+    // For markdown/text files, parse headers from editor content
+    let content = '';
+    if (currentMode === 'writing' && showFormatting && codemirrorView) {
+      content = codemirrorView.state.doc.toString();
+    } else {
+      content = editor.value;
+    }
+
+    headers = parseHeaders(content);
+  }
 
   // Clear outline list
   outlineList.innerHTML = '';
@@ -2848,6 +2882,9 @@ function renderFileTree(tree, parentElement, level = 0) {
       name.textContent = ` 📁 ${item.name}`;
       folderDiv.appendChild(name);
 
+      // Add tooltip with full path
+      folderDiv.title = item.path;
+
       // Click to expand/collapse
       folderDiv.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2879,6 +2916,9 @@ function renderFileTree(tree, parentElement, level = 0) {
       const name = document.createElement('span');
       name.textContent = ` ${item.name}`;
       fileDiv.appendChild(name);
+
+      // Add tooltip with full path
+      fileDiv.title = item.path;
 
       // Highlight current file
       if (currentFilePath && item.path === currentFilePath) {
