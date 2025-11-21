@@ -621,6 +621,12 @@ function updatePreview() {
         if (result.messages.length > 0) {
           console.warn('Mammoth conversion warnings:', result.messages);
         }
+
+        // Update outline and minimap after content is loaded
+        updateOutline();
+        if (minimapEnabled) {
+          updateMinimap();
+        }
       })
       .catch(err => {
         preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
