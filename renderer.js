@@ -2329,21 +2329,26 @@ function updateMinimap() {
 
     if (totalLines === 0) return;
 
-    // Draw lines as small blocks (use thin lines for better appearance)
+    // Get the preview scroll height to scale properly
+    const previewScrollHeight = preview.scrollHeight;
+    const scale = rect.height / previewScrollHeight;
+
+    // Draw lines based on actual position in preview
     ctx.fillStyle = '#333';
 
-    lines.forEach((line, index) => {
-      // Evenly distribute lines across the full height
-      const y = (index / totalLines) * rect.height;
-      const lineLength = line.length;
+    const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li');
+    Array.from(blockElements).forEach((element) => {
+      const text = element.textContent.trim();
+      if (text.length === 0) return;
 
-      if (lineLength > 0) {
-        // Width based on line length
-        const width = Math.min(rect.width - 4, (lineLength / 80) * rect.width);
-        // Use 1-2px height for thin, clean lines
-        const lineHeight = totalLines > 200 ? 1 : 2;
-        ctx.fillRect(2, y, width, lineHeight);
-      }
+      // Get actual Y position of element in preview
+      const elementY = element.offsetTop;
+      const y = elementY * scale;
+
+      // Width based on line length
+      const width = Math.min(rect.width - 4, (text.length / 80) * rect.width);
+      // Use consistent 2px height
+      ctx.fillRect(2, y, width, 2);
     });
 
     // Update viewport indicator
