@@ -2319,9 +2319,12 @@ function updateMinimap() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Extract text content from preview HTML
-    const previewText = preview.textContent || '';
-    const lines = previewText.split('\n').filter(line => line.trim().length > 0);
+    // Extract text from each block-level element in the preview
+    const blockElements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, div');
+    const lines = Array.from(blockElements)
+      .map(el => el.textContent.trim())
+      .filter(text => text.length > 0);
+
     const totalLines = lines.length;
 
     if (totalLines === 0) return;
@@ -2338,7 +2341,7 @@ function updateMinimap() {
 
     lines.forEach((line, index) => {
       const y = index * actualLineHeight * scale;
-      const lineLength = line.trim().length;
+      const lineLength = line.length;
 
       if (lineLength > 0) {
         const width = Math.min(rect.width - 4, (lineLength / 100) * rect.width);
