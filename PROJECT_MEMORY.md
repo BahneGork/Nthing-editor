@@ -143,12 +143,20 @@ npm run build:portable # Create portable exe
 **IMPORTANT: We work in WSL but test in Windows**
 - ⚠️ **DO NOT** run `npm start` or test locally in WSL (missing dependencies)
 - ✅ **ALWAYS** commit and push changes to GitHub
-- ✅ User tests in Windows environment
+- ✅ User tests in Windows environment using built exe
 - Development cycle:
   1. Make code changes in WSL
   2. Commit changes with descriptive message
   3. Push to remote repository
-  4. User pulls and tests in Windows
+  4. User pulls, runs `npm run build`, and tests the built exe in Windows
+
+## Electron Packaging Considerations
+**CRITICAL: When adding new Node modules**
+- Always consider how electron-builder will package the module
+- Some modules need `asarUnpack` configuration to work in packaged apps
+- Test in built exe, not just development mode
+- Add to `asarUnpack` in package.json if module has runtime file access needs
+- Current unpacked modules: mammoth (for .docx conversion)
 
 ## Windows Defender False Positive
 The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's unsigned. This is expected for unsigned Electron apps. Code signing certificates cost $100-400/year.
