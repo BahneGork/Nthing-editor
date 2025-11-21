@@ -20,7 +20,6 @@
 
 const { ipcRenderer, shell } = require('electron');
 const { marked } = require('marked');
-const mammoth = require('mammoth');
 
 // ==========================================
 // DOM Element References
@@ -594,40 +593,8 @@ if (savedPreviewPref !== null) {
 
 function updatePreview() {
   if (isDocxFile) {
-    // For .docx files, convert using mammoth.js
-    try {
-      // Show loading indicator
-      preview.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Loading document...</div>';
-
-      // Convert base64 back to buffer
-      const base64Data = editor.value;
-      const buffer = Buffer.from(base64Data, 'base64');
-
-      // Convert .docx to HTML
-      mammoth.convertToHtml({ buffer: buffer })
-        .then(result => {
-          preview.innerHTML = result.value;
-
-          // Log warnings if any
-          if (result.messages.length > 0) {
-            console.warn('Mammoth conversion warnings:', result.messages);
-          }
-        })
-        .catch(err => {
-          preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
-            <h3>Error Loading Document</h3>
-            <p>${err.message}</p>
-            <p style="font-size: 0.9em; color: #666;">The file may be corrupted, password-protected, or in an unsupported format.</p>
-          </div>`;
-          console.error('Failed to convert .docx:', err);
-        });
-    } catch (err) {
-      preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
-        <h3>Error Processing Document</h3>
-        <p>${err.message}</p>
-      </div>`;
-      console.error('Failed to process .docx:', err);
-    }
+    // For .docx files, display the HTML that was converted by main process
+    preview.innerHTML = editor.value;
   } else if (isHtmlFile) {
     // For HTML files, render directly in an iframe for proper sandboxing
     const htmlContent = editor.value;
