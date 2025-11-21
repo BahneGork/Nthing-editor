@@ -2329,11 +2329,7 @@ function updateMinimap() {
 
     if (totalLines === 0) return;
 
-    // Calculate how much vertical space each line should occupy
-    const lineSpacing = rect.height / totalLines;
-    const lineHeight = Math.min(lineSpacing, 3); // Cap at 3px tall
-
-    // Draw lines as small blocks
+    // Draw lines as small blocks (use thin lines for better appearance)
     ctx.fillStyle = '#333';
 
     lines.forEach((line, index) => {
@@ -2344,6 +2340,8 @@ function updateMinimap() {
       if (lineLength > 0) {
         // Width based on line length
         const width = Math.min(rect.width - 4, (lineLength / 80) * rect.width);
+        // Use 1-2px height for thin, clean lines
+        const lineHeight = totalLines > 200 ? 1 : 2;
         ctx.fillRect(2, y, width, lineHeight);
       }
     });
