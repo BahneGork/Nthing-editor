@@ -1183,6 +1183,8 @@ ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
 
   // Check if this is a .docx or HTML file and add appropriate class
   if (isDocxFile) {
+    // Auto-switch to reader mode for .docx files (no editing base64 data)
+    switchMode('reader');
     container.classList.add('docx-viewer');
     container.classList.remove('html-viewer');
     // Update pane title to show read-only status
