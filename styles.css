@@ -289,6 +289,9 @@ body {
   min-width: 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  white-space: pre-wrap; /* Preserve whitespace but allow wrapping */
+  word-wrap: break-word; /* Break long words if needed */
+  overflow-wrap: break-word; /* Modern browsers */
 }
 
 /* Hide scrollbar on editor - Webkit browsers */
