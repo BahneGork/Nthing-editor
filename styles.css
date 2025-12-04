@@ -628,6 +628,9 @@ body {
   border-radius: 4px;
   overflow-x: auto;
   margin: 1em 0;
+  white-space: pre-wrap; /* Preserve whitespace but allow wrapping */
+  word-wrap: break-word; /* Break long words if needed */
+  overflow-wrap: break-word; /* Modern browsers */
 }
 
 #preview pre code {
