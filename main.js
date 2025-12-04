@@ -230,12 +230,8 @@ function loadSettings() {
       }
 
       // Load startup mode setting
-      // IMPORTANT: Never start in reader mode with no file - it hides everything
-      if (settings.defaultStartupMode && settings.defaultStartupMode !== 'reader') {
+      if (settings.defaultStartupMode) {
         defaultStartupMode = settings.defaultStartupMode;
-      } else if (settings.defaultStartupMode === 'reader') {
-        // If saved as reader, use editor mode instead on startup
-        defaultStartupMode = 'editor';
       }
 
       // Load reader mode margins setting
