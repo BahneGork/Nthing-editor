@@ -64,6 +64,63 @@
     </div>
   </div>
 
+  <!-- Print Settings Dialog -->
+  <div id="print-settings-dialog" class="dialog hidden">
+    <div class="dialog-header">
+      <span id="print-dialog-title">Print Settings</span>
+      <button id="close-print-dialog" class="close-btn">&times;</button>
+    </div>
+    <div class="dialog-content">
+      <div class="input-group">
+        <label for="print-content-type">Content:</label>
+        <select id="print-content-type">
+          <option value="rendered">Rendered Markdown</option>
+          <option value="raw">Raw Markdown</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="print-paper-size">Paper Size:</label>
+        <select id="print-paper-size">
+          <option value="Letter">Letter (8.5 x 11 in)</option>
+          <option value="A4">A4 (210 x 297 mm)</option>
+          <option value="Legal">Legal (8.5 x 14 in)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="print-orientation">Orientation:</label>
+        <select id="print-orientation">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="print-margins">Margins:</label>
+        <select id="print-margins">
+          <option value="none">None</option>
+          <option value="narrow">Narrow (0.5 in)</option>
+          <option value="normal">Normal (1 in)</option>
+          <option value="wide">Wide (1.5 in)</option>
+        </select>
+      </div>
+      <div class="dialog-options">
+        <label>
+          <input type="checkbox" id="print-header-footer">
+          Include header & footer
+        </label>
+        <label>
+          <input type="checkbox" id="print-line-numbers">
+          Include line numbers (raw markdown only)
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button id="print-preview-btn" class="primary-btn">Print Preview</button>
+        <button id="print-btn" class="primary-btn">Print</button>
+        <button id="print-to-pdf-btn">Save as PDF</button>
+        <button id="cancel-print-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Note Backups Sidebar -->
   <div id="version-history-sidebar" class="version-sidebar hidden">
     <div class="version-sidebar-header">

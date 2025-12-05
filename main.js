@@ -786,6 +786,43 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Print',
+          submenu: [
+            {
+              label: 'Print Settings...',
+              click: () => {
+                const win = BrowserWindow.getFocusedWindow();
+                if (win) win.webContents.send('show-print-settings');
+              }
+            },
+            {
+              label: 'Print Preview',
+              accelerator: 'CmdOrCtrl+P',
+              click: () => {
+                const win = BrowserWindow.getFocusedWindow();
+                if (win) win.webContents.send('show-print-preview');
+              }
+            },
+            {
+              label: 'Print Raw Markdown',
+              accelerator: 'CmdOrCtrl+Shift+P',
+              click: () => {
+                const win = BrowserWindow.getFocusedWindow();
+                if (win) win.webContents.send('print-raw-markdown');
+              }
+            },
+            {
+              label: 'Print to PDF...',
+              accelerator: 'CmdOrCtrl+Alt+P',
+              click: () => {
+                const win = BrowserWindow.getFocusedWindow();
+                if (win) win.webContents.send('print-to-pdf');
+              }
+            }
+          ]
+        },
+        { type: 'separator' },
+        {
           label: 'Autosave',
           submenu: [
             {
@@ -1823,6 +1860,105 @@ ipcMain.on('open-file-from-tree', (event, filePath) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (win) openFileByPath(win, filePath);
 });
+
+// Print IPC handlers
+ipcMain.on('print-document', (event, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
+  // Configure print options
+  const printOptions = {
+    silent: false,
+    printBackground: true,
+    color: true,
+    margins: convertMarginsToElectron(options.margins || 'normal'),
+    landscape: options.orientation === 'landscape',
+    scaleFactor: 100,
+    pagesPerSheet: 1,
+    collate: true,
+    copies: 1,
+    pageSize: options.paperSize || 'Letter'
+  };
+
+  win.webContents.print(printOptions, (success, failureReason) => {
+    if (!success) {
+      console.error('Print failed:', failureReason);
+      dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Print Failed',
+        message: `Could not print: ${failureReason}`,
+        buttons: ['OK']
+      });
+    }
+  });
+});
+
+ipcMain.on('print-to-pdf', async (event, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
+  try {
+    // Show save dialog
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Save as PDF',
+      defaultPath: 'document.pdf',
+      filters: [
+        { name: 'PDF Files', extensions: ['pdf'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) return;
+
+    // Configure PDF options
+    const pdfOptions = {
+      printBackground: true,
+      landscape: options.orientation === 'landscape',
+      pageSize: options.paperSize || 'Letter',
+      margins: convertMarginsToElectron(options.margins || 'normal'),
+      displayHeaderFooter: options.headerFooter || false,
+      headerTemplate: options.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="title"></span></div>' : '',
+      footerTemplate: options.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>' : ''
+    };
+
+    const data = await win.webContents.printToPDF(pdfOptions);
+    fs.writeFileSync(result.filePath, data);
+
+    event.sender.send('pdf-saved', result.filePath);
+
+    // Show success message
+    const response = await dialog.showMessageBox(win, {
+      type: 'info',
+      title: 'PDF Saved',
+      message: 'PDF file saved successfully!',
+      detail: result.filePath,
+      buttons: ['OK', 'Open File Location']
+    });
+
+    if (response.response === 1) {
+      // Open file location
+      shell.showItemInFolder(result.filePath);
+    }
+  } catch (err) {
+    console.error('Error saving PDF:', err);
+    dialog.showMessageBox(win, {
+      type: 'error',
+      title: 'Error Saving PDF',
+      message: `Could not save PDF: ${err.message}`,
+      buttons: ['OK']
+    });
+  }
+});
+
+// Helper function to convert margin names to Electron format
+function convertMarginsToElectron(marginType) {
+  const marginPresets = {
+    none: { top: 0, bottom: 0, left: 0, right: 0 },
+    narrow: { top: 0.5, bottom: 0.5, left: 0.5, right: 0.5 },
+    normal: { top: 1, bottom: 1, left: 1, right: 1 },
+    wide: { top: 1.5, bottom: 1.5, left: 1.5, right: 1.5 }
+  };
+  return marginPresets[marginType] || marginPresets.normal;
+}
 
 function saveImage(win, event, base64Data, mimeType, originalName) {
   const state = getWindowState(win);

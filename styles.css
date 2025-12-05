@@ -908,6 +908,21 @@ body {
   border-color: #007acc;
 }
 
+.input-group select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.input-group select:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
 .dialog-options {
   display: flex;
   gap: 16px;
@@ -947,6 +962,21 @@ body {
 
 .dialog-actions button:active {
   background-color: #d0d0d0;
+}
+
+.dialog-actions button.primary-btn {
+  background-color: #007acc;
+  color: white;
+  border-color: #005a9e;
+}
+
+.dialog-actions button.primary-btn:hover {
+  background-color: #005a9e;
+  border-color: #004578;
+}
+
+.dialog-actions button.primary-btn:active {
+  background-color: #004578;
 }
 
 .match-count {

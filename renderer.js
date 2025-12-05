@@ -3026,3 +3026,298 @@ document.addEventListener('keydown', (e) => {
     toggleFileTree(!isOpen);
   }
 });
+
+// ==========================================
+// Print Functionality
+// ==========================================
+
+const printDialog = document.getElementById('print-settings-dialog');
+const closePrintDialog = document.getElementById('close-print-dialog');
+const printContentType = document.getElementById('print-content-type');
+const printPaperSize = document.getElementById('print-paper-size');
+const printOrientation = document.getElementById('print-orientation');
+const printMargins = document.getElementById('print-margins');
+const printHeaderFooter = document.getElementById('print-header-footer');
+const printLineNumbers = document.getElementById('print-line-numbers');
+const printPreviewBtn = document.getElementById('print-preview-btn');
+const printBtn = document.getElementById('print-btn');
+const printToPdfBtn = document.getElementById('print-to-pdf-btn');
+const cancelPrintBtn = document.getElementById('cancel-print-btn');
+
+// Print settings state (saved in localStorage)
+let printSettings = {
+  contentType: 'rendered',
+  paperSize: 'Letter',
+  orientation: 'portrait',
+  margins: 'normal',
+  headerFooter: false,
+  lineNumbers: false
+};
+
+// Load print settings from localStorage
+function loadPrintSettings() {
+  const saved = localStorage.getItem('printSettings');
+  if (saved) {
+    printSettings = { ...printSettings, ...JSON.parse(saved) };
+  }
+  applyPrintSettingsToDialog();
+}
+
+// Apply settings to dialog UI
+function applyPrintSettingsToDialog() {
+  printContentType.value = printSettings.contentType;
+  printPaperSize.value = printSettings.paperSize;
+  printOrientation.value = printSettings.orientation;
+  printMargins.value = printSettings.margins;
+  printHeaderFooter.checked = printSettings.headerFooter;
+  printLineNumbers.checked = printSettings.lineNumbers;
+}
+
+// Save print settings to localStorage
+function savePrintSettings() {
+  printSettings = {
+    contentType: printContentType.value,
+    paperSize: printPaperSize.value,
+    orientation: printOrientation.value,
+    margins: printMargins.value,
+    headerFooter: printHeaderFooter.checked,
+    lineNumbers: printLineNumbers.checked
+  };
+  localStorage.setItem('printSettings', JSON.stringify(printSettings));
+}
+
+// Show print settings dialog
+function showPrintDialog() {
+  loadPrintSettings();
+  printDialog.classList.remove('hidden');
+  makeDraggable(printDialog);
+}
+
+// Hide print settings dialog
+function hidePrintDialog() {
+  printDialog.classList.add('hidden');
+}
+
+// Get print content based on settings
+function getPrintContent() {
+  const contentType = printContentType.value;
+  const includeLineNumbers = printLineNumbers.checked;
+
+  if (contentType === 'raw') {
+    // Get raw markdown content
+    const rawContent = editor.value;
+
+    if (includeLineNumbers) {
+      // Add line numbers to raw markdown
+      const lines = rawContent.split('\n');
+      const numberedContent = lines.map((line, index) => {
+        const lineNum = String(index + 1).padStart(4, ' ');
+        return `${lineNum}  ${line}`;
+      }).join('\n');
+      return `<pre style="font-family: monospace; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(numberedContent)}</pre>`;
+    } else {
+      return `<pre style="font-family: monospace; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(rawContent)}</pre>`;
+    }
+  } else {
+    // Get rendered markdown from preview pane
+    return preview.innerHTML;
+  }
+}
+
+// Helper to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Create print window
+function createPrintWindow(content) {
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  if (!printWindow) {
+    alert('Could not open print window. Please allow popups for this application.');
+    return null;
+  }
+
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
+  const pageTitle = printContentType.value === 'raw' ? `${fileName} (Raw Markdown)` : fileName;
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${pageTitle}</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 100%;
+          margin: 0;
+          padding: 20px;
+        }
+        pre {
+          background: #f5f5f5;
+          padding: 15px;
+          border-radius: 5px;
+          overflow-x: auto;
+        }
+        code {
+          font-family: 'Courier New', Courier, monospace;
+          background: #f5f5f5;
+          padding: 2px 5px;
+          border-radius: 3px;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 15px 0;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        th {
+          background-color: #f5f5f5;
+        }
+        @media print {
+          body {
+            padding: 0;
+          }
+        }
+      </style>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    </head>
+    <body>
+      ${content}
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+
+  return printWindow;
+}
+
+// Print preview
+printPreviewBtn.addEventListener('click', () => {
+  savePrintSettings();
+  const content = getPrintContent();
+  const printWindow = createPrintWindow(content);
+
+  if (printWindow) {
+    // Wait for content to load
+    printWindow.onload = () => {
+      // Apply syntax highlighting if available
+      if (printWindow.hljs) {
+        printWindow.document.querySelectorAll('pre code').forEach((block) => {
+          printWindow.hljs.highlightBlock(block);
+        });
+      }
+    };
+  }
+});
+
+// Print directly
+printBtn.addEventListener('click', () => {
+  savePrintSettings();
+  const content = getPrintContent();
+  const printWindow = createPrintWindow(content);
+
+  if (printWindow) {
+    printWindow.onload = () => {
+      // Apply syntax highlighting if available
+      if (printWindow.hljs) {
+        printWindow.document.querySelectorAll('pre code').forEach((block) => {
+          printWindow.hljs.highlightBlock(block);
+        });
+      }
+      // Wait a bit for rendering, then print
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+  }
+
+  hidePrintDialog();
+});
+
+// Print to PDF
+printToPdfBtn.addEventListener('click', () => {
+  savePrintSettings();
+
+  // Send IPC to main process to handle PDF generation
+  ipcRenderer.send('print-to-pdf', printSettings);
+
+  hidePrintDialog();
+});
+
+// Cancel print dialog
+cancelPrintBtn.addEventListener('click', () => {
+  hidePrintDialog();
+});
+
+// Close print dialog
+closePrintDialog.addEventListener('click', () => {
+  hidePrintDialog();
+});
+
+// IPC listeners for print menu actions
+ipcRenderer.on('show-print-settings', () => {
+  showPrintDialog();
+});
+
+ipcRenderer.on('show-print-preview', () => {
+  loadPrintSettings();
+  const content = getPrintContent();
+  const printWindow = createPrintWindow(content);
+
+  if (printWindow) {
+    printWindow.onload = () => {
+      if (printWindow.hljs) {
+        printWindow.document.querySelectorAll('pre code').forEach((block) => {
+          printWindow.hljs.highlightBlock(block);
+        });
+      }
+    };
+  }
+});
+
+ipcRenderer.on('print-raw-markdown', () => {
+  // Temporarily set to raw mode
+  const originalContentType = printContentType.value;
+  printContentType.value = 'raw';
+
+  const content = getPrintContent();
+  const printWindow = createPrintWindow(content);
+
+  if (printWindow) {
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+  }
+
+  // Restore original setting
+  printContentType.value = originalContentType;
+});
+
+ipcRenderer.on('print-to-pdf', () => {
+  loadPrintSettings();
+  ipcRenderer.send('print-to-pdf', printSettings);
+});
+
+ipcRenderer.on('pdf-saved', (event, filePath) => {
+  // PDF saved successfully notification
+  console.log('PDF saved to:', filePath);
+});
+
+// Load print settings on startup
+loadPrintSettings();
