@@ -1925,9 +1925,12 @@ ipcMain.on('show-print-preview-window', (event, data) => {
       nodeIntegration: false,
       contextIsolation: true
     },
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     title: `Print Preview - ${data.fileName}`
   });
+
+  // Remove menu bar completely
+  previewWin.setMenuBarVisibility(false);
 
   // Create HTML for preview
   const htmlContent = createPrintHTML(data.content, data.fileName, data.settings, true);
