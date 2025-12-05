@@ -3104,8 +3104,23 @@ function getPrintContent() {
   const includeLineNumbers = printLineNumbers.checked;
 
   if (contentType === 'raw') {
-    // Get raw markdown content
-    const rawContent = editor.value;
+    // Get raw markdown content from the appropriate editor
+    let rawContent;
+
+    // If CodeMirror is active (Writing Focus mode with formatting)
+    if (codemirrorView && !codemirrorContainer.classList.contains('hidden')) {
+      rawContent = codemirrorView.state.doc.toString();
+    } else {
+      // Get from textarea
+      rawContent = editor.value;
+    }
+
+    // Safety check: ensure content is actually text, not binary data
+    // Binary data (like .docx) often starts with specific magic bytes
+    if (rawContent && (rawContent.startsWith('UEsDBBQABg') || rawContent.startsWith('PK'))) {
+      // This looks like binary data (ZIP/docx file), show error
+      return `<pre style="font-family: monospace; white-space: pre-wrap; line-height: 1.5; color: red;">Error: Cannot print raw binary data. Please convert to markdown first or use Print Preview to print the rendered content.</pre>`;
+    }
 
     if (includeLineNumbers) {
       // Add line numbers to raw markdown
