@@ -3203,46 +3203,34 @@ function createPrintWindow(content) {
   return printWindow;
 }
 
-// Print preview
+// Print preview - sends to main process to create print window
 printPreviewBtn.addEventListener('click', () => {
   savePrintSettings();
   const content = getPrintContent();
-  const printWindow = createPrintWindow(content);
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
-  if (printWindow) {
-    // Wait for content to load
-    printWindow.onload = () => {
-      // Apply syntax highlighting if available
-      if (printWindow.hljs) {
-        printWindow.document.querySelectorAll('pre code').forEach((block) => {
-          printWindow.hljs.highlightBlock(block);
-        });
-      }
-    };
-  }
+  // Send to main process to create proper print preview window
+  ipcRenderer.send('show-print-preview-window', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
+
+  hidePrintDialog();
 });
 
-// Print directly
+// Print directly - sends to main process for system print dialog
 printBtn.addEventListener('click', () => {
   savePrintSettings();
   const content = getPrintContent();
-  const printWindow = createPrintWindow(content);
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
-  if (printWindow) {
-    printWindow.onload = () => {
-      // Apply syntax highlighting if available
-      if (printWindow.hljs) {
-        printWindow.document.querySelectorAll('pre code').forEach((block) => {
-          printWindow.hljs.highlightBlock(block);
-        });
-      }
-      // Wait a bit for rendering, then print
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    };
-  }
+  // Send to main process to handle printing with system dialog
+  ipcRenderer.send('print-document', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
 
   hidePrintDialog();
 });
@@ -3250,9 +3238,15 @@ printBtn.addEventListener('click', () => {
 // Print to PDF
 printToPdfBtn.addEventListener('click', () => {
   savePrintSettings();
+  const content = getPrintContent();
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
   // Send IPC to main process to handle PDF generation
-  ipcRenderer.send('print-to-pdf', printSettings);
+  ipcRenderer.send('print-to-pdf', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
 
   hidePrintDialog();
 });
@@ -3275,43 +3269,46 @@ ipcRenderer.on('show-print-settings', () => {
 ipcRenderer.on('show-print-preview', () => {
   loadPrintSettings();
   const content = getPrintContent();
-  const printWindow = createPrintWindow(content);
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
-  if (printWindow) {
-    printWindow.onload = () => {
-      if (printWindow.hljs) {
-        printWindow.document.querySelectorAll('pre code').forEach((block) => {
-          printWindow.hljs.highlightBlock(block);
-        });
-      }
-    };
-  }
+  // Send to main process to create proper print preview window
+  ipcRenderer.send('show-print-preview-window', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
 });
 
 ipcRenderer.on('print-raw-markdown', () => {
   // Temporarily set to raw mode
-  const originalContentType = printContentType.value;
-  printContentType.value = 'raw';
+  loadPrintSettings();
+  const originalContentType = printSettings.contentType;
+  printSettings.contentType = 'raw';
 
   const content = getPrintContent();
-  const printWindow = createPrintWindow(content);
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
-  if (printWindow) {
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    };
-  }
+  // Send to main process for proper printing
+  ipcRenderer.send('print-document', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
 
   // Restore original setting
-  printContentType.value = originalContentType;
+  printSettings.contentType = originalContentType;
 });
 
 ipcRenderer.on('print-to-pdf', () => {
   loadPrintSettings();
-  ipcRenderer.send('print-to-pdf', printSettings);
+  const content = getPrintContent();
+  const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
+
+  ipcRenderer.send('print-to-pdf', {
+    content: content,
+    fileName: fileName,
+    settings: printSettings
+  });
 });
 
 ipcRenderer.on('pdf-saved', (event, filePath) => {

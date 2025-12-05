@@ -1862,38 +1862,102 @@ ipcMain.on('open-file-from-tree', (event, filePath) => {
 });
 
 // Print IPC handlers
-ipcMain.on('print-document', (event, options) => {
+ipcMain.on('print-document', (event, data) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return;
 
-  // Configure print options
-  const printOptions = {
-    silent: false,
-    printBackground: true,
-    color: true,
-    margins: convertMarginsToElectron(options.margins || 'normal'),
-    landscape: options.orientation === 'landscape',
-    scaleFactor: 100,
-    pagesPerSheet: 1,
-    collate: true,
-    copies: 1,
-    pageSize: options.paperSize || 'Letter'
-  };
-
-  win.webContents.print(printOptions, (success, failureReason) => {
-    if (!success) {
-      console.error('Print failed:', failureReason);
-      dialog.showMessageBox(win, {
-        type: 'error',
-        title: 'Print Failed',
-        message: `Could not print: ${failureReason}`,
-        buttons: ['OK']
-      });
+  // Create a hidden window to hold the print content
+  const printWin = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
     }
+  });
+
+  // Create HTML for printing
+  const htmlContent = createPrintHTML(data.content, data.fileName, data.settings);
+
+  // Load the content
+  printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+  // Wait for content to load, then show print dialog
+  printWin.webContents.on('did-finish-load', () => {
+    // Configure print options
+    const printOptions = {
+      silent: false,
+      printBackground: true,
+      color: true,
+      margins: convertMarginsToElectron(data.settings.margins || 'normal'),
+      landscape: data.settings.orientation === 'landscape',
+      pageSize: data.settings.paperSize || 'Letter'
+    };
+
+    // Show system print dialog
+    printWin.webContents.print(printOptions, (success, failureReason) => {
+      if (!success && failureReason !== 'cancelled') {
+        console.error('Print failed:', failureReason);
+        dialog.showMessageBox(win, {
+          type: 'error',
+          title: 'Print Failed',
+          message: `Could not print: ${failureReason}`,
+          buttons: ['OK']
+        });
+      }
+      // Close the print window
+      printWin.close();
+    });
   });
 });
 
-ipcMain.on('print-to-pdf', async (event, options) => {
+// Show print preview window
+ipcMain.on('show-print-preview-window', (event, data) => {
+  const parentWin = BrowserWindow.fromWebContents(event.sender);
+  if (!parentWin) return;
+
+  // Create a preview window
+  const previewWin = new BrowserWindow({
+    width: 800,
+    height: 600,
+    parent: parentWin,
+    modal: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    },
+    autoHideMenuBar: false,
+    title: `Print Preview - ${data.fileName}`
+  });
+
+  // Create HTML for preview
+  const htmlContent = createPrintHTML(data.content, data.fileName, data.settings, true);
+
+  // Load the content
+  previewWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+  // Add print button functionality
+  previewWin.webContents.on('did-finish-load', () => {
+    // Inject print button handler
+    previewWin.webContents.executeJavaScript(`
+      const printBtn = document.getElementById('preview-print-btn');
+      const closeBtn = document.getElementById('preview-close-btn');
+
+      if (printBtn) {
+        printBtn.addEventListener('click', () => {
+          window.print();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          window.close();
+        });
+      }
+    `);
+  });
+});
+
+ipcMain.on('print-to-pdf', async (event, data) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return;
 
@@ -1909,35 +1973,67 @@ ipcMain.on('print-to-pdf', async (event, options) => {
 
     if (result.canceled || !result.filePath) return;
 
-    // Configure PDF options
-    const pdfOptions = {
-      printBackground: true,
-      landscape: options.orientation === 'landscape',
-      pageSize: options.paperSize || 'Letter',
-      margins: convertMarginsToElectron(options.margins || 'normal'),
-      displayHeaderFooter: options.headerFooter || false,
-      headerTemplate: options.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="title"></span></div>' : '',
-      footerTemplate: options.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>' : ''
-    };
-
-    const data = await win.webContents.printToPDF(pdfOptions);
-    fs.writeFileSync(result.filePath, data);
-
-    event.sender.send('pdf-saved', result.filePath);
-
-    // Show success message
-    const response = await dialog.showMessageBox(win, {
-      type: 'info',
-      title: 'PDF Saved',
-      message: 'PDF file saved successfully!',
-      detail: result.filePath,
-      buttons: ['OK', 'Open File Location']
+    // Create a hidden window for PDF generation
+    const pdfWin = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
     });
 
-    if (response.response === 1) {
-      // Open file location
-      shell.showItemInFolder(result.filePath);
-    }
+    // Create HTML for PDF
+    const htmlContent = createPrintHTML(data.content, data.fileName, data.settings);
+
+    // Load the content
+    pdfWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+    // Wait for content to load, then generate PDF
+    pdfWin.webContents.on('did-finish-load', async () => {
+      try {
+        // Configure PDF options
+        const pdfOptions = {
+          printBackground: true,
+          landscape: data.settings.orientation === 'landscape',
+          pageSize: data.settings.paperSize || 'Letter',
+          margins: convertMarginsToElectron(data.settings.margins || 'normal'),
+          displayHeaderFooter: data.settings.headerFooter || false,
+          headerTemplate: data.settings.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="title"></span></div>' : '',
+          footerTemplate: data.settings.headerFooter ? '<div style="font-size: 10px; text-align: center; width: 100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>' : ''
+        };
+
+        const pdfData = await pdfWin.webContents.printToPDF(pdfOptions);
+        fs.writeFileSync(result.filePath, pdfData);
+
+        event.sender.send('pdf-saved', result.filePath);
+
+        // Close PDF window
+        pdfWin.close();
+
+        // Show success message
+        const response = await dialog.showMessageBox(win, {
+          type: 'info',
+          title: 'PDF Saved',
+          message: 'PDF file saved successfully!',
+          detail: result.filePath,
+          buttons: ['OK', 'Open File Location']
+        });
+
+        if (response.response === 1) {
+          // Open file location
+          shell.showItemInFolder(result.filePath);
+        }
+      } catch (err) {
+        console.error('Error generating PDF:', err);
+        pdfWin.close();
+        dialog.showMessageBox(win, {
+          type: 'error',
+          title: 'Error Saving PDF',
+          message: `Could not save PDF: ${err.message}`,
+          buttons: ['OK']
+        });
+      }
+    });
   } catch (err) {
     console.error('Error saving PDF:', err);
     dialog.showMessageBox(win, {
@@ -1948,6 +2044,107 @@ ipcMain.on('print-to-pdf', async (event, options) => {
     });
   }
 });
+
+// Helper function to create print HTML
+function createPrintHTML(content, fileName, settings, isPreview = false) {
+  const pageTitle = settings.contentType === 'raw' ? `${fileName} (Raw Markdown)` : fileName;
+
+  const previewButtons = isPreview ? `
+    <div style="position: fixed; top: 10px; right: 10px; z-index: 9999; display: flex; gap: 10px;" class="no-print">
+      <button id="preview-print-btn" style="padding: 10px 20px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600;">🖨️ Print</button>
+      <button id="preview-close-btn" style="padding: 10px 20px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Close</button>
+    </div>
+  ` : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>${pageTitle}</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 100%;
+      margin: 0;
+      padding: 20px;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      background: #f5f5f5;
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 24px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+    h1 { font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    h3 { font-size: 1.25em; }
+    h4 { font-size: 1em; }
+    h5 { font-size: 0.875em; }
+    h6 { font-size: 0.85em; color: #666; }
+    p { margin-bottom: 16px; }
+    ul, ol { margin-bottom: 16px; padding-left: 2em; }
+    blockquote {
+      border-left: 4px solid #ddd;
+      padding-left: 16px;
+      color: #666;
+      margin: 16px 0;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+  ${previewButtons}
+  ${content}
+  <script>
+    // Apply syntax highlighting
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightBlock(block);
+    });
+  </script>
+</body>
+</html>`;
+}
 
 // Helper function to convert margin names to Electron format
 function convertMarginsToElectron(marginType) {
