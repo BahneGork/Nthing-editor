@@ -3267,15 +3267,21 @@ ipcRenderer.on('show-print-settings', () => {
 });
 
 ipcRenderer.on('show-print-preview', () => {
+  // Print the rendered markdown (preview pane content)
   loadPrintSettings();
-  const content = getPrintContent();
+
+  // Force rendered content (not raw)
+  const tempSettings = { ...printSettings, contentType: 'rendered' };
+
+  // Get rendered content from preview pane
+  const content = preview.innerHTML;
   const fileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() : 'Untitled';
 
-  // Send to main process to create proper print preview window
-  ipcRenderer.send('show-print-preview-window', {
+  // Send to main process for printing
+  ipcRenderer.send('print-document', {
     content: content,
     fileName: fileName,
-    settings: printSettings
+    settings: tempSettings
   });
 });
 
