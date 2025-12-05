@@ -3037,7 +3037,6 @@ const printContentType = document.getElementById('print-content-type');
 const printPaperSize = document.getElementById('print-paper-size');
 const printOrientation = document.getElementById('print-orientation');
 const printMargins = document.getElementById('print-margins');
-const printHeaderFooter = document.getElementById('print-header-footer');
 const printLineNumbers = document.getElementById('print-line-numbers');
 const printPreviewBtn = document.getElementById('print-preview-btn');
 const printBtn = document.getElementById('print-btn');
@@ -3050,7 +3049,7 @@ let printSettings = {
   paperSize: 'Letter',
   orientation: 'portrait',
   margins: 'normal',
-  headerFooter: false,
+  headerFooter: true, // Always true for PDF exports (header/footer only works for PDF)
   lineNumbers: false
 };
 
@@ -3069,7 +3068,6 @@ function applyPrintSettingsToDialog() {
   printPaperSize.value = printSettings.paperSize;
   printOrientation.value = printSettings.orientation;
   printMargins.value = printSettings.margins;
-  printHeaderFooter.checked = printSettings.headerFooter;
   printLineNumbers.checked = printSettings.lineNumbers;
 }
 
@@ -3080,7 +3078,7 @@ function savePrintSettings() {
     paperSize: printPaperSize.value,
     orientation: printOrientation.value,
     margins: printMargins.value,
-    headerFooter: printHeaderFooter.checked,
+    headerFooter: true, // Always true for PDF exports
     lineNumbers: printLineNumbers.checked
   };
   localStorage.setItem('printSettings', JSON.stringify(printSettings));

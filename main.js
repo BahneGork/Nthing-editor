@@ -1887,7 +1887,7 @@ ipcMain.on('print-document', (event, data) => {
     const printOptions = {
       silent: false,
       printBackground: true,
-      color: true,
+      color: false, // Default to black & white printing
       margins: convertMarginsToElectron(data.settings.margins || 'normal'),
       landscape: data.settings.orientation === 'landscape',
       pageSize: data.settings.paperSize || 'Letter'
