@@ -2581,11 +2581,21 @@ switchMode = function(mode) {
 // Outline/TOC Feature
 // ==========================================
 
-const outlineSidebar = document.getElementById('outline-sidebar');
-const closeOutlineSidebarBtn = document.getElementById('close-outline-sidebar');
+// Left Sidebar (Tabbed)
+const leftSidebar = document.getElementById('left-sidebar');
+const closeLeftSidebarBtn = document.getElementById('close-left-sidebar');
+const tabFilesBtn = document.getElementById('tab-files');
+const tabOutlineBtn = document.getElementById('tab-outline');
+const fileTreeContent = document.getElementById('file-tree-content');
+const outlineContent = document.getElementById('outline-content');
+
+// Outline elements
 const outlineList = document.getElementById('outline-list');
 const outlineEmpty = document.getElementById('outline-empty');
 let outlineUpdateTimeout = null;
+
+// Active tab state
+let activeTab = localStorage.getItem('leftSidebar.activeTab') || 'files';
 
 // Parse headers from markdown content
 function parseHeaders(content) {
@@ -2772,23 +2782,71 @@ function scheduleOutlineUpdate() {
   }, 500);
 }
 
-// Toggle outline sidebar
-function toggleOutline(show) {
-  if (show) {
-    outlineSidebar.classList.remove('hidden');
-    document.body.classList.add('outline-sidebar-open');
+// Switch tabs in left sidebar
+function switchLeftSidebarTab(tab) {
+  activeTab = tab;
+  localStorage.setItem('leftSidebar.activeTab', tab);
+
+  // Update tab buttons
+  const allTabs = document.querySelectorAll('.sidebar-tab');
+  allTabs.forEach(t => t.classList.remove('active'));
+
+  // Update tab content
+  const allContent = document.querySelectorAll('.sidebar-tab-content');
+  allContent.forEach(c => c.classList.remove('active'));
+
+  if (tab === 'files') {
+    tabFilesBtn.classList.add('active');
+    fileTreeContent.classList.add('active');
+  } else if (tab === 'outline') {
+    tabOutlineBtn.classList.add('active');
+    outlineContent.classList.add('active');
     updateOutline();
-  } else {
-    outlineSidebar.classList.add('hidden');
-    document.body.classList.remove('outline-sidebar-open');
   }
 }
 
+// Toggle left sidebar
+function toggleLeftSidebar(show) {
+  if (show) {
+    leftSidebar.classList.remove('hidden');
+    document.body.classList.add('left-sidebar-open');
+    // Update content for active tab
+    if (activeTab === 'outline') {
+      updateOutline();
+    }
+  } else {
+    leftSidebar.classList.add('hidden');
+    document.body.classList.remove('left-sidebar-open');
+  }
+}
+
+// Toggle outline (shows sidebar with outline tab active)
+function toggleOutline(show) {
+  if (show) {
+    switchLeftSidebarTab('outline');
+    toggleLeftSidebar(true);
+  } else {
+    toggleLeftSidebar(false);
+  }
+}
+
+// Tab button click handlers
+if (tabFilesBtn) {
+  tabFilesBtn.addEventListener('click', () => {
+    switchLeftSidebarTab('files');
+  });
+}
+
+if (tabOutlineBtn) {
+  tabOutlineBtn.addEventListener('click', () => {
+    switchLeftSidebarTab('outline');
+  });
+}
+
 // Close button handler
-if (closeOutlineSidebarBtn) {
-  closeOutlineSidebarBtn.addEventListener('click', () => {
-    toggleOutline(false);
-    ipcRenderer.send('outline-closed');
+if (closeLeftSidebarBtn) {
+  closeLeftSidebarBtn.addEventListener('click', () => {
+    toggleLeftSidebar(false);
   });
 }
 
@@ -2796,7 +2854,7 @@ if (closeOutlineSidebarBtn) {
 ipcRenderer.on('toggle-outline', (event, show) => {
   // If show is null, toggle based on current state
   if (show === null || show === undefined) {
-    const isOpen = !outlineSidebar.classList.contains('hidden');
+    const isOpen = !leftSidebar.classList.contains('hidden');
     toggleOutline(!isOpen);
   } else {
     toggleOutline(show);
@@ -2810,8 +2868,14 @@ editor.addEventListener('input', scheduleOutlineUpdate);
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.shiftKey && e.key === 'O') {
     e.preventDefault();
-    const isOpen = !outlineSidebar.classList.contains('hidden');
-    toggleOutline(!isOpen);
+    const isOpen = !leftSidebar.classList.contains('hidden');
+    if (isOpen && activeTab === 'outline') {
+      // Close if already showing outline
+      toggleOutline(false);
+    } else {
+      // Open and show outline tab
+      toggleOutline(true);
+    }
     ipcRenderer.send('outline-toggled', !isOpen);
   }
 });
@@ -2821,9 +2885,9 @@ switchMode = (function(originalFunc) {
   return function(mode) {
     originalFunc(mode);
 
-    // Update outline after mode switch
-    const isOutlineOpen = !outlineSidebar.classList.contains('hidden');
-    if (isOutlineOpen) {
+    // Update outline after mode switch if sidebar is open and outline tab is active
+    const isSidebarOpen = !leftSidebar.classList.contains('hidden');
+    if (isSidebarOpen && activeTab === 'outline') {
       setTimeout(() => {
         updateOutline();
       }, 100);
@@ -2831,12 +2895,16 @@ switchMode = (function(originalFunc) {
   };
 })(switchMode);
 
+// Initialize active tab on load
+document.addEventListener('DOMContentLoaded', () => {
+  switchLeftSidebarTab(activeTab);
+});
+
 // ==========================================
 // File Tree Navigator
 // ==========================================
 
-const fileTreeSidebar = document.getElementById('file-tree-sidebar');
-const closeFileTreeSidebarBtn = document.getElementById('close-file-tree-sidebar');
+// File tree elements (already in tabbed sidebar)
 const fileTreeList = document.getElementById('file-tree-list');
 const fileTreeEmpty = document.getElementById('file-tree-empty');
 const openWorkspaceBtn = document.getElementById('open-workspace-btn');
@@ -2855,22 +2923,14 @@ try {
   console.error('Error loading expanded folders:', err);
 }
 
-// Toggle file tree sidebar
+// Toggle file tree (shows sidebar with files tab active)
 function toggleFileTree(show) {
   if (show) {
-    fileTreeSidebar.classList.remove('hidden');
-    document.body.classList.add('file-tree-sidebar-open');
+    switchLeftSidebarTab('files');
+    toggleLeftSidebar(true);
   } else {
-    fileTreeSidebar.classList.add('hidden');
-    document.body.classList.remove('file-tree-sidebar-open');
+    toggleLeftSidebar(false);
   }
-}
-
-// Close button handler
-if (closeFileTreeSidebarBtn) {
-  closeFileTreeSidebarBtn.addEventListener('click', () => {
-    toggleFileTree(false);
-  });
 }
 
 // Open workspace button handler
@@ -3003,7 +3063,7 @@ ipcRenderer.on('workspace-opened', (event, data) => {
   refreshFileTreeDisplay();
 
   // Auto-open sidebar if it's not already open
-  if (fileTreeSidebar.classList.contains('hidden')) {
+  if (leftSidebar.classList.contains('hidden')) {
     toggleFileTree(true);
   }
 });
@@ -3011,8 +3071,9 @@ ipcRenderer.on('workspace-opened', (event, data) => {
 // Listen for toggle from main process
 ipcRenderer.on('toggle-file-tree', (event, show) => {
   if (show === null || show === undefined) {
-    const isOpen = !fileTreeSidebar.classList.contains('hidden');
-    toggleFileTree(!isOpen);
+    const isOpen = !leftSidebar.classList.contains('hidden');
+    const isFilesActive = activeTab === 'files';
+    toggleFileTree(!(isOpen && isFilesActive));
   } else {
     toggleFileTree(show);
   }
@@ -3022,8 +3083,14 @@ ipcRenderer.on('toggle-file-tree', (event, show) => {
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.shiftKey && e.key === 'E') {
     e.preventDefault();
-    const isOpen = !fileTreeSidebar.classList.contains('hidden');
-    toggleFileTree(!isOpen);
+    const isOpen = !leftSidebar.classList.contains('hidden');
+    if (isOpen && activeTab === 'files') {
+      // Close if already showing files
+      toggleFileTree(false);
+    } else {
+      // Open and show files tab
+      toggleFileTree(true);
+    }
   }
 });
 

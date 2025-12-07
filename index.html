@@ -145,40 +145,39 @@
     </div>
   </div>
 
-  <!-- Outline Sidebar -->
-  <div id="outline-sidebar" class="outline-sidebar hidden">
-    <div class="outline-sidebar-header">
-      <div class="outline-sidebar-title">
-        <span>📑 Outline</span>
-      </div>
-      <button id="close-outline-sidebar" class="close-btn">&times;</button>
+  <!-- Left Sidebar (Tabbed: Files + Outline) -->
+  <div id="left-sidebar" class="left-sidebar hidden">
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" id="tab-files" data-tab="files">
+        <span>📁</span> Files
+      </button>
+      <button class="sidebar-tab" id="tab-outline" data-tab="outline">
+        <span>📑</span> Outline
+      </button>
+      <button id="close-left-sidebar" class="close-btn" title="Close Sidebar">&times;</button>
     </div>
-    <div class="outline-sidebar-content">
-      <div class="outline-list" id="outline-list">
-        <!-- Outline items will be populated here -->
-      </div>
-      <div class="outline-empty" id="outline-empty">
-        <p>No headers found</p>
-        <p class="outline-hint">Add headings to your document to see the outline</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- File Tree Sidebar -->
-  <div id="file-tree-sidebar" class="file-tree-sidebar hidden">
-    <div class="file-tree-sidebar-header">
-      <div class="file-tree-sidebar-title">
-        <span>📁 Files</span>
+    <div class="sidebar-content">
+      <!-- File Tree Tab Content -->
+      <div id="file-tree-content" class="sidebar-tab-content active">
+        <div class="file-tree-list" id="file-tree-list">
+          <!-- Tree items populated here -->
+        </div>
+        <div class="file-tree-empty" id="file-tree-empty">
+          <p>No workspace open</p>
+          <button id="open-workspace-btn" class="open-workspace-btn">Open Folder...</button>
+        </div>
       </div>
-      <button id="close-file-tree-sidebar" class="close-btn">&times;</button>
-    </div>
-    <div class="file-tree-sidebar-content">
-      <div class="file-tree-list" id="file-tree-list">
-        <!-- Tree items populated here -->
-      </div>
-      <div class="file-tree-empty" id="file-tree-empty">
-        <p>No workspace open</p>
-        <button id="open-workspace-btn" class="open-workspace-btn">Open Folder...</button>
+
+      <!-- Outline Tab Content -->
+      <div id="outline-content" class="sidebar-tab-content">
+        <div class="outline-list" id="outline-list">
+          <!-- Outline items will be populated here -->
+        </div>
+        <div class="outline-empty" id="outline-empty">
+          <p>No headers found</p>
+          <p class="outline-hint">Add headings to your document to see the outline</p>
+        </div>
       </div>
     </div>
   </div>
