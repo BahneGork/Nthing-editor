@@ -90,7 +90,7 @@ The README now has placeholders for these screenshots. Save them in `.github/scr
 - **Greenshot** (free): https://getgreenshot.org/
   - Similar to Snipping Tool but more features
   - Quick editing capabilities
-
+i h 
 ## Image Guidelines
 
 - **Format**: PNG (better for screenshots with text)

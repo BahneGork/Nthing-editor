@@ -592,50 +592,7 @@ if (savedPreviewPref !== null) {
 }
 
 function updatePreview() {
-  if (isDocxFile) {
-    // For .docx files, convert using mammoth.js browser build
-    if (typeof mammoth === 'undefined') {
-      preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
-        <h3>Error: Mammoth.js Not Loaded</h3>
-        <p>The .docx converter library failed to load. Please restart the application.</p>
-      </div>`;
-      console.error('Mammoth.js library not found');
-      return;
-    }
-
-    const base64Data = editor.value;
-
-    // Convert base64 to ArrayBuffer for mammoth
-    const binaryString = atob(base64Data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    // Convert .docx to HTML using mammoth browser API
-    mammoth.convertToHtml({ arrayBuffer: bytes.buffer })
-      .then(result => {
-        preview.innerHTML = result.value;
-
-        // Log warnings if any
-        if (result.messages.length > 0) {
-          console.warn('Mammoth conversion warnings:', result.messages);
-        }
-
-        // Update outline and minimap after content is loaded
-        updateOutline();
-        if (minimapEnabled) {
-          updateMinimap();
-        }
-      })
-      .catch(err => {
-        preview.innerHTML = `<div style="padding: 20px; color: #d32f2f;">
-          <h3>Error Loading Document</h3>
-          <p>${err.message}</p>
-        </div>`;
-        console.error('Failed to convert .docx:', err);
-      });
-  } else if (isHtmlFile) {
+  if (isHtmlFile) {
     // For HTML files, render directly in an iframe for proper sandboxing
     const htmlContent = editor.value;
     preview.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" style="width: 100%; height: 100%; border: none; background: white;"></iframe>`;
@@ -1153,8 +1110,38 @@ if (savedFormattingPref !== null) {
 }
 
 // Listen for file opened
-ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
-  editor.value = content;
+ipcRenderer.on('file-opened', async (event, { content, filePath, isDocx }) => {
+  // Convert .docx to markdown before setting editor value
+  if (isDocx) {
+    try {
+      // Convert base64 to ArrayBuffer for mammoth
+      const binaryString = atob(content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const arrayBuffer = bytes.buffer;
+
+      // Convert .docx to HTML using mammoth
+      const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+      const html = result.value;
+
+      // Convert HTML to Markdown using Turndown
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        codeBlockStyle: 'fenced'
+      });
+      const markdown = turndownService.turndown(html);
+
+      editor.value = markdown;
+    } catch (err) {
+      console.error('Error converting .docx to markdown:', err);
+      editor.value = `<!-- Error converting .docx file: ${err.message} -->\n\n${content}`;
+    }
+  } else {
+    editor.value = content;
+  }
+
   currentFilePath = filePath;
   contentChangedSinceLastSave = false; // Reset unsaved flag
 
@@ -1183,22 +1170,12 @@ ipcRenderer.on('file-opened', (event, { content, filePath, isDocx }) => {
     }
   }
 
-  // Check if this is an HTML file or .docx file
+  // Check if this is an HTML file (.docx files are now converted to markdown)
   isHtmlFile = filePath && filePath.toLowerCase().endsWith('.html');
-  isDocxFile = isDocx || (filePath && filePath.toLowerCase().endsWith('.docx'));
+  isDocxFile = false; // .docx files are now converted to markdown, treat as markdown
 
-  // Check if this is a .docx or HTML file and add appropriate class
-  if (isDocxFile) {
-    // Auto-switch to reader mode for .docx files (no editing base64 data)
-    switchMode('reader');
-    container.classList.add('docx-viewer');
-    container.classList.remove('html-viewer');
-    // Update pane title to show read-only status
-    const paneTitle = document.querySelector('.preview-pane .pane-header .title');
-    if (paneTitle) {
-      paneTitle.textContent = 'Read-Only: Word Document';
-    }
-  } else if (isHtmlFile) {
+  // Check if this is an HTML file and add appropriate class
+  if (isHtmlFile) {
     container.classList.add('html-viewer');
     container.classList.remove('docx-viewer');
     // Update pane title
