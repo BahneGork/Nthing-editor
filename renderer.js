@@ -280,6 +280,7 @@ editor.addEventListener('keydown', (e) => {
   // Handle Tab key for indentation
   if (e.key === 'Tab') {
     e.preventDefault();
+    console.log('Tab pressed, shiftKey:', e.shiftKey);
 
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
@@ -287,6 +288,7 @@ editor.addEventListener('keydown', (e) => {
     const tabCharacter = '  '; // 2 spaces (can be changed to '\t' for actual tab)
 
     if (e.shiftKey) {
+      console.log('Executing unindent logic');
       // Shift+Tab: Always unindent (even with no selection)
       const lineStart = text.lastIndexOf('\n', start - 1) + 1;
       const lineEnd = text.indexOf('\n', end);
