@@ -87,13 +87,11 @@ const cmView = require('@codemirror/view');
 const cmState = require('@codemirror/state');
 const langMarkdown = require('@codemirror/lang-markdown');
 const cmLanguage = require('@codemirror/language');
-const cmCommands = require('@codemirror/commands');
 
 const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
 const { syntaxHighlighting, HighlightStyle, defaultHighlightStyle } = cmLanguage;
-const { indentWithTab } = cmCommands;
 
 // Check if tags are available
 console.log('Trying to import tags from language...');
@@ -1033,7 +1031,15 @@ function initializeCodeMirror() {
       // Highlight active line for focus mode
       highlightActiveLine(),
       // Tab key handling for indentation
-      keymap.of([indentWithTab]),
+      keymap.of([
+        {
+          key: 'Tab',
+          run: (view) => {
+            view.dispatch(view.state.replaceSelection('  '));
+            return true;
+          }
+        }
+      ]),
       // Custom themes
       markdownTheme,
       markdownBaseTheme,
