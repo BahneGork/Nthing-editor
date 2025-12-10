@@ -286,50 +286,53 @@ editor.addEventListener('keydown', (e) => {
     const text = editor.value;
     const tabCharacter = '  '; // 2 spaces (can be changed to '\t' for actual tab)
 
-    if (start === end) {
-      // No selection: insert tab at cursor
-      const newText = text.substring(0, start) + tabCharacter + text.substring(end);
-      editor.value = newText;
-      editor.setSelectionRange(start + tabCharacter.length, start + tabCharacter.length);
-    } else {
-      // Selection exists: indent/outdent all selected lines
+    if (e.shiftKey) {
+      // Shift+Tab: Always unindent (even with no selection)
       const lineStart = text.lastIndexOf('\n', start - 1) + 1;
       const lineEnd = text.indexOf('\n', end);
       const actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
 
       const selectedLines = text.substring(lineStart, actualLineEnd);
 
-      if (e.shiftKey) {
-        // Shift+Tab: Remove indentation
-        const unindentedLines = selectedLines.split('\n').map(line => {
-          if (line.startsWith('\t')) {
-            return line.substring(1);
-          } else if (line.startsWith('  ')) {
-            return line.substring(2);
-          } else if (line.startsWith(' ')) {
-            return line.substring(1);
-          }
-          return line;
-        }).join('\n');
+      const unindentedLines = selectedLines.split('\n').map(line => {
+        if (line.startsWith('\t')) {
+          return line.substring(1);
+        } else if (line.startsWith('  ')) {
+          return line.substring(2);
+        } else if (line.startsWith(' ')) {
+          return line.substring(1);
+        }
+        return line;
+      }).join('\n');
 
-        const newText = text.substring(0, lineStart) + unindentedLines + text.substring(actualLineEnd);
-        editor.value = newText;
+      const newText = text.substring(0, lineStart) + unindentedLines + text.substring(actualLineEnd);
+      editor.value = newText;
 
-        // Adjust selection to maintain selected lines
-        const newStart = lineStart;
-        const newEnd = lineStart + unindentedLines.length;
-        editor.setSelectionRange(newStart, newEnd);
-      } else {
-        // Tab: Add indentation
-        const indentedLines = selectedLines.split('\n').map(line => tabCharacter + line).join('\n');
-        const newText = text.substring(0, lineStart) + indentedLines + text.substring(actualLineEnd);
-        editor.value = newText;
+      // Maintain cursor position after unindent
+      const removed = selectedLines.length - unindentedLines.length;
+      const newStart = Math.max(lineStart, start - removed);
+      const newEnd = end - removed;
+      editor.setSelectionRange(newStart, newEnd);
+    } else if (start === end) {
+      // No selection: insert tab at cursor
+      const newText = text.substring(0, start) + tabCharacter + text.substring(end);
+      editor.value = newText;
+      editor.setSelectionRange(start + tabCharacter.length, start + tabCharacter.length);
+    } else {
+      // Selection exists: indent all selected lines
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const lineEnd = text.indexOf('\n', end);
+      const actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
 
-        // Adjust selection to maintain selected lines
-        const newStart = lineStart;
-        const newEnd = lineStart + indentedLines.length;
-        editor.setSelectionRange(newStart, newEnd);
-      }
+      const selectedLines = text.substring(lineStart, actualLineEnd);
+      const indentedLines = selectedLines.split('\n').map(line => tabCharacter + line).join('\n');
+      const newText = text.substring(0, lineStart) + indentedLines + text.substring(actualLineEnd);
+      editor.value = newText;
+
+      // Adjust selection to maintain selected lines
+      const newStart = lineStart;
+      const newEnd = lineStart + indentedLines.length;
+      editor.setSelectionRange(newStart, newEnd);
     }
 
     updatePreview();
