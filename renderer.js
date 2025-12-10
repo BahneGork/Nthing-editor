@@ -87,11 +87,13 @@ const cmView = require('@codemirror/view');
 const cmState = require('@codemirror/state');
 const langMarkdown = require('@codemirror/lang-markdown');
 const cmLanguage = require('@codemirror/language');
+const cmCommands = require('@codemirror/commands');
 
 const { EditorView, highlightSpecialChars, drawSelection, highlightActiveLine, keymap } = cmView;
 const { EditorState } = cmState;
 const { markdown } = langMarkdown;
 const { syntaxHighlighting, HighlightStyle, defaultHighlightStyle } = cmLanguage;
+const { indentWithTab } = cmCommands;
 
 // Check if tags are available
 console.log('Trying to import tags from language...');
@@ -277,6 +279,67 @@ editor.addEventListener('input', () => {
 
 // Auto-continue lists on Enter
 editor.addEventListener('keydown', (e) => {
+  // Handle Tab key for indentation
+  if (e.key === 'Tab') {
+    e.preventDefault();
+
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const text = editor.value;
+    const tabCharacter = '  '; // 2 spaces (can be changed to '\t' for actual tab)
+
+    if (start === end) {
+      // No selection: insert tab at cursor
+      const newText = text.substring(0, start) + tabCharacter + text.substring(end);
+      editor.value = newText;
+      editor.setSelectionRange(start + tabCharacter.length, start + tabCharacter.length);
+    } else {
+      // Selection exists: indent/outdent all selected lines
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const lineEnd = text.indexOf('\n', end);
+      const actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
+
+      const selectedLines = text.substring(lineStart, actualLineEnd);
+
+      if (e.shiftKey) {
+        // Shift+Tab: Remove indentation
+        const unindentedLines = selectedLines.split('\n').map(line => {
+          if (line.startsWith('\t')) {
+            return line.substring(1);
+          } else if (line.startsWith('  ')) {
+            return line.substring(2);
+          } else if (line.startsWith(' ')) {
+            return line.substring(1);
+          }
+          return line;
+        }).join('\n');
+
+        const newText = text.substring(0, lineStart) + unindentedLines + text.substring(actualLineEnd);
+        editor.value = newText;
+
+        // Adjust selection to maintain selected lines
+        const newStart = lineStart;
+        const newEnd = lineStart + unindentedLines.length;
+        editor.setSelectionRange(newStart, newEnd);
+      } else {
+        // Tab: Add indentation
+        const indentedLines = selectedLines.split('\n').map(line => tabCharacter + line).join('\n');
+        const newText = text.substring(0, lineStart) + indentedLines + text.substring(actualLineEnd);
+        editor.value = newText;
+
+        // Adjust selection to maintain selected lines
+        const newStart = lineStart;
+        const newEnd = lineStart + indentedLines.length;
+        editor.setSelectionRange(newStart, newEnd);
+      }
+    }
+
+    updatePreview();
+    updateStats();
+    updateLineNumbers();
+    return;
+  }
+
   if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
     const cursorPos = editor.selectionStart;
     const text = editor.value;
@@ -969,6 +1032,8 @@ function initializeCodeMirror() {
       EditorView.lineWrapping,
       // Highlight active line for focus mode
       highlightActiveLine(),
+      // Tab key handling for indentation
+      keymap.of([indentWithTab]),
       // Custom themes
       markdownTheme,
       markdownBaseTheme,
