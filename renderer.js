@@ -1038,6 +1038,41 @@ function initializeCodeMirror() {
             view.dispatch(view.state.replaceSelection('  '));
             return true;
           }
+        },
+        {
+          key: 'Shift-Tab',
+          run: (view) => {
+            const state = view.state;
+            const selection = state.selection.main;
+            const doc = state.doc;
+
+            // Get the line range for the selection
+            const fromLine = doc.lineAt(selection.from);
+            const toLine = doc.lineAt(selection.to);
+
+            const changes = [];
+
+            // Process each line in the selection
+            for (let lineNum = fromLine.number; lineNum <= toLine.number; lineNum++) {
+              const line = doc.line(lineNum);
+              const lineText = line.text;
+
+              // Remove up to 2 spaces or 1 tab from the start of the line
+              if (lineText.startsWith('\t')) {
+                changes.push({ from: line.from, to: line.from + 1, insert: '' });
+              } else if (lineText.startsWith('  ')) {
+                changes.push({ from: line.from, to: line.from + 2, insert: '' });
+              } else if (lineText.startsWith(' ')) {
+                changes.push({ from: line.from, to: line.from + 1, insert: '' });
+              }
+            }
+
+            if (changes.length > 0) {
+              view.dispatch({ changes });
+            }
+
+            return true;
+          }
         }
       ]),
       // Custom themes
