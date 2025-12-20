@@ -119,6 +119,181 @@
     </div>
   </div>
 
+  <!-- Quick Capture Settings Dialog -->
+  <div id="quick-capture-settings-dialog" class="dialog hidden">
+    <div class="dialog-header">
+      <span>Quick Capture Settings</span>
+      <button id="close-capture-settings-dialog" class="close-btn">&times;</button>
+    </div>
+    <div class="dialog-content">
+      <!-- General Settings Tab -->
+      <div class="settings-section">
+        <h3>General</h3>
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="quick-capture-enabled" checked>
+            Enable Quick Capture
+          </label>
+        </div>
+        <div class="input-group">
+          <label for="quick-capture-hotkey">Global Hotkey:</label>
+          <input type="text" id="quick-capture-hotkey" value="CommandOrControl+Shift+N" readonly>
+          <small>Press Alt to show menu for customization</small>
+        </div>
+        <div class="input-group">
+          <label>Window Style:</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="window-style" value="normal">
+              Normal Window
+            </label>
+            <label>
+              <input type="radio" name="window-style" value="floating" checked>
+              Floating (Always on Top)
+            </label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="clear-after-send" checked>
+            Clear window after sending
+          </label>
+        </div>
+        <div class="setting-item">
+          <label>
+            <input type="checkbox" id="show-filename-preview" checked>
+            Show filename preview
+          </label>
+        </div>
+      </div>
+
+      <!-- Vaults Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h3>Vaults</h3>
+          <button id="add-vault-btn" class="add-btn" title="Add Vault">+ Add Vault</button>
+        </div>
+        <div id="vaults-list" class="vaults-list">
+          <!-- Vault items will be dynamically added here -->
+          <div class="vaults-empty">
+            <p>No vaults configured</p>
+            <p class="hint">Click "+ Add Vault" to configure your first destination</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button id="save-capture-settings-btn" class="primary-btn">Save</button>
+        <button id="cancel-capture-settings-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vault Edit Dialog (Modal within modal) -->
+  <div id="vault-edit-dialog" class="dialog hidden">
+    <div class="dialog-header">
+      <span id="vault-edit-title">Add Vault</span>
+      <button id="close-vault-edit-dialog" class="close-btn">&times;</button>
+    </div>
+    <div class="dialog-content">
+      <div class="input-group">
+        <label for="vault-name">Vault Name:</label>
+        <input type="text" id="vault-name" placeholder="e.g., Work Notes" maxlength="50">
+      </div>
+      <div class="input-group">
+        <label for="vault-path">Vault Path:</label>
+        <div class="path-input-group">
+          <input type="text" id="vault-path" placeholder="C:\Users\...\Vault" readonly>
+          <button id="browse-vault-path-btn" class="browse-btn">Browse...</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label for="vault-inbox">Inbox Folder:</label>
+        <input type="text" id="vault-inbox" placeholder="e.g., 00-Inbox or inbox" value="inbox">
+        <small>Folder name relative to vault root</small>
+      </div>
+      <div class="input-group">
+        <label for="vault-icon">Icon:</label>
+        <div class="icon-picker">
+          <button type="button" id="selected-icon-btn" class="icon-preview-btn">📓</button>
+          <div id="icon-picker-popup" class="icon-picker-popup hidden">
+            <div class="icon-grid">
+              <button type="button" class="icon-option" data-icon="📓">📓</button>
+              <button type="button" class="icon-option" data-icon="📝">📝</button>
+              <button type="button" class="icon-option" data-icon="📔">📔</button>
+              <button type="button" class="icon-option" data-icon="📒">📒</button>
+              <button type="button" class="icon-option" data-icon="📕">📕</button>
+              <button type="button" class="icon-option" data-icon="📗">📗</button>
+              <button type="button" class="icon-option" data-icon="📘">📘</button>
+              <button type="button" class="icon-option" data-icon="📙">📙</button>
+              <button type="button" class="icon-option" data-icon="📚">📚</button>
+              <button type="button" class="icon-option" data-icon="💼">💼</button>
+              <button type="button" class="icon-option" data-icon="🏠">🏠</button>
+              <button type="button" class="icon-option" data-icon="💻">💻</button>
+              <button type="button" class="icon-option" data-icon="🎓">🎓</button>
+              <button type="button" class="icon-option" data-icon="📅">📅</button>
+              <button type="button" class="icon-option" data-icon="✍️">✍️</button>
+              <button type="button" class="icon-option" data-icon="🎯">🎯</button>
+              <button type="button" class="icon-option" data-icon="💡">💡</button>
+              <button type="button" class="icon-option" data-icon="⭐">⭐</button>
+              <button type="button" class="icon-option" data-icon="🔖">🔖</button>
+              <button type="button" class="icon-option" data-icon="🎨">🎨</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label for="vault-hotkey">Send Hotkey:</label>
+        <select id="vault-hotkey">
+          <option value="Ctrl+1">Ctrl+1</option>
+          <option value="Ctrl+2">Ctrl+2</option>
+          <option value="Ctrl+3">Ctrl+3</option>
+          <option value="Ctrl+4">Ctrl+4</option>
+          <option value="Ctrl+5">Ctrl+5</option>
+          <option value="Ctrl+6">Ctrl+6</option>
+          <option value="Ctrl+7">Ctrl+7</option>
+          <option value="Ctrl+8">Ctrl+8</option>
+          <option value="Ctrl+9">Ctrl+9</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Filename Pattern:</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="filename-pattern" value="date-title" checked>
+            Date + Title <small>(2025-12-17-Note.md)</small>
+          </label>
+          <label>
+            <input type="radio" name="filename-pattern" value="title">
+            Title Only <small>(Note.md)</small>
+          </label>
+          <label>
+            <input type="radio" name="filename-pattern" value="custom">
+            Custom: <input type="text" id="custom-filename-pattern" placeholder="{{date}}-{{title}}.md" style="width: 200px;">
+          </label>
+        </div>
+        <small>Available: {{date}}, {{time}}, {{datetime}}, {{timestamp}}, {{title}}</small>
+      </div>
+      <div class="input-group">
+        <label>File Mode:</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="file-mode" value="new" checked>
+            Create new file each time
+          </label>
+          <label>
+            <input type="radio" name="file-mode" value="append">
+            Append to existing file
+          </label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="save-vault-btn" class="primary-btn">Save</button>
+        <button id="cancel-vault-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Note Backups Sidebar -->
   <div id="version-history-sidebar" class="version-sidebar hidden">
     <div class="version-sidebar-header">

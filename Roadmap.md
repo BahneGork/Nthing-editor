@@ -32,6 +32,12 @@ Things I'm thinking about adding:
 - **Math equations** - LaTeX/KaTeX for academic writing
 - **Diagram support** - Mermaid for flowcharts and stuff
 - **Export to Word** - .docx export, probably need pandoc for this
+- **GitHub workspace integration** - Connect to GitHub repositories to browse and edit files remotely
+  - Authenticate with GitHub (PAT or OAuth)
+  - Browse repository file tree alongside local files
+  - Fetch, edit, and commit files directly to GitHub
+  - Enable collaborative editing workflows (e.g., for Obsidian Digital Garden publishing)
+  - Auto-triggers Netlify builds when integrated with Digital Garden plugin
 
 ## Philosophy
 

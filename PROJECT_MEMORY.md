@@ -1,6 +1,6 @@
 # Nthing Editor - Project Memory
 
-Last Updated: 2025-11-21
+Last Updated: 2025-12-13
 
 ## Project Overview
 Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.13.0
@@ -194,6 +194,18 @@ The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's
 ---
 
 ## Session History
+
+### 2025-12-13
+- Added **GitHub workspace integration** to roadmap (Long term section)
+- Feature would enable:
+  - Connect to GitHub repositories to browse and edit files remotely
+  - GitHub authentication (PAT or OAuth)
+  - Direct file editing and committing to GitHub
+  - Collaborative editing workflows (e.g., Obsidian Digital Garden publishing)
+  - Auto-triggers Netlify builds when integrated with Digital Garden plugin
+- Placed in "Long term" due to complexity (estimated 20-30 hours development)
+- Requires dependencies: @octokit/rest for GitHub API integration
+- Use case: Enable D&D players to edit GM notes through Nthing by connecting to GitHub repo, with changes flowing through GitHub → Netlify
 
 ### 2025-11-21
 - Implemented .docx file viewer using mammoth.browser.min.js

@@ -1530,3 +1530,313 @@ body.minimap-sidebar-open .status-bar {
   border: none;
   background: white;
 }
+
+/* ==========================================
+   Quick Capture Settings Dialog
+   ========================================== */
+
+#quick-capture-settings-dialog {
+  width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.settings-section {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-section:last-of-type {
+  border-bottom: none;
+}
+
+.settings-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.setting-item {
+  margin-bottom: 12px;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.radio-group small {
+  color: #666;
+  margin-left: 4px;
+}
+
+.add-btn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.add-btn:hover {
+  background: #357abd;
+}
+
+/* Vaults List */
+.vaults-list {
+  min-height: 100px;
+}
+
+.vaults-empty {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+}
+
+.vaults-empty p {
+  margin: 5px 0;
+}
+
+.vaults-empty .hint {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.vault-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.vault-item-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.vault-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vault-item-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.vault-item-details {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-item-hotkey {
+  font-family: 'Consolas', 'Monaco', monospace;
+  background: #e0e0e0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.vault-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vault-item-actions button {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+}
+
+.vault-item-actions button:hover {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
+.vault-item-actions .delete-btn:hover {
+  background: #e74c3c;
+  border-color: #c0392b;
+  color: white;
+}
+
+/* Vault Edit Dialog */
+#vault-edit-dialog {
+  width: 500px;
+}
+
+#vault-edit-dialog .input-group {
+  margin-bottom: 15px;
+}
+
+#vault-edit-dialog label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+#vault-edit-dialog small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #999;
+}
+
+.path-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input-group input {
+  flex: 1;
+}
+
+.browse-btn {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.browse-btn:hover {
+  background: #e0e0e0;
+}
+
+/* Icon Picker */
+.icon-picker {
+  position: relative;
+}
+
+.icon-preview-btn {
+  width: 50px;
+  height: 50px;
+  font-size: 28px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-preview-btn:hover {
+  border-color: #4a90e2;
+  transform: scale(1.05);
+}
+
+.icon-picker-popup {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.icon-picker-popup.hidden {
+  display: none;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  max-width: 440px;
+}
+
+.icon-option {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: #f9f9f9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.icon-option:hover {
+  background: #e0e0e0;
+  border-color: #4a90e2;
+  transform: scale(1.1);
+}
+
+.icon-option.selected {
+  background: #4a90e2;
+  border-color: #357abd;
+}
+
+/* Primary Button */
+.primary-btn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.primary-btn:hover {
+  background: #357abd;
+}
+
+.primary-btn:active {
+  background: #2c5f8d;
+}

@@ -15,7 +15,7 @@
  * to renderer processes via IPC (Inter-Process Communication).
  */
 
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -46,6 +46,15 @@ let autosavePersistent = false;  // Whether autosave setting persists across ses
 let defaultStartupMode = 'editor'; // Default mode on startup: 'editor', 'writing', or 'reader'
 let readerModeMargins = 'medium'; // Reader mode margin width: 'none', 'narrow', 'medium', 'wide', 'extra-wide'
 let minimapEnabled = false;      // Whether minimap is enabled
+
+// Quick Capture configuration
+let quickCaptureEnabled = true;
+let quickCaptureHotkey = 'CommandOrControl+Q'; // Changed from Ctrl+Shift+N to avoid conflict with New Window
+let quickCaptureWindowStyle = 'floating'; // 'normal' or 'floating' (always on top)
+let quickCaptureClearAfterSend = true;
+let quickCaptureShowFilenamePreview = true;
+let quickCaptureVaults = []; // Array of vault configurations
+let captureWindow = null; // Reference to the quick capture window
 
 // Backup system configuration
 let versioningEnabled = true;     // Enable/disable backup creation on save
@@ -253,6 +262,16 @@ function loadSettings() {
         versionAutoCleanup = settings.versioning.autoCleanup || false;
         versionCleanupDays = settings.versioning.cleanupDays || 30;
       }
+
+      // Load quick capture settings
+      if (settings.quickCapture) {
+        quickCaptureEnabled = settings.quickCapture.enabled !== undefined ? settings.quickCapture.enabled : true;
+        quickCaptureHotkey = settings.quickCapture.globalHotkey || 'CommandOrControl+Shift+N';
+        quickCaptureWindowStyle = settings.quickCapture.windowStyle || 'floating';
+        quickCaptureClearAfterSend = settings.quickCapture.clearAfterSend !== undefined ? settings.quickCapture.clearAfterSend : true;
+        quickCaptureShowFilenamePreview = settings.quickCapture.showFilenamePreview !== undefined ? settings.quickCapture.showFilenamePreview : true;
+        quickCaptureVaults = settings.quickCapture.vaults || [];
+      }
     }
   } catch (err) {
     console.error('Error loading settings:', err);
@@ -275,6 +294,14 @@ function saveSettings() {
         globalPath: versionGlobalPath,
         autoCleanup: versionAutoCleanup,
         cleanupDays: versionCleanupDays
+      },
+      quickCapture: {
+        enabled: quickCaptureEnabled,
+        globalHotkey: quickCaptureHotkey,
+        windowStyle: quickCaptureWindowStyle,
+        clearAfterSend: quickCaptureClearAfterSend,
+        showFilenamePreview: quickCaptureShowFilenamePreview,
+        vaults: quickCaptureVaults
       },
       defaultStartupMode: defaultStartupMode,
       readerModeMargins: readerModeMargins,
@@ -747,6 +774,14 @@ function createMenu() {
           }
         },
         {
+          label: 'Quick Capture',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => {
+            openQuickCaptureWindow();
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Open',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
@@ -1185,6 +1220,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Quick Capture Settings...',
+          click: () => {
+            const win = BrowserWindow.getFocusedWindow();
+            if (win) win.webContents.send('open-quick-capture-settings');
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Toggle Developer Tools',
           accelerator: 'F12',
           click: () => {
@@ -1229,6 +1272,112 @@ function createMenu() {
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+}
+
+// ==========================================
+// Quick Capture Functions
+// ==========================================
+
+// Register global hotkey for quick capture
+function registerQuickCaptureHotkey() {
+  try {
+    // Unregister existing hotkey if any
+    globalShortcut.unregisterAll();
+
+    // Register the hotkey
+    const registered = globalShortcut.register(quickCaptureHotkey, () => {
+      if (quickCaptureEnabled) {
+        openQuickCaptureWindow();
+      }
+    });
+
+    if (!registered) {
+      console.error('Quick capture hotkey registration failed');
+    }
+  } catch (err) {
+    console.error('Error registering quick capture hotkey:', err);
+  }
+}
+
+// Open or focus the quick capture window
+function openQuickCaptureWindow() {
+  // If window already exists, focus it
+  if (captureWindow && !captureWindow.isDestroyed()) {
+    captureWindow.show();
+    captureWindow.focus();
+    return;
+  }
+
+  // Create new capture window
+  captureWindow = new BrowserWindow({
+    width: 600,
+    height: 400,
+    minWidth: 400,
+    minHeight: 300,
+    frame: false,
+    alwaysOnTop: quickCaptureWindowStyle === 'floating',
+    skipTaskbar: false,
+    title: 'Quick Capture - Nthing',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true
+    }
+  });
+
+  captureWindow.loadFile('capture.html');
+
+  // Handle window close
+  captureWindow.on('closed', () => {
+    captureWindow = null;
+  });
+
+  // Send configuration to capture window after load
+  captureWindow.webContents.on('did-finish-load', () => {
+    captureWindow.webContents.send('capture-config', {
+      vaults: quickCaptureVaults,
+      clearAfterSend: quickCaptureClearAfterSend,
+      showFilenamePreview: quickCaptureShowFilenamePreview
+    });
+  });
+}
+
+// Sanitize filename for Windows/cross-platform compatibility
+function sanitizeFilename(text) {
+  if (!text || typeof text !== 'string') {
+    return 'untitled';
+  }
+
+  return text
+    .split('\n')[0]                    // First line only
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, '')      // Remove Windows illegal chars
+    .replace(/\s+/g, '-')              // Spaces to hyphens
+    .replace(/\.+$/g, '')              // Remove trailing periods
+    .substring(0, 100)                 // Max 100 chars (reasonable length)
+    .replace(/-+$/g, '')               // Remove trailing hyphens
+    || 'untitled';                     // Fallback if empty
+}
+
+// Process filename template
+function processFilenameTemplate(template, title) {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  const sanitizedTitle = sanitizeFilename(title);
+
+  return template
+    .replace(/\{\{date\}\}/g, `${year}-${month}-${day}`)
+    .replace(/\{\{time\}\}/g, `${hours}-${minutes}-${seconds}`)
+    .replace(/\{\{datetime\}\}/g, `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`)
+    .replace(/\{\{timestamp\}\}/g, `${year}${month}${day}${hours}${minutes}${seconds}`)
+    .replace(/\{\{title\}\}/g, sanitizedTitle);
 }
 
 function newFile(win) {
@@ -2048,6 +2197,119 @@ ipcMain.on('print-to-pdf', async (event, data) => {
   }
 });
 
+// ==========================================
+// Quick Capture IPC Handlers
+// ==========================================
+
+// Send note to vault
+ipcMain.on('send-to-vault', async (event, data) => {
+  const { vaultId, content, filename } = data;
+
+  try {
+    // Find vault configuration
+    const vault = quickCaptureVaults.find(v => v.id === vaultId);
+    if (!vault || !vault.enabled) {
+      event.sender.send('send-to-vault-error', { error: 'Vault not found or disabled' });
+      return;
+    }
+
+    // Validate vault path exists
+    if (!fs.existsSync(vault.path)) {
+      event.sender.send('send-to-vault-error', { error: `Vault path does not exist: ${vault.path}` });
+      return;
+    }
+
+    // Create inbox folder if it doesn't exist
+    const inboxPath = path.join(vault.path, vault.inboxFolder);
+    if (!fs.existsSync(inboxPath)) {
+      fs.mkdirSync(inboxPath, { recursive: true });
+    }
+
+    // Generate full file path
+    const filePath = path.join(inboxPath, filename);
+
+    // Write or append content
+    if (vault.appendMode && fs.existsSync(filePath)) {
+      // Append with timestamp header
+      const timestamp = new Date().toISOString();
+      const appendContent = `\n\n---\n**${timestamp}**\n\n${content}`;
+      fs.appendFileSync(filePath, appendContent, 'utf-8');
+    } else {
+      // Write new file
+      fs.writeFileSync(filePath, content, 'utf-8');
+    }
+
+    // Send success
+    event.sender.send('send-to-vault-success', { vaultName: vault.name, filePath });
+  } catch (err) {
+    console.error('Error sending to vault:', err);
+    event.sender.send('send-to-vault-error', { error: err.message });
+  }
+});
+
+// Browse for vault path
+ipcMain.on('browse-vault-path', async (event) => {
+  const result = await dialog.showOpenDialog({
+    title: 'Select Vault Folder',
+    properties: ['openDirectory', 'createDirectory']
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    event.sender.send('vault-path-selected', result.filePaths[0]);
+  }
+});
+
+// Update quick capture settings
+ipcMain.on('update-quick-capture-settings', (event, settings) => {
+  quickCaptureEnabled = settings.enabled;
+  quickCaptureWindowStyle = settings.windowStyle;
+  quickCaptureClearAfterSend = settings.clearAfterSend;
+  quickCaptureShowFilenamePreview = settings.showFilenamePreview;
+  quickCaptureVaults = settings.vaults;
+
+  saveSettings();
+
+  // Re-register hotkey if changed
+  if (quickCaptureEnabled) {
+    registerQuickCaptureHotkey();
+  } else {
+    globalShortcut.unregisterAll();
+  }
+
+  // Update capture window if open
+  if (captureWindow && !captureWindow.isDestroyed()) {
+    captureWindow.webContents.send('capture-config', {
+      vaults: quickCaptureVaults,
+      clearAfterSend: quickCaptureClearAfterSend,
+      showFilenamePreview: quickCaptureShowFilenamePreview
+    });
+    captureWindow.setAlwaysOnTop(quickCaptureWindowStyle === 'floating');
+  }
+
+  event.sender.send('quick-capture-settings-saved');
+});
+
+// Get current quick capture settings
+ipcMain.on('get-quick-capture-settings', (event) => {
+  event.sender.send('quick-capture-settings', {
+    enabled: quickCaptureEnabled,
+    globalHotkey: quickCaptureHotkey,
+    windowStyle: quickCaptureWindowStyle,
+    clearAfterSend: quickCaptureClearAfterSend,
+    showFilenamePreview: quickCaptureShowFilenamePreview,
+    vaults: quickCaptureVaults
+  });
+});
+
+// Open quick capture window from menu
+ipcMain.on('open-quick-capture', () => {
+  openQuickCaptureWindow();
+});
+
+// ==========================================
+// Helper Functions
+// ==========================================
+
 // Helper function to create print HTML
 function createPrintHTML(content, fileName, settings, isPreview = false) {
   const pageTitle = settings.contentType === 'raw' ? `${fileName} (Raw Markdown)` : fileName;
@@ -2397,6 +2659,11 @@ Built with Electron and marked.js
 app.whenReady().then(() => {
   const win = createWindow(filePathToOpen);
   // File will be opened via createWindow's did-finish-load handler
+
+  // Register global hotkey for quick capture
+  if (quickCaptureEnabled) {
+    registerQuickCaptureHotkey();
+  }
 });
 
 // macOS: Handle file opening
