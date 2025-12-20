@@ -1,9 +1,9 @@
 # Nthing Editor - Project Memory
 
-Last Updated: 2025-12-13
+Last Updated: 2025-12-20
 
 ## Project Overview
-Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.13.0
+Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.14.0 (in development)
 
 ## GitHub Repository
 https://github.com/BahneGork/Nthing-editor
@@ -14,7 +14,111 @@ https://github.com/BahneGork/Nthing-editor
 - Expires: December 20, 2025
 - Token value: (stored in ~/.github_token file, not in version control)
 
-## Recent Session Work (2025-11-21)
+## Recent Session Work (2025-12-20)
+
+### Completed
+1. ✅ Implemented Quick Capture Feature (Drafts-inspired)
+   - Global hotkey (Ctrl+Q) to open quick capture window anywhere
+   - Minimal distraction-free editor for fast note capture
+   - Send captured notes to configured Obsidian vault inboxes
+   - Support for multiple vaults with custom emoji icons
+   - Icon-only send buttons with tooltips (Option 2 design from research)
+   - Vault-specific hotkeys (Ctrl+1-9) for keyboard-only workflow
+   - Live filename preview with auto-sanitization from first line
+   - Manual filename editing with lock/unlock behavior
+   - Filename templating: {{date}}, {{time}}, {{datetime}}, {{timestamp}}, {{title}}
+   - Append mode (add to existing file) vs Create new file mode
+   - Floating/always-on-top window option
+   - Auto-clear editor after send option
+   - Toast notifications for success/error feedback
+   - Settings dialog with vault management (View → Quick Capture Settings)
+   - Emoji icon picker (20 built-in options)
+   - Path browser for vault selection
+   - Vault add/edit/delete with full CRUD interface
+
+### Technical Decisions Made
+- **Hotkey Choice**: Changed from Ctrl+Shift+N to **Ctrl+Q** to avoid conflict with "New Window"
+- **Button Style**: Chose icon-only buttons (Option 2) for compact, clean design
+- **Filename Strategy**: Auto-generate from first line with option to manually edit and lock
+- **CodeMirror Setup**: Used minimal extensions (markdown, lineWrapping, defaultKeymap) for fast loading
+- **Settings Persistence**: Stored in main settings.json under `quickCapture` object
+- **Window Style**: Created separate capture.html for isolated quick capture UI
+- **IPC Pattern**: Main process handles file operations, renderer handles UI logic
+- **Sanitization**: Windows-compatible filename sanitization (removes `<>:"/\|?*`, limits to 100 chars)
+- **Template Processing**: Date/time variables processed in main process for consistency
+
+### Files Created This Session
+- `capture.html` - Quick capture window layout (minimal titlebar, editor, status bar, send buttons)
+- `capture.css` - Quick capture styling (~250 lines)
+- `capture-renderer.js` - Capture window logic and CodeMirror editor (~350 lines)
+
+### Files Modified This Session
+- `main.js` - Added ~400 lines:
+  - Global hotkey registration with globalShortcut API
+  - Quick capture window creation function
+  - Settings load/save for quickCapture config
+  - Filename sanitization function
+  - Template processing function
+  - IPC handlers: send-to-vault, browse-vault-path, update-quick-capture-settings, get-quick-capture-settings
+- `index.html` - Added ~175 lines:
+  - Quick Capture Settings dialog
+  - Vault Edit dialog
+  - Icon picker popup with 20 emoji options
+- `styles.css` - Added ~310 lines:
+  - Settings section styling
+  - Vault list and vault item cards
+  - Icon picker grid styling
+  - Primary button styles
+- `renderer.js` - Added ~310 lines:
+  - Settings dialog open/close handlers
+  - Vault list rendering
+  - Vault CRUD operations (add, edit, delete)
+  - Icon picker functionality
+  - Path browser integration
+  - Settings save/load with IPC communication
+
+### Menu Items Added
+- **File → Quick Capture** (Ctrl+Q) - Opens quick capture window
+- **View → Quick Capture Settings...** - Opens settings dialog
+
+### Architecture Patterns Established
+- **Separate Window Pattern**: Quick capture uses dedicated window with own HTML/CSS/JS files
+- **Settings Dialog Pattern**: Complex settings use nested dialogs (main settings → vault editor)
+- **Icon Picker Pattern**: Emoji picker as popup within dialog (click outside to close)
+- **IPC Communication Pattern**: Renderer requests settings, main process responds with current state
+- **Vault Configuration Schema**:
+  ```javascript
+  {
+    id: 'vault-timestamp',
+    name: 'Vault Name',
+    path: 'C:\\path\\to\\vault',
+    inboxFolder: 'inbox',
+    icon: '📓',
+    hotkey: 'Ctrl+1',
+    filenamePattern: '{{date}}-{{title}}.md',
+    appendMode: false,
+    enabled: true
+  }
+  ```
+
+### Testing Status
+- ⚠️ **Not yet tested** - Awaiting user testing on Windows
+- All code written and committed (commit 265bb7b)
+- Testing workflow:
+  1. Configure at least one vault via settings
+  2. Press Ctrl+Q to open quick capture
+  3. Type note, verify filename preview updates
+  4. Click vault icon or press Ctrl+1 to send
+  5. Verify file appears in vault inbox folder
+
+### Known Considerations
+- CodeMirror dependencies reused from main editor (no new packages)
+- Window path separators handled with Node's `path.join()` for cross-platform compatibility
+- Icon picker closes when clicking outside (event listener on document)
+- Empty vault list shows helpful placeholder message
+- Filename locked state persists until custom filename is cleared or editor is cleared
+
+## Previous Session Work (2025-11-21)
 
 ### Completed
 1. ✅ Implemented .docx File Viewer Support
@@ -58,7 +162,7 @@ https://github.com/BahneGork/Nthing-editor
 
 ## Current Project State
 
-### Completed Features (v1.13.0)
+### Completed Features (v1.14.0 - in development)
 - ✅ Three view modes: Editor, Writing Focus, Reader
 - ✅ File tree sidebar (Ctrl+Shift+E)
 - ✅ Outline/TOC sidebar (Ctrl+Shift+O)
@@ -70,9 +174,14 @@ https://github.com/BahneGork/Nthing-editor
 - ✅ Recent files (Ctrl+1-9)
 - ✅ Workspace folder support
 - ✅ HTML file support
-- ✅ **Word document (.docx) viewer** - New in v1.13.0
+- ✅ Word document (.docx) viewer (v1.13.0)
 - ✅ Resizable editor/preview panes
 - ✅ File tree tooltips for long filenames
+- ✅ **Quick Capture for Obsidian vaults** - New in v1.14.0 (UNTESTED)
+  - Global hotkey (Ctrl+Q) for instant note capture
+  - Send to multiple configured vaults with icon buttons
+  - Live filename preview with templating
+  - Floating/always-on-top window option
 
 ### Open GitHub Issues (11 total)
 
@@ -194,6 +303,20 @@ The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's
 ---
 
 ## Session History
+
+### 2025-12-20
+- **Implemented Quick Capture feature** (Drafts-inspired note capture for Obsidian)
+- Research phase: Analyzed Drafts app features and UX patterns
+- Design decisions: Icon-only buttons (Option 2), Ctrl+Q hotkey, auto-sanitized filenames
+- Created 3 new files (capture.html, capture.css, capture-renderer.js)
+- Modified 4 existing files (main.js +400 lines, renderer.js +310 lines, index.html +175 lines, styles.css +310 lines)
+- Total addition: ~1,830 lines of code
+- Added settings dialog with vault CRUD interface
+- Implemented emoji icon picker with 20 options
+- Added filename templating system ({{date}}, {{time}}, {{title}}, etc.)
+- Commit: 265bb7b "Add Quick Capture feature for sending notes to Obsidian vaults"
+- **Status**: Code complete, awaiting Windows testing
+- **Next steps**: User testing on Windows, potential bug fixes based on feedback
 
 ### 2025-12-13
 - Added **GitHub workspace integration** to roadmap (Long term section)
