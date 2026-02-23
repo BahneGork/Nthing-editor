@@ -31,7 +31,6 @@ const maximizeBtn = document.getElementById('maximize-btn');
 const closeBtn = document.getElementById('close-btn');
 const menuBtn = document.getElementById('menu-btn');
 const titlebarText = document.getElementById('titlebar-text');
-const toggleViewBtn = document.getElementById('toggle-view-btn');
 const modeEditorBtn = document.getElementById('mode-editor-btn');
 const modeWritingBtn = document.getElementById('mode-writing-btn');
 const modeReaderBtn = document.getElementById('mode-reader-btn');
@@ -51,11 +50,6 @@ closeBtn.addEventListener('click', () => {
 // Menu button - shows application menu
 menuBtn.addEventListener('click', () => {
   ipcRenderer.send('show-menu');
-});
-
-// Toggle view mode button
-toggleViewBtn.addEventListener('click', () => {
-  toggleViewMode();
 });
 
 // Mode buttons
