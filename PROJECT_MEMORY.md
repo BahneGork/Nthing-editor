@@ -1,9 +1,9 @@
 # Nthing Editor - Project Memory
 
-Last Updated: 2025-12-20
+Last Updated: 2026-02-23
 
 ## Project Overview
-Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.14.0 (in development)
+Nthing is a markdown editor built with Electron focused on distraction-free writing and editing. Current version: 1.14.2
 
 ## GitHub Repository
 https://github.com/BahneGork/Nthing-editor
@@ -162,7 +162,7 @@ https://github.com/BahneGork/Nthing-editor
 
 ## Current Project State
 
-### Completed Features (v1.14.0 - in development)
+### Completed Features (v1.14.2)
 - ✅ Three view modes: Editor, Writing Focus, Reader
 - ✅ File tree sidebar (Ctrl+Shift+E)
 - ✅ Outline/TOC sidebar (Ctrl+Shift+O)
@@ -177,30 +177,29 @@ https://github.com/BahneGork/Nthing-editor
 - ✅ Word document (.docx) viewer (v1.13.0)
 - ✅ Resizable editor/preview panes
 - ✅ File tree tooltips for long filenames
-- ✅ **Quick Capture for Obsidian vaults** - New in v1.14.0 (UNTESTED)
+- ✅ **Quick Capture for Obsidian vaults** (v1.14.0)
   - Global hotkey (Ctrl+Q) for instant note capture
   - Send to multiple configured vaults with icon buttons
   - Live filename preview with templating
   - Floating/always-on-top window option
+- ✅ **Titlebar mode buttons** (v1.14.2) - 📝 🖊️ 👁 one-click mode switching
 
-### Open GitHub Issues (11 total)
+### Open GitHub Issues (9 total)
 
-**Short-term (5 issues):**
-- #1: Export to PDF/HTML
+**Short-term (3 issues):**
 - #3: Interactive Task Lists
-- #4: Dark Theme
-- #15: Smart Formatting Wrapping (NEW)
-- #16: Move Lines with Keyboard (NEW)
+- #15: Smart Formatting Wrapping
+- #16: Move Lines with hotkeys
 
 **Medium-term (3 issues):**
-- #18: File Tree Enhancements (NEW)
-- #19: Left Sidebar Organization (NEW)
-- #20: Right Sidebar Organization (NEW)
+- #4: Dark Theme
+- #18: File Tree Enhancements
+- #20: Right Sidebar Organization
 
 **Long-term (3 issues):**
 - #8: Math Equations (LaTeX/KaTeX)
 - #9: Diagram Support (Mermaid)
-- #10: Export to Word (.docx)
+- #10: Export to Word (.docx) — note: import (.docx → markdown) already done, this is export only
 
 ### Known Issues
 
@@ -303,6 +302,20 @@ The built exe triggers Windows Defender (Trojan:Win32/Wacatac.C!ml) because it's
 ---
 
 ## Session History
+
+### 2026-02-23
+- **Added titlebar mode buttons** (📝 Editor, 🖊️ Writing Focus, 👁 Reader)
+  - Three icon buttons in titlebar-left after the ☰ menu button
+  - Active mode highlighted (full opacity + subtle background), inactive dimmed
+  - Buttons stay in sync with all existing mode-switching paths (F9, menu)
+  - Calls existing `switchMode()` function directly
+- **Removed redundant ⇄ mode cycler button** from pane header
+  - Cleaned up HTML, CSS (.toggle-view-btn), and JS references
+  - F9 keyboard shortcut still works for cycling modes
+- **Released v1.14.2** on GitHub (v1.14.1 and v1.14.2 were version bumps from Windows side)
+  - Release includes portable zip option (dist\win-unpacked)
+- **WSL/Windows file preview discussion**: Clarified that MOTW (Mark of the Web) tagging on WSL files prevents PowerToys preview pane from working. Files on Windows filesystem preview fine.
+- Commits: 84d3b17 (mode buttons), 9393b0e (remove cycler)
 
 ### 2025-12-20
 - **Implemented Quick Capture feature** (Drafts-inspired note capture for Obsidian)
