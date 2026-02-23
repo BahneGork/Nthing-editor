@@ -32,6 +32,9 @@ const closeBtn = document.getElementById('close-btn');
 const menuBtn = document.getElementById('menu-btn');
 const titlebarText = document.getElementById('titlebar-text');
 const toggleViewBtn = document.getElementById('toggle-view-btn');
+const modeEditorBtn = document.getElementById('mode-editor-btn');
+const modeWritingBtn = document.getElementById('mode-writing-btn');
+const modeReaderBtn = document.getElementById('mode-reader-btn');
 
 minimizeBtn.addEventListener('click', () => {
   ipcRenderer.send('minimize-window');
@@ -54,6 +57,11 @@ menuBtn.addEventListener('click', () => {
 toggleViewBtn.addEventListener('click', () => {
   toggleViewMode();
 });
+
+// Mode buttons
+modeEditorBtn.addEventListener('click', () => switchMode('editor'));
+modeWritingBtn.addEventListener('click', () => switchMode('writing'));
+modeReaderBtn.addEventListener('click', () => switchMode('reader'));
 
 // Alt key shows menu
 document.addEventListener('keydown', (e) => {
@@ -723,6 +731,11 @@ function applyReaderMargins() {
 function switchMode(mode) {
   currentMode = mode;
   container.setAttribute('data-mode', mode);
+
+  // Update mode button active states
+  modeEditorBtn.classList.toggle('active', mode === 'editor');
+  modeWritingBtn.classList.toggle('active', mode === 'writing');
+  modeReaderBtn.classList.toggle('active', mode === 'reader');
 
   if (mode === 'writing') {
     paneTitle.textContent = 'Writing Focus';

@@ -63,6 +63,29 @@ body {
   color: #333;
 }
 
+.mode-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  margin-left: 2px;
+  opacity: 0.4;
+  transition: opacity 0.15s, background-color 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.mode-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  opacity: 0.7;
+}
+
+.mode-btn.active {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
 .titlebar-center {
   position: absolute;
   left: 50%;
