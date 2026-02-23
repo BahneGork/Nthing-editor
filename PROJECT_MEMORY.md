@@ -17,106 +17,13 @@ https://github.com/BahneGork/Nthing-editor
 ## Recent Session Work (2025-12-20)
 
 ### Completed
-1. ✅ Implemented Quick Capture Feature (Drafts-inspired)
-   - Global hotkey (Ctrl+Q) to open quick capture window anywhere
-   - Minimal distraction-free editor for fast note capture
-   - Send captured notes to configured Obsidian vault inboxes
-   - Support for multiple vaults with custom emoji icons
-   - Icon-only send buttons with tooltips (Option 2 design from research)
-   - Vault-specific hotkeys (Ctrl+1-9) for keyboard-only workflow
-   - Live filename preview with auto-sanitization from first line
-   - Manual filename editing with lock/unlock behavior
-   - Filename templating: {{date}}, {{time}}, {{datetime}}, {{timestamp}}, {{title}}
-   - Append mode (add to existing file) vs Create new file mode
-   - Floating/always-on-top window option
-   - Auto-clear editor after send option
-   - Toast notifications for success/error feedback
-   - Settings dialog with vault management (View → Quick Capture Settings)
-   - Emoji icon picker (20 built-in options)
-   - Path browser for vault selection
-   - Vault add/edit/delete with full CRUD interface
-
-### Technical Decisions Made
-- **Hotkey Choice**: Changed from Ctrl+Shift+N to **Ctrl+Q** to avoid conflict with "New Window"
-- **Button Style**: Chose icon-only buttons (Option 2) for compact, clean design
-- **Filename Strategy**: Auto-generate from first line with option to manually edit and lock
-- **CodeMirror Setup**: Used minimal extensions (markdown, lineWrapping, defaultKeymap) for fast loading
-- **Settings Persistence**: Stored in main settings.json under `quickCapture` object
-- **Window Style**: Created separate capture.html for isolated quick capture UI
-- **IPC Pattern**: Main process handles file operations, renderer handles UI logic
-- **Sanitization**: Windows-compatible filename sanitization (removes `<>:"/\|?*`, limits to 100 chars)
-- **Template Processing**: Date/time variables processed in main process for consistency
-
-### Files Created This Session
-- `capture.html` - Quick capture window layout (minimal titlebar, editor, status bar, send buttons)
-- `capture.css` - Quick capture styling (~250 lines)
-- `capture-renderer.js` - Capture window logic and CodeMirror editor (~350 lines)
-
-### Files Modified This Session
-- `main.js` - Added ~400 lines:
-  - Global hotkey registration with globalShortcut API
-  - Quick capture window creation function
-  - Settings load/save for quickCapture config
-  - Filename sanitization function
-  - Template processing function
-  - IPC handlers: send-to-vault, browse-vault-path, update-quick-capture-settings, get-quick-capture-settings
-- `index.html` - Added ~175 lines:
-  - Quick Capture Settings dialog
-  - Vault Edit dialog
-  - Icon picker popup with 20 emoji options
-- `styles.css` - Added ~310 lines:
-  - Settings section styling
-  - Vault list and vault item cards
-  - Icon picker grid styling
-  - Primary button styles
-- `renderer.js` - Added ~310 lines:
-  - Settings dialog open/close handlers
-  - Vault list rendering
-  - Vault CRUD operations (add, edit, delete)
-  - Icon picker functionality
-  - Path browser integration
-  - Settings save/load with IPC communication
-
-### Menu Items Added
-- **File → Quick Capture** (Ctrl+Q) - Opens quick capture window
-- **View → Quick Capture Settings...** - Opens settings dialog
-
-### Architecture Patterns Established
-- **Separate Window Pattern**: Quick capture uses dedicated window with own HTML/CSS/JS files
-- **Settings Dialog Pattern**: Complex settings use nested dialogs (main settings → vault editor)
-- **Icon Picker Pattern**: Emoji picker as popup within dialog (click outside to close)
-- **IPC Communication Pattern**: Renderer requests settings, main process responds with current state
-- **Vault Configuration Schema**:
-  ```javascript
-  {
-    id: 'vault-timestamp',
-    name: 'Vault Name',
-    path: 'C:\\path\\to\\vault',
-    inboxFolder: 'inbox',
-    icon: '📓',
-    hotkey: 'Ctrl+1',
-    filenamePattern: '{{date}}-{{title}}.md',
-    appendMode: false,
-    enabled: true
-  }
-  ```
-
-### Testing Status
-- ⚠️ **Not yet tested** - Awaiting user testing on Windows
-- All code written and committed (commit 265bb7b)
-- Testing workflow:
-  1. Configure at least one vault via settings
-  2. Press Ctrl+Q to open quick capture
-  3. Type note, verify filename preview updates
-  4. Click vault icon or press Ctrl+1 to send
-  5. Verify file appears in vault inbox folder
-
-### Known Considerations
-- CodeMirror dependencies reused from main editor (no new packages)
-- Window path separators handled with Node's `path.join()` for cross-platform compatibility
-- Icon picker closes when clicking outside (event listener on document)
-- Empty vault list shows helpful placeholder message
-- Filename locked state persists until custom filename is cleared or editor is cleared
+1. ✅ Implemented Quick Capture Feature (Ctrl+Q global hotkey)
+   - Separate window (capture.html/css/capture-renderer.js)
+   - Send notes to configured destination folders with icon buttons (Ctrl+1-9)
+   - Live filename preview with templating ({{date}}, {{time}}, {{title}}, etc.)
+   - Floating/always-on-top option, append vs new file mode
+   - Settings dialog under View → Quick Capture Settings
+   - Menu: File → Quick Capture (Ctrl+Q)
 
 ## Previous Session Work (2025-11-21)
 
